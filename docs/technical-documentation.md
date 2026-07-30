@@ -53,6 +53,8 @@ Aplikacja jest podzielona na sekcje funkcyjne z granulowanym systemem uprawnień
 | Filtrowanie | Każda lista w aplikacji musi mieć opcję filtrowania |
 | Ochrona danych | Minimalizacja dostępu do danych osobowych pracowników |
 | Bezpieczeństwo | Wszelkie dobre praktyki security i szyfrowanie |
+| Praca w terenie | Aplikacja musi działać stabilnie na telefonach w warunkach słabego zasięgu — offline-first, cache'owanie danych, minimalizacja transferu, gracefully degradation przy utracie połączenia |
+| Optymalizacja mobilna | Wszystkie optymalizacje (frontend i backend) skupione na wydajności w warunkach polowych: małe payloady, lazy loading, kompresja, minimalne zużycie baterii i danych |
 
 ---
 

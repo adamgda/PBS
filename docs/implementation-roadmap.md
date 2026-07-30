@@ -8,6 +8,8 @@
 
 ## Jak korzystać z tego dokumentu
 
+> **⚠️ Wymóg obowiązkowy:** Przed rozpoczęciem jakiejkolwiek pracy nad projektem PBS należy najpierw przeczytać dokument `docs/technical-documentation.md`. Jest to źródło prawdy dla architektury, założeń technicznych, modeli danych, API i konwencji. Każdy etap wdrożenia musi być realizowany zgodnie z tą dokumentacją.
+
 Poniższy dokument rozpisuje projekt PBS na etapy wdrożenia. Po zakończeniu i weryfikacji danego kroku **odznacz go** zamieniając `- [ ]` na `- [x]`. Dzięki temu dokument stanowi live-owe źródło prawdy o postępie projektu.
 
 Legenda statusów:
