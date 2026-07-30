@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Terminale</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c' } } } } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<aside id="pbs-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-brand-900 flex-col p-4 z-40"></aside>
+<div id="pbs-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+<aside id="pbs-drawer" class="fixed inset-y-0 right-0 w-72 bg-brand-900 p-4 z-50 lg:hidden overflow-y-auto pbs-scroll"></aside>
+
+<div class="flex-1 min-w-0 flex flex-col min-h-screen lg:ml-64">
+  <header id="pbs-header" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-3 sm:px-5 py-3 flex items-center justify-between"></header>
+
+  <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto pbs-fade">
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-4">
+      <div class="relative flex-1 max-w-md">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="s-search"></span>
+        <input type="text" placeholder="Szukaj terminala..." class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-cyan-500">
+      </div>
+      <button data-modal="m-add-terminal" class="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700"><span id="b-add"></span>Dodaj terminal</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600"><span id="t1-ico"></span></span>
+            <div><p class="font-semibold text-slate-800">Baltic Container Terminal</p><p class="text-xs text-slate-500">BCT</p></div>
+          </div>
+          <span class="pill pill-ok">Aktywny</span>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t1-pin"></span><div><p class="text-slate-500 text-xs">Adres</p><p class="font-medium">ul. Kontenerowa 1, Gdynia</p></div></div>
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t1-user"></span><div><p class="text-slate-500 text-xs">Operator</p><p class="font-medium">BCT Sp. z o.o.</p></div></div>
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t1-phone"></span><div><p class="text-slate-500 text-xs">Kontakt</p><p class="font-medium">+48 58 100 20 30</p></div></div>
+        </div>
+        <div class="mt-3 grid grid-cols-4 gap-2 text-center">
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">12</p><p class="text-xs text-slate-500">pracownicy</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">5</p><p class="text-xs text-slate-500">sprzęt</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">3</p><p class="text-xs text-slate-500">zlecenia</p></div>
+          <div class="bg-cyan-50 rounded-lg p-2"><p class="text-lg font-bold text-cyan-700">192 h</p><p class="text-xs text-slate-500">godz. (mc)</p></div>
+        </div>
+      </div>
+
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600"><span id="t2-ico"></span></span>
+            <div><p class="font-semibold text-slate-800">Deepwater Container Terminal</p><p class="text-xs text-slate-500">DCT</p></div>
+          </div>
+          <span class="pill pill-ok">Aktywny</span>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t2-pin"></span><div><p class="text-slate-500 text-xs">Adres</p><p class="font-medium">ul. Portowa 12, Gdańsk</p></div></div>
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t2-user"></span><div><p class="text-slate-500 text-xs">Operator</p><p class="font-medium">DCT Gdańsk SA</p></div></div>
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t2-phone"></span><div><p class="text-slate-500 text-xs">Kontakt</p><p class="font-medium">+48 58 200 40 50</p></div></div>
+        </div>
+        <div class="mt-3 grid grid-cols-4 gap-2 text-center">
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">8</p><p class="text-xs text-slate-500">pracownicy</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">3</p><p class="text-xs text-slate-500">sprzęt</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">2</p><p class="text-xs text-slate-500">zlecenia</p></div>
+          <div class="bg-indigo-50 rounded-lg p-2"><p class="text-lg font-bold text-indigo-700">160 h</p><p class="text-xs text-slate-500">godz. (mc)</p></div>
+        </div>
+      </div>
+
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-10 h-10 rounded-xl bg-slate-100 text-slate-600"><span id="t3-ico"></span></span>
+            <div><p class="font-semibold text-slate-800">Gdynia Cargo Terminal</p><p class="text-xs text-slate-500">GCT</p></div>
+          </div>
+          <span class="pill pill-muted">Bez zleceń</span>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t3-pin"></span><div><p class="text-slate-500 text-xs">Adres</p><p class="font-medium">ul. Indykatowa 8, Gdynia</p></div></div>
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t3-user"></span><div><p class="text-slate-500 text-xs">Operator</p><p class="font-medium">GCT Ltd.</p></div></div>
+          <div class="flex items-start gap-2"><span class="text-slate-400 mt-0.5" id="t3-phone"></span><div><p class="text-slate-500 text-xs">Kontakt</p><p class="font-medium">+48 58 300 60 70</p></div></div>
+        </div>
+        <div class="mt-3 grid grid-cols-4 gap-2 text-center">
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">4</p><p class="text-xs text-slate-500">pracownicy</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">2</p><p class="text-xs text-slate-500">sprzęt</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-lg font-bold text-slate-800">0</p><p class="text-xs text-slate-500">zlecenia</p></div>
+          <div class="bg-slate-100 rounded-lg p-2"><p class="text-lg font-bold text-slate-500">128 h</p><p class="text-xs text-slate-500">godz. (mc)</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hours summary per port -->
+    <section class="mt-6 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center gap-2 p-4 border-b border-slate-100">
+        <span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="hs-ico"></span></span>
+        <div><h3 class="font-semibold text-slate-800">Suma godzin per port — czerwiec 2026</h3><p class="text-xs text-slate-500">Godziny z danego portu sumują się osobno</p></div>
+      </div>
+      <div class="p-4 space-y-3">
+        <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">BCT — 192 h</span><span class="text-slate-500">8 640 zł</span></div><div class="bar-track"><div class="bar-fill bg-cyan-500" style="width:100%"></div></div></div>
+        <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">DCT — 160 h</span><span class="text-slate-500">6 720 zł</span></div><div class="bar-track"><div class="bar-fill bg-indigo-500" style="width:83%"></div></div></div>
+        <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">GCT — 128 h</span><span class="text-slate-500">4 696 zł</span></div><div class="bar-track"><div class="bar-fill bg-slate-400" style="width:67%"></div></div></div>
+      </div>
+      <div class="px-4 pb-4 pt-2 border-t border-slate-100 flex justify-between text-sm font-semibold">
+        <span>Razem (wszystkie porty): 480 h</span><span class="text-emerald-700">20 056 zł</span>
+      </div>
+    </section>
+  </main>
+
+  <nav id="pbs-bottomnav" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex z-30"></nav>
+  <div class="h-14 lg:hidden"></div>
+</div>
+
+<!-- Modal: Add terminal -->
+<div id="m-add-terminal" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="mt-ico"></span></span>Dodaj terminal</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mt-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Nazwa / kod</label><input type="text" placeholder="Baltic Container Terminal (BCT)" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Adres</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="mt-pin"></span><input type="text" placeholder="ul. Kontenerowa 1, Gdynia" class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Operator</label><input type="text" placeholder="BCT Sp. z o.o." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Telefon kontaktowy</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="mt-phone"></span><input type="tel" placeholder="+48 58 000 00 00" class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mt-save"></span>Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+PBS.init("terminale");
+document.getElementById("s-search").innerHTML = pbsIcon("search","w-5 h-5");
+document.getElementById("b-add").innerHTML = pbsIcon("plus","w-4 h-4");
+document.getElementById("hs-ico").innerHTML = pbsIcon("chart","w-5 h-5");
+["t1-ico","t2-ico","t3-ico"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("anchor","w-5 h-5"); });
+["t1-pin","t2-pin","t3-pin"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("pin","w-4 h-4"); });
+["t1-user","t2-user","t3-user"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("user","w-4 h-4"); });
+["t1-phone","t2-phone","t3-phone"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("phone","w-4 h-4"); });
+// modal icons
+document.getElementById("mt-ico").innerHTML = pbsIcon("anchor","w-5 h-5");
+document.getElementById("mt-close").innerHTML = pbsIcon("close","w-5 h-5");
+document.getElementById("mt-pin").innerHTML = pbsIcon("pin","w-4 h-4");
+document.getElementById("mt-phone").innerHTML = pbsIcon("phone","w-4 h-4");
+document.getElementById("mt-save").innerHTML = pbsIcon("check","w-4 h-4");
+</script>
+</body>
+</html>

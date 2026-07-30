@@ -1,0 +1,48 @@
+{
+    "name": "pbs/backend",
+    "description": "Port Baltic Shipping (PBS) - Backend REST API",
+    "type": "project",
+    "license": "proprietary",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.3",
+        "ext-pdo": "*",
+        "ext-json": "*",
+        "nikic/fast-route": "^1.3",
+        "firebase/php-jwt": "^6.10"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "pestphp/pest": "^3.0",
+        "phpstan/phpstan": "^1.12",
+        "mockery/mockery": "^1.6"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "audit": {
+            "abandoned": "report",
+            "block-insecure": false
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "analyse": "phpstan analyse src tests --level=9",
+        "migrate": "php bin/migrate.php",
+        "seed": "php bin/seed.php"
+    }
+}

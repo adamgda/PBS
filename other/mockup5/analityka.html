@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Analityka</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c' } } } } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<aside id="pbs-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-brand-900 flex-col p-4 z-40"></aside>
+<div id="pbs-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+<aside id="pbs-drawer" class="fixed inset-y-0 right-0 w-72 bg-brand-900 p-4 z-50 lg:hidden overflow-y-auto pbs-scroll"></aside>
+
+<div class="flex-1 min-w-0 flex flex-col min-h-screen lg:ml-64">
+  <header id="pbs-header" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-3 sm:px-5 py-3 flex items-center justify-between"></header>
+
+  <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto pbs-fade">
+    <!-- Period selector (applies to all charts) -->
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-4">
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-slate-500">Okres:</span>
+        <div class="inline-flex rounded-xl border border-slate-200 bg-white p-0.5">
+          <button class="px-3 py-1.5 rounded-lg text-slate-500 font-medium">7 dni</button>
+          <button class="px-3 py-1.5 rounded-lg bg-brand-900 text-white font-medium">30 dni</button>
+          <button class="px-3 py-1.5 rounded-lg text-slate-500 font-medium">90 dni</button>
+          <button class="px-3 py-1.5 rounded-lg text-slate-500 font-medium">12 mies.</button>
+        </div>
+      </div>
+      <button class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50"><span id="b-dl"></span>Eksportuj dane (Excel)</button>
+    </div>
+
+    <!-- KPI summary -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4"><p class="text-xs text-slate-500">Obsłużone zlecenia</p><p class="text-2xl font-extrabold mt-1">128</p><p class="text-xs text-emerald-600">+12% m/m</p></div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4"><p class="text-xs text-slate-500">Suma godzin (wszystkie porty)</p><p class="text-2xl font-extrabold mt-1">1 440 h</p><p class="text-xs text-slate-400">w wybranym okresie</p></div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4"><p class="text-xs text-slate-500">Suma wynagrodzeń</p><p class="text-2xl font-extrabold mt-1 text-emerald-700">20 056 zł</p><p class="text-xs text-slate-400">okres 1–23</p></div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4"><p class="text-xs text-slate-500">Wartość zleceń</p><p class="text-2xl font-extrabold mt-1">1.92 mln</p><p class="text-xs text-slate-400">okres 1–23</p></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Bar: terminals load -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <h3 class="font-semibold text-slate-800 mb-1">Obciążenie terminali</h3>
+        <p class="text-xs text-slate-500 mb-4">Liczba obsłużonych zleceń w wybranym okresie</p>
+        <div class="space-y-3">
+          <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">BCT</span><span class="text-slate-500">52</span></div><div class="bar-track"><div class="bar-fill bg-cyan-500" style="width:88%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">DCT</span><span class="text-slate-500">40</span></div><div class="bar-track"><div class="bar-fill bg-indigo-500" style="width:68%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">GCT</span><span class="text-slate-500">24</span></div><div class="bar-track"><div class="bar-fill bg-emerald-500" style="width:41%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">ECT</span><span class="text-slate-500">9</span></div><div class="bar-track"><div class="bar-fill bg-amber-500" style="width:15%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">FCT</span><span class="text-slate-500">3</span></div><div class="bar-track"><div class="bar-fill bg-slate-400" style="width:5%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Donut: equipment distribution -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <h3 class="font-semibold text-slate-800 mb-1">Najczęściej przypisywany sprzęt</h3>
+        <p class="text-xs text-slate-500 mb-4">Udział w przypisaniach</p>
+        <div class="flex items-center gap-5">
+          <svg viewBox="0 0 42 42" class="w-28 h-28 -rotate-90">
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="6"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#0891b2" stroke-width="6" stroke-dasharray="38 100" stroke-dashoffset="25"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#6366f1" stroke-width="6" stroke-dasharray="26 100" stroke-dashoffset="-13"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#10b981" stroke-width="6" stroke-dasharray="22 100" stroke-dashoffset="-39"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="14 100" stroke-dashoffset="-61"></circle>
+          </svg>
+          <ul class="text-sm space-y-1.5 flex-1">
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-cyan-500"></span>Reach Stacker</span><span class="text-slate-500">38%</span></li>
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-indigo-500"></span>Wózki widłowe</span><span class="text-slate-500">26%</span></li>
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-emerald-500"></span>Spreadery</span><span class="text-slate-500">22%</span></li>
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-amber-500"></span>Inne</span><span class="text-slate-500">14%</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Line: orders over time -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 lg:col-span-2">
+        <h3 class="font-semibold text-slate-800 mb-1">Zlecenia w czasie</h3>
+        <p class="text-xs text-slate-500 mb-4">Dzienna liczba realizowanych zleceń (30 dni)</p>
+        <svg viewBox="0 0 320 90" class="w-full h-32" preserveAspectRatio="none">
+          <polyline fill="none" stroke="#e2e8f0" stroke-width="1" points="0,22 320,22"></polyline>
+          <polyline fill="none" stroke="#e2e8f0" stroke-width="1" points="0,55 320,55"></polyline>
+          <polyline fill="rgba(8,145,178,.12)" stroke="none" points="0,70 12,55 24,60 36,40 48,48 60,30 72,38 84,28 96,42 108,33 120,20 132,30 144,25 156,18 168,28 180,22 192,35 204,25 216,15 228,30 240,22 252,12 264,26 276,18 288,10 300,22 312,15 320,8 320,90 0,90"></polyline>
+          <polyline fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="0,70 12,55 24,60 36,40 48,48 60,30 72,38 84,28 96,42 108,33 120,20 132,30 144,25 156,18 168,28 180,22 192,35 204,25 216,15 228,30 240,22 252,12 264,26 276,18 288,10 300,22 312,15 320,8"></polyline>
+        </svg>
+        <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>18.05</span><span>27.05</span><span>05.06</span><span>14.06</span><span>17.06</span></div>
+      </div>
+
+      <!-- Hours per port -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <h3 class="font-semibold text-slate-800 mb-1">Suma godzin per port</h3>
+        <p class="text-xs text-slate-500 mb-4">Godziny z danego portu sumują się osobno</p>
+        <div class="space-y-3">
+          <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">BCT — 576 h</span><span class="text-slate-500">25 920 zł</span></div><div class="bar-track"><div class="bar-fill bg-cyan-500" style="width:100%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">DCT — 480 h</span><span class="text-slate-500">20 160 zł</span></div><div class="bar-track"><div class="bar-fill bg-indigo-500" style="width:83%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span class="font-medium">GCT — 384 h</span><span class="text-slate-500">15 200 zł</span></div><div class="bar-track"><div class="bar-fill bg-slate-400" style="width:67%"></div></div></div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between text-sm font-semibold"><span>Razem: 1 440 h</span><span class="text-emerald-700">20 056 zł</span></div>
+      </div>
+
+      <!-- Role distribution -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <h3 class="font-semibold text-slate-800 mb-1">Rozkład stanowisk</h3>
+        <p class="text-xs text-slate-500 mb-4">Godziny w każdej roli (30 dni)</p>
+        <div class="flex items-center gap-5">
+          <svg viewBox="0 0 42 42" class="w-28 h-28 -rotate-90">
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="6"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#0891b2" stroke-width="6" stroke-dasharray="38 100" stroke-dashoffset="25"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#6366f1" stroke-width="6" stroke-dasharray="25 100" stroke-dashoffset="-13"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#10b981" stroke-width="6" stroke-dasharray="20 100" stroke-dashoffset="-38"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="10 100" stroke-dashoffset="-58"></circle>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#8b5cf6" stroke-width="6" stroke-dasharray="7 100" stroke-dashoffset="-68"></circle>
+          </svg>
+          <ul class="text-sm space-y-1.5 flex-1">
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-cyan-500"></span>Operator</span><span class="text-slate-500">540 h · 38%</span></li>
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-indigo-500"></span>Brygadzista</span><span class="text-slate-500">360 h · 25%</span></li>
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-emerald-500"></span>Sztauer</span><span class="text-slate-500">280 h · 20%</span></li>
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-amber-500"></span>Lukowy</span><span class="text-slate-500">144 h · 10%</span></li>
+            <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-violet-500"></span>Operator żurawia</span><span class="text-slate-500">100 h · 7%</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Wages per worker -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 lg:col-span-2">
+        <h3 class="font-semibold text-slate-800 mb-1">Suma godzin i wynagrodzenie per pracownik</h3>
+        <p class="text-xs text-slate-500 mb-4">Godziny × stawka godzinowa · 30 dni</p>
+        <div class="overflow-x-auto pbs-scroll">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left font-medium px-3 py-2">Pracownik</th><th class="text-right font-medium px-3 py-2">Godz.</th><th class="text-right font-medium px-3 py-2">Stawka/h</th><th class="text-right font-medium px-3 py-2">Wynagrodz.</th><th class="text-left font-medium px-3 py-2">Główne role</th></tr></thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr><td class="px-3 py-2 font-medium">Marek Nowak</td><td class="px-3 py-2 text-right">168 h</td><td class="px-3 py-2 text-right">45,00 zł</td><td class="px-3 py-2 text-right font-semibold text-emerald-700">7 560 zł</td><td class="px-3 py-2"><span class="pill pill-info">operator</span></td></tr>
+              <tr><td class="px-3 py-2 font-medium">Anna Kowal</td><td class="px-3 py-2 text-right">160 h</td><td class="px-3 py-2 text-right">42,00 zł</td><td class="px-3 py-2 text-right font-semibold text-emerald-700">6 720 zł</td><td class="px-3 py-2"><span class="pill pill-info">brygadzista</span></td></tr>
+              <tr><td class="px-3 py-2 font-medium">Piotr Lew</td><td class="px-3 py-2 text-right">152 h</td><td class="px-3 py-2 text-right">38,00 zł</td><td class="px-3 py-2 text-right font-semibold text-emerald-700">5 776 zł</td><td class="px-3 py-2"><span class="pill pill-muted">sztauer</span></td></tr>
+              <tr><td class="px-3 py-2 font-medium">Jan Kruk</td><td class="px-3 py-2 text-right">144 h</td><td class="px-3 py-2 text-right">40,00 zł</td><td class="px-3 py-2 text-right font-semibold text-emerald-700">5 760 zł</td><td class="px-3 py-2"><span class="pill pill-info">operator</span></td></tr>
+              <tr class="bg-slate-50 font-semibold"><td class="px-3 py-2">Razem (4 pracowników)</td><td class="px-3 py-2 text-right">624 h</td><td class="px-3 py-2"></td><td class="px-3 py-2 text-right text-emerald-700">25 816 zł</td><td class="px-3 py-2"></td></tr>
+            </tbody>
+          </table>
+        </div>
+      
+        <div class="mt-3 grid grid-cols-3 gap-3 text-sm">
+          <div class="bg-cyan-50 rounded-lg p-3"><p class="text-xs text-cyan-600">Okres I (1–15)</p><p class="text-lg font-bold text-emerald-700">10 028 zł</p></div>
+          <div class="bg-indigo-50 rounded-lg p-3"><p class="text-xs text-indigo-600">Okres II (15–23)</p><p class="text-lg font-bold text-emerald-700">10 028 zł</p></div>
+          <div class="bg-slate-100 rounded-lg p-3"><p class="text-xs text-slate-500">Razem miesiąc (1–23)</p><p class="text-lg font-bold text-emerald-700">20 056 zł</p></div>
+        </div>
+</div>
+
+      <!-- Top workers -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 lg:col-span-2">
+        <h3 class="font-semibold text-slate-800 mb-1">Najczęściej przypisywani pracownicy</h3>
+        <p class="text-xs text-slate-500 mb-4">Relacje pracownik ↔ sprzęt ↔ terminal</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50"><span class="w-9 h-9 rounded-full bg-brand-900 text-white grid place-items-center text-xs font-semibold">MN</span><div class="flex-1"><p class="text-sm font-medium">Marek Nowak</p><p class="text-xs text-slate-500">22 przypisania · BCT · RS-02 · 168 h</p></div><span class="pill pill-ok">top</span></div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50"><span class="w-9 h-9 rounded-full bg-brand-800 text-white grid place-items-center text-xs font-semibold">AK</span><div class="flex-1"><p class="text-sm font-medium">Anna Kowal</p><p class="text-xs text-slate-500">18 przypisań · DCT · WD-11 · 160 h</p></div><span class="pill pill-info">2</span></div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50"><span class="w-9 h-9 rounded-full bg-brand-700 text-white grid place-items-center text-xs font-semibold">PL</span><div class="flex-1"><p class="text-sm font-medium">Piotr Lew</p><p class="text-xs text-slate-500">14 przypisań · GCT · SP-04 · 152 h</p></div><span class="pill pill-muted">3</span></div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50"><span class="w-9 h-9 rounded-full bg-brand-700 text-white grid place-items-center text-xs font-semibold">JK</span><div class="flex-1"><p class="text-sm font-medium">Jan Kruk</p><p class="text-xs text-slate-500">11 przypisań · BCT · 144 h</p></div><span class="pill pill-muted">4</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <nav id="pbs-bottomnav" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex z-30"></nav>
+  <div class="h-14 lg:hidden"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+PBS.init("analityka");
+document.getElementById("b-dl").innerHTML = pbsIcon("download","w-4 h-4");
+</script>
+</body>
+</html>

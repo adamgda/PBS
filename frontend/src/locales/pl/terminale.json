@@ -1,0 +1,34 @@
+{
+  "title": "Terminale",
+  "list": {
+    "title": "Lista terminali",
+    "name": "Nazwa",
+    "address": "Adres",
+    "operator": "Operator",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "status": "Status",
+    "hours_worked": "Przepracowane godziny",
+    "orders_count": "Liczba zleceń",
+    "employees_count": "Przypisani pracownicy",
+    "equipment_count": "Przypisany sprzęt"
+  },
+  "form": {
+    "add_title": "Dodaj terminal",
+    "edit_title": "Edytuj terminal",
+    "name": "Nazwa",
+    "address": "Adres",
+    "operator": "Operator",
+    "phone": "Telefon operatora",
+    "email": "E-mail operatora",
+    "is_active": "Aktywny"
+  },
+  "messages": {
+    "deleted": {
+      "success": "Usunięto terminal {{name}}"
+    },
+    "saved": {
+      "success": "Zapisano dane terminala {{name}}"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "title": "Awaria!",
+  "list": {
+    "title": "Lista awarii",
+    "type": "Typ",
+    "type_equipment": "Sprzęt",
+    "type_other": "Inne",
+    "equipment": "Sprzęt",
+    "status": "Status",
+    "reported_date": "Data zgłoszenia",
+    "closed_date": "Data zakończenia",
+    "downtime": "Czas przestoju",
+    "reported_by": "Zgłoszona przez"
+  },
+  "form": {
+    "title": "Zgłoś awarię",
+    "what_concerns": "Czego dotyczy zdarzenie",
+    "select_equipment": "Wybierz sprzęt",
+    "description": "Opis sytuacji",
+    "submit": "Zgłoś"
+  },
+  "detail": {
+    "title": "Szczegóły awarii",
+    "status_change": "Zmiana statusu",
+    "close_date": "Data zakończenia naprawy",
+    "comments": "Komentarze",
+    "add_comment": "Dodaj komentarz",
+    "status_history": "Historia zmian statusu",
+    "changed_by": "Zmieniony przez",
+    "change_date": "Data zmiany"
+  },
+  "lifecycle": {
+    "reported": "Zgłoszona",
+    "under_repair": "W trakcie naprawy",
+    "repaired": "Naprawiona",
+    "closed": "Zamknięta"
+  },
+  "messages": {
+    "created": {
+      "success": "Awaria została zgłoszona"
+    },
+    "status_changed": {
+      "success": "Zmieniono status awarii"
+    },
+    "comment_added": {
+      "success": "Dodano komentarz"
+    }
+  }
+}

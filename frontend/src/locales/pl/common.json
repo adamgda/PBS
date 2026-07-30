@@ -1,0 +1,98 @@
+{
+  "buttons": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "add": "Dodaj",
+    "search": "Szukaj",
+    "filter": "Filtruj",
+    "clear": "Wyczyść",
+    "close": "Zamknij",
+    "confirm": "Potwierdź",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "submit": "Wyślij",
+    "refresh": "Odśwież",
+    "export": "Eksportuj",
+    "import": "Importuj",
+    "print": "Drukuj",
+    "actions": "Akcje",
+    "view": "Podgląd",
+    "details": "Szczegóły"
+  },
+  "status": {
+    "active": "Aktywny",
+    "inactive": "Nieaktywny",
+    "new": "Nowe",
+    "in_progress": "W realizacji",
+    "completed": "Zakończone",
+    "reported": "Zgłoszona",
+    "under_repair": "W trakcie naprawy",
+    "repaired": "Naprawiona",
+    "closed": "Zamknięta"
+  },
+  "table": {
+    "no_data": "Brak danych",
+    "loading": "Ładowanie...",
+    "page": "Strona",
+    "of": "z",
+    "per_page": "Na stronę",
+    "total": "Łącznie",
+    "sort": "Sortuj",
+    "columns": "Kolumny"
+  },
+  "validation": {
+    "required": "To pole jest wymagane",
+    "email": "Nieprawidłowy adres e-mail",
+    "min_length": "Minimalna długość: {{min}} znaków",
+    "max_length": "Maksymalna długość: {{max}} znaków",
+    "phone": "Nieprawidłowy numer telefonu",
+    "date": "Nieprawidłowa data"
+  },
+  "messages": {
+    "success": {
+      "saved": "Zapisano pomyślnie",
+      "deleted": "Usunięto pomyślnie",
+      "created": "Utworzono pomyślnie",
+      "updated": "Zaktualizowano pomyślnie"
+    },
+    "error": {
+      "generic": "Wystąpił błąd",
+      "unauthorized": "Brak uprawnień",
+      "not_found": "Nie znaleziono",
+      "server_error": "Błąd serwera",
+      "network": "Błąd połączenia"
+    },
+    "warning": {
+      "unsaved_changes": "Masz niezapisane zmiany",
+      "delete_confirm": "Czy na pewno chcesz usunąć?"
+    },
+    "info": {
+      "no_results": "Brak wyników",
+      "select_option": "Wybierz opcję"
+    }
+  },
+  "auth": {
+    "login": "Zaloguj",
+    "logout": "Wyloguj",
+    "email": "E-mail",
+    "password": "Hasło",
+    "set_password": "Ustaw hasło",
+    "login_title": "Logowanie do systemu PBS",
+    "login_button": "Zaloguj się",
+    "remember_me": "Zapamiętaj mnie",
+    "forgot_password": "Zapomniałeś hasła?"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "pracownicy": "Pracownicy",
+    "sprzet": "Sprzęt",
+    "terminale": "Terminale",
+    "harmonogram": "Harmonogram",
+    "analityka": "Analityka",
+    "raportowanie": "Raportowanie",
+    "ustawienia": "Ustawienia",
+    "awaria": "Awaria!"
+  }
+}

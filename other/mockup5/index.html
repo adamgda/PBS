@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c' } },
+    fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] }
+  } }
+}
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<!-- Desktop sidebar -->
+<aside id="pbs-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-brand-900 flex-col p-4 z-40"></aside>
+
+<!-- Mobile drawer -->
+<div id="pbs-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+<aside id="pbs-drawer" class="fixed inset-y-0 right-0 w-72 bg-brand-900 p-4 z-50 lg:hidden overflow-y-auto pbs-scroll"></aside>
+
+<!-- Main column -->
+<div class="flex-1 min-w-0 flex flex-col min-h-screen lg:ml-64">
+  <header id="pbs-header" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-3 sm:px-5 py-3 flex items-center justify-between"></header>
+
+  <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto pbs-fade">
+    <div class="mb-5">
+      <p class="text-sm text-slate-500">Witaj, Jan — oto bieżący stan operacyjny</p>
+      <p class="text-xs text-slate-400">Piątek, 17 czerwca 2026 · 19:09</p>
+    </div>
+
+    <!-- KPI grid -->
+    <section class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3 sm:gap-4 mb-6">
+      <div class="pbs-card bg-white rounded-2xl p-4 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Aktywni pracownicy</span>
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="i1"></span></span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold text-slate-800">42</p>
+        <p class="mt-1 text-xs text-emerald-600 font-medium flex items-center gap-1"><span id="iu1"></span>+8 vs wczoraj</p>
+      </div>
+      <div class="pbs-card bg-white rounded-2xl p-4 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Terminale w obsłudze</span>
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600"><span id="i2"></span></span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold text-slate-800">5 / 7</p>
+        <p class="mt-1 text-xs text-slate-400 font-medium">2 bez zleceń</p>
+      </div>
+      <div class="pbs-card bg-white rounded-2xl p-4 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Pojazdy w użyciu</span>
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="i3"></span></span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold text-slate-800">12</p>
+        <p class="mt-1 text-xs text-slate-400 font-medium">z 18 dostępnych</p>
+      </div>
+      <div class="pbs-card bg-white rounded-2xl p-4 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Aktywne awarie</span>
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-rose-50 text-rose-600"><span id="i4"></span></span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold text-slate-800">3</p>
+        <p class="mt-1 text-xs text-rose-600 font-medium">1 wysokiego priorytetu</p>
+      </div>
+      <div class="pbs-card bg-white rounded-2xl p-4 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Godziny dziś (porty)</span>
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600"><span id="i5"></span></span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold text-slate-800">336 h</p>
+        <p class="mt-1 text-xs text-slate-400 font-medium">suma wszystkich portów</p>
+      </div>
+      <div class="pbs-card bg-white rounded-2xl p-4 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Na urlopie</span>
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="i6"></span></span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold text-slate-800">3</p>
+        <p class="mt-1 text-xs text-amber-600 font-medium">2 wraca w tym tygodniu</p>
+      </div>
+      <div class="pbs-card bg-white rounded-2xl p-4 border border-emerald-200 bg-emerald-50/30">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Wynagrodzenia (mc)</span>
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600"><span id="i7"></span></span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold text-emerald-700">20 056 zł</p>
+        <p class="mt-1 text-xs text-slate-400 font-medium">1–15: 10 028 zł · 15–23: 10 028 zł</p>
+      </div>
+    </section>
+
+    <!-- Quick actions -->
+    <section class="mb-6">
+      <h2 class="text-sm font-semibold text-slate-700 mb-3">Szybkie akcje</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <a href="awaria.html" class="pbs-card group flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200">
+          <span class="grid place-items-center w-11 h-11 rounded-xl bg-rose-50 text-rose-600 group-hover:bg-rose-100"><span id="qa1"></span></span>
+          <div><p class="font-semibold text-slate-800">Zgłoś awarię</p><p class="text-xs text-slate-500">Maksymalnie uproszczony formularz</p></div>
+        </a>
+        <a href="raportowanie.html" class="pbs-card group flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200">
+          <span class="grid place-items-center w-11 h-11 rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-100"><span id="qa2"></span></span>
+          <div><p class="font-semibold text-slate-800">Utwórz raport</p><p class="text-xs text-slate-500">Dzienny raport z terminala/pojazdu</p></div>
+        </a>
+        <a href="harmonogram.html" class="pbs-card group flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200">
+          <span class="grid place-items-center w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100"><span id="qa3"></span></span>
+          <div><p class="font-semibold text-slate-800">Dodaj zlecenie</p><p class="text-xs text-slate-500">Przypisz pracowników i sprzęt</p></div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Rozliczenie dziś per port -->
+    <section class="mb-6 bg-white rounded-2xl border border-slate-200 p-4">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="dh-ico"></span></span>
+        <div><h3 class="font-semibold text-slate-800">Rozliczenie godzin dziś — per port</h3><p class="text-xs text-slate-500">17.06.2026 · suma godzin i wynagrodzeń w każdym porcie</p></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-slate-50 rounded-xl p-3"><div class="flex items-center justify-between mb-1"><span class="font-medium text-slate-700">BCT</span><span class="pill pill-info">aktywny</span></div><p class="text-2xl font-extrabold text-slate-800">144 h</p><p class="text-xs text-emerald-600 font-medium">6 480 zł wynagrodzeń</p></div>
+        <div class="bg-slate-50 rounded-xl p-3"><div class="flex items-center justify-between mb-1"><span class="font-medium text-slate-700">DCT</span><span class="pill pill-info">aktywny</span></div><p class="text-2xl font-extrabold text-slate-800">120 h</p><p class="text-xs text-emerald-600 font-medium">5 040 zł wynagrodzeń</p></div>
+        <div class="bg-slate-50 rounded-xl p-3"><div class="flex items-center justify-between mb-1"><span class="font-medium text-slate-700">GCT</span><span class="pill pill-muted">bez zleceń</span></div><p class="text-2xl font-extrabold text-slate-800">72 h</p><p class="text-xs text-emerald-600 font-medium">2 736 zł wynagrodzeń</p></div>
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between text-sm font-semibold"><span>Razem dziś (wszystkie porty): 336 h</span><span class="text-emerald-700">14 256 zł</span></div>
+    </section>
+
+    <!-- Alerts -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Upcoming returns from leave -->
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-9 h-9 rounded-xl bg-sky-50 text-sky-600"><span id="al0"></span></span>
+            <h3 class="font-semibold text-slate-800">Powroty z urlopów</h3>
+          </div>
+          <span class="pill pill-info">2</span>
+        </div>
+        <ul class="divide-y divide-slate-100">
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">Tomasz Sik</p><p class="text-xs text-slate-500">powrót 22.07 · za 5 dni</p></div><span class="pill pill-warn">5d</span></li>
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">Jan Wiśniewski</p><p class="text-xs text-slate-500">powrót 25.07 · za 8 dni</p></div><span class="pill pill-info">8d</span></li>
+        </ul>
+        <a href="pracownicy.html" class="block text-center text-sm text-cyan-600 font-medium p-3 hover:bg-slate-50">Zarządzaj urlopami</a>
+      </div>
+
+      <!-- Certificates expiring -->
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="al1"></span></span>
+            <h3 class="font-semibold text-slate-800">Uprawnienia do wygaśnięcia</h3>
+          </div>
+          <span class="pill pill-warn">5</span>
+        </div>
+        <ul class="divide-y divide-slate-100">
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">Marek Nowak — UDT HDS</p><p class="text-xs text-slate-500">wygasa za 12 dni</p></div><span class="pill pill-warn">12d</span></li>
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">Anna Kowal — BHP</p><p class="text-xs text-slate-500">wygasa za 25 dni</p></div><span class="pill pill-warn">25d</span></li>
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">Piotr Lew — Orzeczenie lek.</p><p class="text-xs text-rose-600 font-medium">wygasło 3 dni temu</p></div><span class="pill pill-err">prz</span></li>
+        </ul>
+        <a href="pracownicy.html" class="block text-center text-sm text-cyan-600 font-medium p-3 hover:bg-slate-50">Zarządzaj dokumentami</a>
+      </div>
+
+      <!-- Equipment inspections -->
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-9 h-9 rounded-xl bg-sky-50 text-sky-600"><span id="al2"></span></span>
+            <h3 class="font-semibold text-slate-800">Zbliżające się przeglądy</h3>
+          </div>
+          <span class="pill pill-info">4</span>
+        </div>
+        <ul class="divide-y divide-slate-100">
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">Reach Stacker RS-02 — serwis olejowy</p><p class="text-xs text-slate-500">za 180 km / ~5 dni</p></div><span class="pill pill-info">180km</span></li>
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">Wózek WD-11 — przegląd UDT</p><p class="text-xs text-slate-500">za 9 dni</p></div><span class="pill pill-warn">9d</span></li>
+        </ul>
+        <a href="sprzet.html" class="block text-center text-sm text-cyan-600 font-medium p-3 hover:bg-slate-50">Planuj przeglądy</a>
+      </div>
+
+      <!-- Unresolved failures -->
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-9 h-9 rounded-xl bg-rose-50 text-rose-600"><span id="al3"></span></span>
+            <h3 class="font-semibold text-slate-800">Nierozwiązane awarie</h3>
+          </div>
+          <span class="pill pill-err">3</span>
+        </div>
+        <ul class="divide-y divide-slate-100">
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">RS-02 — wyciek oleju</p><p class="text-xs text-slate-500">zgłoszona 2h temu · terminal BCT</p></div><span class="pill pill-err">w trakcie</span></li>
+          <li class="flex items-center justify-between p-3.5"><div><p class="text-sm font-medium text-slate-800">Inne — opóźnienie rozładunku</p><p class="text-xs text-slate-500">zgłoszona dziś · terminal DCT</p></div><span class="pill pill-warn">zgłoszona</span></li>
+        </ul>
+        <a href="awaria.html" class="block text-center text-sm text-cyan-600 font-medium p-3 hover:bg-slate-50">Otwórz sekcję Awaria!</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile bottom nav -->
+  <nav id="pbs-bottomnav" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex z-30"></nav>
+  <div class="h-14 lg:hidden"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+PBS.init("dashboard");
+document.getElementById("i1").innerHTML = pbsIcon("workers","w-5 h-5");
+document.getElementById("i2").innerHTML = pbsIcon("terminal","w-5 h-5");
+document.getElementById("i3").innerHTML = pbsIcon("truck","w-5 h-5");
+document.getElementById("i4").innerHTML = pbsIcon("alert","w-5 h-5");
+document.getElementById("i5").innerHTML = pbsIcon("clock","w-5 h-5");
+document.getElementById("i6").innerHTML = pbsIcon("clock","w-5 h-5");
+document.getElementById("i7").innerHTML = pbsIcon("money","w-5 h-5");
+document.getElementById("iu1").innerHTML = pbsIcon("arrowUp","w-3.5 h-3.5");
+document.getElementById("dh-ico").innerHTML = pbsIcon("anchor","w-5 h-5");
+document.getElementById("qa1").innerHTML = pbsIcon("alert","w-6 h-6");
+document.getElementById("qa2").innerHTML = pbsIcon("report","w-6 h-6");
+document.getElementById("qa3").innerHTML = pbsIcon("plus","w-6 h-6");
+document.getElementById("al0").innerHTML = pbsIcon("clock","w-5 h-5");
+document.getElementById("al1").innerHTML = pbsIcon("shield","w-5 h-5");
+document.getElementById("al2").innerHTML = pbsIcon("wrench","w-5 h-5");
+document.getElementById("al3").innerHTML = pbsIcon("alert","w-5 h-5");
+</script>
+</body>
+</html>

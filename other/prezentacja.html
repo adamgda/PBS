@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Port Baltic Shipping | Kompleksowe zarządzanie operacjami portowymi</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c',600:'#2563a0' } },
+    fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] }
+  } }
+}
+</script>
+<style>
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+.gradient-hero{background:linear-gradient(135deg,#0b2a4a 0%,#1c417c 50%,#2563a0 100%);}
+.gradient-text{background:linear-gradient(135deg,#22d3ee,#3b82f6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.device-frame{box-shadow:0 25px 80px -15px rgba(11,42,74,.4),0 0 0 1px rgba(255,255,255,.08);border-radius:16px;overflow:hidden;background:#fff;}
+.fade-up{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease;}
+.fade-up.visible{opacity:1;transform:none;}
+.nav-blur{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
+.hero-bg{position:relative;}
+.hero-bg::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 80%,rgba(34,211,238,.12),transparent 50%),radial-gradient(circle at 80% 20%,rgba(59,130,246,.12),transparent 50%);pointer-events:none;}
+.card-hover{transition:transform .25s ease,box-shadow .25s ease;}
+.card-hover:hover{transform:translateY(-4px);box-shadow:0 20px 40px -12px rgba(11,42,74,.2);}
+.module-card{transition:transform .3s ease,box-shadow .3s ease;}
+.module-card:hover{transform:translateY(-6px);box-shadow:0 25px 50px -12px rgba(11,42,74,.25);}
+.stat-num{font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<!-- ====== NAV ====== -->
+<nav id="topnav" class="fixed top-0 inset-x-0 z-50 nav-blur bg-brand-900/90 text-white transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+    <a href="#" class="flex items-center gap-2 font-bold text-lg">
+      <span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-300 font-black text-sm">PB</span>
+      <span class="hidden sm:inline">Port Baltic Shipping</span>
+    </a>
+    <div class="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-200">
+      <a href="#funkcjonalnosci" class="hover:text-cyan-300 transition">Funkcjonalności</a>
+      <a href="#moduly" class="hover:text-cyan-300 transition">Moduły</a>
+      <a href="#scenariusze" class="hover:text-cyan-300 transition">Jak to działa</a>
+      <a href="#mockupy" class="hover:text-cyan-300 transition">Zobacz na żywo</a>
+    </div>
+    <button id="menu-btn" class="lg:hidden p-2 rounded-lg text-slate-200 hover:bg-white/10" aria-label="Menu">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+  <div id="mobile-menu" class="hidden lg:hidden bg-brand-900 border-t border-white/10 px-4 py-4 space-y-2 text-sm font-medium text-slate-200">
+    <a href="#funkcjonalnosci" class="block px-3 py-2 rounded-lg hover:bg-white/5">Funkcjonalności</a>
+    <a href="#moduly" class="block px-3 py-2 rounded-lg hover:bg-white/5">Moduły</a>
+    <a href="#scenariusze" class="block px-3 py-2 rounded-lg hover:bg-white/5">Jak to działa</a>
+    <a href="#mockupy" class="block px-3 py-2 rounded-lg hover:bg-white/5">Zobacz na żywo</a>
+    <a href="#kontakt" class="block px-3 py-2 rounded-lg bg-cyan-500 text-white font-semibold text-center">Skontaktuj się</a>
+  </div>
+</nav>
+
+<!-- ====== KORZYŚCI ====== -->
+<section id="funkcjonalnosci" class="py-16 sm:py-24 px-4 sm:px-6 mt-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-10 fade-up">
+      <p class="text-cyan-600 font-semibold text-sm uppercase tracking-wider mb-2">Dlaczego warto</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800">Funkcjonalności</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="card-hover bg-white rounded-2xl border border-slate-200 p-6 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 1v22M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-800 mb-2">Automatyczne rozliczenia</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">Godziny przepracowane przez każdego pracownika mnożą się automatycznie przez jego stawkę. Wypłaty liczą się same — per pracownik i per port, z podziałem na okresy rozliczeniowe 1–15 i 15–23 oraz łączną sumą za cały miesiąc.</p>
+      </div>
+      <div class="card-hover bg-white rounded-2xl border border-slate-200 p-6 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-800 mb-2">Wszystkie porty w jednym miejscu</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">Widzisz na pierwszy rzut oka, ilu pracowników i jakiego sprzętu potrzebuje każdy port. Godziny z każdego portu sumują się osobno.</p>
+      </div>
+      <div class="card-hover bg-white rounded-2xl border border-slate-200 p-6 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-rose-50 text-rose-600 mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-800 mb-2">Awaria? Jedno kliknięcie</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">Pracownik zgłasza awarię z telefonu w 10 sekund. Status naprawy, komentarze i czas przestoju — wszystko widoczne na bieżąco.</p>
+      </div>
+      <div class="card-hover bg-white rounded-2xl border border-slate-200 p-6 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-amber-50 text-amber-600 mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM19.4 13.5a1.7 1.7 0 00.33 1.86l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.86-.33 1.7 1.7 0 00-1 1.56V21a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1.11-1.56 1.7 1.7 0 00-1.86.33l-.06.06A2 2 0 14.9l.06-.06a1.7 1.7 0 00.33-1.86 1.7 1.7 0 00-1.56-1H3a2 2 0 110-4h.09a1.7 1.7 0 001.56-1.11 1.7 1.7 0 00-.33-1.86l-.06-.06A2 2 0 17.1l.06.06a1.7 1.7 0 001.86.33H9a1.7 1.7 0 001-1.56V0a2 2 0 114 0v.09a1.7 1.7 0 001 1.56 1.7 1.7 0 001.86-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.33 1.86V7a1.7 1.7 0 001.56 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.51 1z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-800 mb-2">Alerty, które nie dają o sobie zapomnieć</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">Uprawnienia kończące się za 30 dni, zbliżające się przeglądy, brak raportu OC do godziny — system sam przypomni mailem i na ekranie.</p>
+      </div>
+      <div class="card-hover bg-white rounded-2xl border border-slate-200 p-6 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20v-1.2a4.8 4.8 0 019.6 0V20M16 11.2a3 3 0 100-6 3 3 0 000 6zM15 20v-1.1a4.6 4.6 0 016.5-4.2"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-800 mb-2">Role w jednym dniu</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">Dziś ktoś jest operatorem, jutro brygadzistą, pojutrze sztauerem, lukowym lub operatorem żurawia — wszystko zapisane i policzone. Każdy pracownik wie, co ma robić.</p>
+      </div>
+      <div class="card-hover bg-white rounded-2xl border border-slate-200 p-6 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-sky-50 text-sky-600 mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 9h18M8 3v4M16 3v4M8 13h3v3H8z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-800 mb-2">Harmonogram, który myśli za Ciebie</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">Skopiuj cały tydzień jednym kliknięciem. Pracownik na urlopie? System sam go nie pokaże jako dostępnego. Proste.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== MODUŁY SPRZEDAŻOWE ====== -->
+<section id="moduly" class="py-16 sm:py-24 px-4 sm:px-6 bg-white">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-12 fade-up">
+      <p class="text-cyan-600 font-semibold text-sm uppercase tracking-wider mb-2">Moduły</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800">Możliwe do wdrożenia</h2>
+    </div>
+
+    <!-- Moduł: Pracownicy -->
+    <div class="module-card bg-gradient-to-br from-indigo-50 to-white rounded-3xl border border-indigo-100 p-6 sm:p-8 mb-6 fade-up">
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+        <div class="flex items-center gap-4 lg:w-1/3">
+          <div class="grid place-items-center w-16 h-16 rounded-2xl bg-indigo-500 text-white shrink-0">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20v-1.2a4.8 4.8 0 019.6 0V20M16 11.2a3 3 0 100-6 3 3 0 000 6zM15 20v-1.1a4.6 4.6 0 016.5-4.2"/></svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-extrabold text-slate-800">Pracownicy</h3>
+            <p class="text-sm text-indigo-600 font-medium">Zespół pod kontrolą</p>
+          </div>
+        </div>
+        <div class="lg:w-2/3 space-y-3">
+          <p class="text-slate-600 leading-relaxed">Zarządzaj całym zespołem w jednym miejscu. Każdy pracownik ma swoją kartę z danymi kontaktowymi, stawką godzinową, rolą na dany dzień i przypisanym sprzętem.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Stawki godzinowe z historią zmian</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Role: operator, brygadzista, sztauer, lukowy, operator żurawia</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Urlopy i nieobecności</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Certyfikaty i uprawnienia z alertami</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Wynagrodzenia liczą się same</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Szybkie przypisanie do portu i sprzętu</div>
+          </div>
+          <a href="#mockupy" data-src="mockup5/pracownicy.html" data-label="Pracownicy" class="mod-link inline-flex items-center gap-2 text-indigo-600 font-semibold text-sm hover:gap-3 transition-all">Zobacz moduł Pracownicy →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Moduł: Sprzęt -->
+    <div class="module-card bg-gradient-to-br from-amber-50 to-white rounded-3xl border border-amber-100 p-6 sm:p-8 mb-6 fade-up">
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+        <div class="flex items-center gap-4 lg:w-1/3">
+          <div class="grid place-items-center w-16 h-16 rounded-2xl bg-amber-500 text-white shrink-0">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/></svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-extrabold text-slate-800">Sprzęt</h3>
+            <p class="text-sm text-amber-600 font-medium">Pojazdy i urządzenia</p>
+          </div>
+        </div>
+        <div class="lg:w-2/3 space-y-3">
+          <p class="text-slate-600 leading-relaxed">Wszystkie pojazdy i urządzenia w jednej bazie. Przebieg, serwis, codzienna obsługa (OC) i historia każdej maszyny w formie osi czasu.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Pojazdy i inne urządzenia</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Przebieg i serwis olejowy</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Codzienna obsługa (OC)</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Historia w formie osi czasu</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Planowanie przeglądów UDT</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Przypomnienia o serwisie</div>
+          </div>
+          <a href="#mockupy" data-src="mockup5/sprzet.html" data-label="Sprzęt" class="mod-link inline-flex items-center gap-2 text-amber-600 font-semibold text-sm hover:gap-3 transition-all">Zobacz moduł Sprzęt →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Moduł: Terminale -->
+    <div class="module-card bg-gradient-to-br from-emerald-50 to-white rounded-3xl border border-emerald-100 p-6 sm:p-8 mb-6 fade-up">
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+        <div class="flex items-center gap-4 lg:w-1/3">
+          <div class="grid place-items-center w-16 h-16 rounded-2xl bg-emerald-500 text-white shrink-0">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5M9 11h6"/></svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-extrabold text-slate-800">Terminale</h3>
+            <p class="text-sm text-emerald-600 font-medium">Wszystkie porty</p>
+          </div>
+        </div>
+        <div class="lg:w-2/3 space-y-3">
+          <p class="text-slate-600 leading-relaxed">Baza wszystkich portów, na których pracujecie. Dla każdego portu widzisz sumę przepracowanych godzin, liczbę pracowników, sprzętu i zleceń.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Adres, operator, kontakt</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Suma godzin per port</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Liczba pracowników i sprzętu</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Liczba aktywnych zleceń</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Godziny sumują się osobno</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Wykres obciążenia per port</div>
+          </div>
+          <a href="#mockupy" data-src="mockup5/terminale.html" data-label="Terminale" class="mod-link inline-flex items-center gap-2 text-emerald-600 font-semibold text-sm hover:gap-3 transition-all">Zobacz moduł Terminale →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Moduł: Harmonogram -->
+    <div class="module-card bg-gradient-to-br from-sky-50 to-white rounded-3xl border border-sky-100 p-6 sm:p-8 mb-6 fade-up">
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+        <div class="flex items-center gap-4 lg:w-1/3">
+          <div class="grid place-items-center w-16 h-16 rounded-2xl bg-sky-500 text-white shrink-0">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 9h18M8 3v4M16 3v4M8 13h3v3H8z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-extrabold text-slate-800">Harmonogram</h3>
+            <p class="text-sm text-sky-600 font-medium">Planowanie zleceń</p>
+          </div>
+        </div>
+        <div class="lg:w-2/3 space-y-3">
+          <p class="text-slate-600 leading-relaxed">Siatka tygodniowa z zleceniami. Przypisujesz pracowników z rolami dziennymi i sprzęt. System sam liczy godziny i wynagrodzenia. Kopiuj cały tydzień jednym kliknięciem.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-sky-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Widok dzienny, tygodniowy, miesięczny</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-sky-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Role: operator / brygadzista / sztauer / lukowy / operator żurawia</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-sky-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Godziny × stawka = wynagrodzenie</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-sky-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Urlopy wykluczone automatycznie</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-sky-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Kopiowanie tygodnia jako szablon</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-sky-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Dostępność pracowników na żywo</div>
+          </div>
+          <a href="#mockupy" data-src="mockup5/harmonogram.html" data-label="Harmonogram" class="mod-link inline-flex items-center gap-2 text-sky-600 font-semibold text-sm hover:gap-3 transition-all">Zobacz moduł Harmonogram →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Moduł: Analityka -->
+    <div class="module-card bg-gradient-to-br from-violet-50 to-white rounded-3xl border border-violet-100 p-6 sm:p-8 mb-6 fade-up">
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+        <div class="flex items-center gap-4 lg:w-1/3">
+          <div class="grid place-items-center w-16 h-16 rounded-2xl bg-violet-500 text-white shrink-0">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20V4M4 20h16M8 16v-4M12 16V9M16 16v-6M20 16v-2"/></svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-extrabold text-slate-800">Analityka</h3>
+            <p class="text-sm text-violet-600 font-medium">Liczby i wykresy</p>
+          </div>
+        </div>
+        <div class="lg:w-2/3 space-y-3">
+          <p class="text-slate-600 leading-relaxed">Który port pracuje najwięcej? Kto najczęściej jest operatorem? Ile kosztują wypłaty w miesiącu? Wykresy, tabele i eksport do Excel — wszystko w wybranym okresie.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-violet-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Suma godzin per port</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-violet-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Wynagrodzenia per pracownik</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-violet-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Rozkład ról (operator/brygadzista/sztauer/lukowy/operator żurawia)</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-violet-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Obciążenie terminali</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-violet-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Suma wszystkich godzin we wszystkich portach</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-violet-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Suma wynagrodzeń za cały miesiąc (podział 1–15 i 15–23)</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-violet-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Eksport do Excel</div>
+          </div>
+          <a href="#mockupy" data-src="mockup5/analityka.html" data-label="Analityka" class="mod-link inline-flex items-center gap-2 text-violet-600 font-semibold text-sm hover:gap-3 transition-all">Zobacz moduł Analityka →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Moduł: Raportowanie -->
+    <div class="module-card bg-gradient-to-br from-teal-50 to-white rounded-3xl border border-teal-100 p-6 sm:p-8 mb-6 fade-up">
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+        <div class="flex items-center gap-4 lg:w-1/3">
+          <div class="grid place-items-center w-16 h-16 rounded-2xl bg-teal-500 text-white shrink-0">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13H7zM14 3v5h5M10 12h6M10 16h6M10 8h2"/></svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-extrabold text-slate-800">Raportowanie</h3>
+            <p class="text-sm text-teal-600 font-medium">Raporty z portu i pojazdu</p>
+          </div>
+        </div>
+        <div class="lg:w-2/3 space-y-3">
+          <p class="text-slate-600 leading-relaxed">Raport dzienny z portu — pracownicy, godziny, role i wypłaty wchodzą same z harmonogramu. Raport z pojazdu — przebieg i codzienna obsługa (OC).</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Raport z terminala — dane same wchodzą</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Raport z pojazdu — przebieg i OC</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Godziny, role, stawki, wynagrodzenia</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Suma godzin w porcie danego dnia</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Podział wynagrodzeń na okresy 1–15 i 15–23</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Historia raportów</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Brak raportu OC = alert</div>
+          </div>
+          <a href="#mockupy" data-src="mockup5/raportowanie.html" data-label="Raportowanie" class="mod-link inline-flex items-center gap-2 text-teal-600 font-semibold text-sm hover:gap-3 transition-all">Zobacz moduł Raportowanie →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Moduł: Awaria -->
+    <div class="module-card bg-gradient-to-br from-rose-50 to-white rounded-3xl border border-rose-200 p-6 sm:p-8 mb-6 fade-up">
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+        <div class="flex items-center gap-4 lg:w-1/3">
+          <div class="grid place-items-center w-16 h-16 rounded-2xl bg-rose-500 text-white shrink-0">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01"/></svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-extrabold text-slate-800">Awaria! SOS</h3>
+            <p class="text-sm text-rose-600 font-medium">Szybkie zgłoszenia</p>
+          </div>
+        </div>
+        <div class="lg:w-2/3 space-y-3">
+          <p class="text-slate-600 leading-relaxed">Dla pracownika w terenie: wybierz sprzęt, napisz co się dzieje, wyślij — 10 sekund. Dla kierownika: status, komentarze i czas przestoju na bieżąco.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Uproszczony formularz z telefonu</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Status: zgłoszona → w naprawie → naprawiona</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Komentarze i historia zmian</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Czas przestoju w analityce</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Dostęp specjalny „zgłaszanie awarii"</div>
+            <div class="flex items-center gap-2 text-slate-600"><svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>Sprzęt lub inne zdarzenie</div>
+          </div>
+          <a href="#mockupy" data-src="mockup5/awaria.html" data-label="Awaria! SOS" class="mod-link inline-flex items-center gap-2 text-rose-600 font-semibold text-sm hover:gap-3 transition-all">Zobacz moduł Awaria →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dostępne domyślnie -->
+    <div class="mt-8 bg-slate-100 rounded-2xl border border-slate-200 p-6 fade-up">
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg>
+        <h3 class="font-bold text-slate-700">Dodatkowo</h3>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-slate-200">
+          <span class="grid place-items-center w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 shrink-0"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg></span>
+          <div><p class="font-bold text-slate-800">Pulpit główny</p><p class="text-xs text-slate-500">Przegląd dnia, alerty, rozliczenie godzin per port — zawsze pod ręką.</p></div>
+        </div>
+        <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-slate-200">
+          <span class="grid place-items-center w-10 h-10 rounded-xl bg-slate-100 text-slate-600 shrink-0"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3"/></svg></span>
+          <div><p class="font-bold text-slate-800">Ustawienia i dostęp</p><p class="text-xs text-slate-500">Użytkownicy, uprawnienia, alerty, hasła — konfiguracja całego systemu.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SCENARIUSZE ====== -->
+<section id="scenariusze" class="py-16 sm:py-24 px-4 sm:px-6 bg-slate-100">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-12 fade-up">
+      <p class="text-cyan-600 font-semibold text-sm uppercase tracking-wider mb-2">Jak to działa</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800">Przykładowy dzień z PBS</h2>
+    </div>
+    <div class="space-y-4">
+      <div class="flex items-start gap-4 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-cyan-500 text-white font-bold text-lg shrink-0">1</div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 flex-1">
+          <h3 class="font-bold text-slate-800 mb-1">Rano — sprawdzasz pulpit</h3>
+          <p class="text-sm text-slate-500">Otwierasz telefon. Widzisz: 42 pracowników w terenie, 5 portów obsłużonych, 336 godzin dziś, 3 awarie czekające. Dwa powroty z urlopów w tym tygodniu.</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-4 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-sky-500 text-white font-bold text-lg shrink-0">2</div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 flex-1">
+          <h3 class="font-bold text-slate-800 mb-1">W południe — rozliczasz zlecenia</h3>
+          <p class="text-sm text-slate-500">W harmonogramie przypisujesz pracowników do zleceń. Każdy dostaje rolę: operator, brygadzista, sztauer, lukowy lub operator żurawia. System sam liczy: 8 godzin × 45 zł = 360 zł.</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-4 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-rose-500 text-white font-bold text-lg shrink-0">3</div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 flex-1">
+          <h3 class="font-bold text-slate-800 mb-1">Popołudnie — awaria zgłoszona</h3>
+          <p class="text-sm text-slate-500">Kierowca Reach Stacker widzi wyciek oleju. Otwiera „Awaria!" na telefonie, wybiera sprzęt, pisze „wyciek z zaworu", wysyła. Ty dostajesz alert. Status: zgłoszona → w naprawie.</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-4 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-teal-500 text-white font-bold text-lg shrink-0">4</div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 flex-1">
+          <h3 class="font-bold text-slate-800 mb-1">Wieczór — raport gotowy</h3>
+          <p class="text-sm text-slate-500">Tworzysz raport z portu BCT. Pracownicy, sprzęt, godziny, role i wypłaty wchodzą same z harmonogramu. Suma: 24 godziny, 984 zł. Zapisujesz i zamykasz dzień.</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-4 fade-up">
+        <div class="grid place-items-center w-12 h-12 rounded-xl bg-violet-500 text-white font-bold text-lg shrink-0">5</div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 flex-1">
+          <h3 class="font-bold text-slate-800 mb-1">Koniec miesiąca — analityka</h3>
+          <p class="text-sm text-slate-500">Otwierasz Analitykę, wybierasz miesiąc. Widzisz: 1 440 godzin we wszystkich portach, 61 280 zł wypłat — okres 1–15: 32 100 zł, okres 15–23: 29 180 zł. BCT najwięcej pracowało, operatorzy 45% czasu. Eksportujesz do Excel i wysyłasz księgowości.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== MOCKUPY (iframe previews) ====== -->
+<section id="mockupy" class="py-16 sm:py-24 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-12 fade-up">
+      <p class="text-cyan-600 font-semibold text-sm uppercase tracking-wider mb-2">Na żywo</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800">Zobacz jak to wygląda</h2>
+    </div>
+
+    <div class="flex justify-center gap-2 mb-8">
+      <button id="view-desktop" class="px-4 py-2 rounded-xl bg-brand-900 text-white text-sm font-semibold flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4"/></svg>
+        Widok komputera
+      </button>
+      <button id="view-mobile" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-semibold flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M11 18h2"/></svg>
+        Widok telefonu
+      </button>
+    </div>
+
+    <div id="iframe-wrap" class="device-frame mx-auto transition-all duration-300" style="max-width:1100px;">
+      <div class="bg-slate-800 px-4 py-2.5 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+        <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+        <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+        <span id="iframe-url" class="ml-3 text-xs text-slate-400 font-mono">Pulpit główny</span>
+      </div>
+      <iframe id="mockup-frame" src="mockup5/index.html" class="w-full block" style="height:600px;border:0;"></iframe>
+    </div>
+
+    <div class="mt-6 flex flex-wrap gap-2 justify-center">
+      <button data-src="mockup5/pracownicy.html" data-label="Pracownicy" class="tab-btn px-4 py-2 rounded-xl bg-brand-900 text-white text-sm font-semibold">Pracownicy</button>
+      <button data-src="mockup5/sprzet.html" data-label="Sprzęt" class="tab-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Sprzęt</button>
+      <button data-src="mockup5/terminale.html" data-label="Terminale" class="tab-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Terminale</button>
+      <button data-src="mockup5/harmonogram.html" data-label="Harmonogram" class="tab-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Harmonogram</button>
+      <button data-src="mockup5/analityka.html" data-label="Analityka" class="tab-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Analityka</button>
+      <button data-src="mockup5/raportowanie.html" data-label="Raportowanie" class="tab-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Raportowanie</button>
+      <button data-src="mockup5/awaria.html" data-label="Awaria! SOS" class="tab-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-rose-600 text-sm font-semibold hover:bg-rose-50">Awaria! SOS</button>
+      <div class="w-full sm:w-px sm:h-8 sm:bg-slate-200 my-1 sm:my-0"></div>
+      <span class="text-xs text-slate-400 self-center px-2">Domyślnie:</span>
+      <button data-src="mockup5/index.html" data-label="Pulpit główny" class="tab-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-sm font-medium hover:bg-slate-50">Pulpit</button>
+      <button data-src="mockup5/ustawienia.html" data-label="Ustawienia" class="tab-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-sm font-medium hover:bg-slate-50">Ustawienia</button>
+    </div>
+  </div>
+</section>
+
+<!-- ====== FOOTER ====== -->
+<footer class="bg-brand-900 text-slate-400 py-8 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+    <div class="flex items-center gap-2 text-white font-bold">
+      <span class="grid place-items-center w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 font-black text-xs">PB</span>
+      Port Baltic Shipping
+    </div>
+    <p class="text-xs text-slate-500">Kompleksowe zarządzanie operacjami portowymi · Prezentacja produktu</p>
+  </div>
+</footer>
+
+<script>
+// Mobile menu
+(function(){
+  var btn = document.getElementById('menu-btn');
+  var menu = document.getElementById('mobile-menu');
+  if(btn) btn.addEventListener('click', function(){ menu.classList.toggle('hidden'); });
+  if(menu) menu.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ menu.classList.add('hidden'); }); });
+})();
+
+// Nav shadow on scroll
+(function(){
+  var nav = document.getElementById('topnav');
+  window.addEventListener('scroll', function(){
+    if(window.scrollY > 20) nav.classList.add('shadow-lg'); else nav.classList.remove('shadow-lg');
+  });
+})();
+
+// Fade-up observer
+(function(){
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(function(el){ obs.observe(el); });
+})();
+
+// Iframe tab switching
+(function(){
+  var frame = document.getElementById('mockup-frame');
+  var urlLabel = document.getElementById('iframe-url');
+  var wrap = document.getElementById('iframe-wrap');
+  var buttons = document.querySelectorAll('.tab-btn');
+
+  function setTab(src, label){
+    frame.src = src;
+    urlLabel.textContent = label || src;
+    buttons.forEach(function(b){
+      if(b.getAttribute('data-src') === src){
+        b.classList.add('bg-brand-900','text-white');
+        b.classList.remove('bg-white','border','border-slate-200','text-slate-600','hover:bg-slate-50','text-slate-500');
+      } else {
+        b.classList.remove('bg-brand-900','text-white');
+        b.classList.add('bg-white','border','border-slate-200');
+        if(b.classList.contains('text-rose-600')){ /* keep rose */ }
+        else if(b.getAttribute('data-label') === 'Pulpit główny' || b.getAttribute('data-label') === 'Ustawienia'){
+          b.classList.add('text-slate-500');
+        } else {
+          b.classList.add('text-slate-600');
+        }
+      }
+    });
+    var section = document.getElementById('mockupy');
+    if(section) section.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  // Tab buttons
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      setTab(btn.getAttribute('data-src'), btn.getAttribute('data-label'));
+    });
+  });
+
+  // Module links (in #moduly section)
+  document.querySelectorAll('.mod-link').forEach(function(link){
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      var src = link.getAttribute('data-src');
+      var label = link.getAttribute('data-label');
+      setTab(src, label);
+    });
+  });
+
+  // Desktop / Mobile toggle
+  var viewDesktop = document.getElementById('view-desktop');
+  var viewMobile = document.getElementById('view-mobile');
+
+  viewDesktop.addEventListener('click', function(){
+    wrap.style.maxWidth = '1100px';
+    frame.style.height = '600px';
+    viewDesktop.classList.add('bg-brand-900','text-white');
+    viewDesktop.classList.remove('bg-white','border','border-slate-200','text-slate-600');
+    viewMobile.classList.remove('bg-brand-900','text-white');
+    viewMobile.classList.add('bg-white','border','border-slate-200','text-slate-600');
+  });
+  viewMobile.addEventListener('click', function(){
+    wrap.style.maxWidth = '391px';
+    frame.style.height = '700px';
+    viewMobile.classList.add('bg-brand-900','text-white');
+    viewMobile.classList.remove('bg-white','border','border-slate-200','text-slate-600');
+    viewDesktop.classList.remove('bg-brand-900','text-white');
+    viewDesktop.classList.add('bg-white','border','border-slate-200','text-slate-600');
+  });
+})();
+</script>
+</body>
+</html>

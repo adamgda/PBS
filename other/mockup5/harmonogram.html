@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Harmonogram</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c' } } } } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<aside id="pbs-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-brand-900 flex-col p-4 z-40"></aside>
+<div id="pbs-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+<aside id="pbs-drawer" class="fixed inset-y-0 right-0 w-72 bg-brand-900 p-4 z-50 lg:hidden overflow-y-auto pbs-scroll"></aside>
+
+<div class="flex-1 min-w-0 flex flex-col min-h-screen lg:ml-64">
+  <header id="pbs-header" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-3 sm:px-5 py-3 flex items-center justify-between"></header>
+
+  <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto pbs-fade">
+    <!-- View controls -->
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <button class="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"><span id="v-prev"></span></button>
+        <p class="text-sm font-semibold text-slate-800 px-2">Tydzień 25 · 15–21 czerwca 2026</p>
+        <button class="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"><span id="v-next"></span></button>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="inline-flex rounded-xl border border-slate-200 bg-white p-0.5 text-sm">
+          <button class="px-3 py-1.5 rounded-lg text-slate-500 font-medium">Dzień</button>
+          <button class="px-3 py-1.5 rounded-lg bg-brand-900 text-white font-medium">Tydzień</button>
+          <button class="px-3 py-1.5 rounded-lg text-slate-500 font-medium">Miesiąc</button>
+        </div>
+        <button data-modal="m-add-order" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700"><span id="v-add"></span>Zlecenie</button>
+        <button data-modal="m-copy-week" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50"><span id="v-copy"></span>Kopiuj tydzień</button>
+      </div>
+    </div>
+
+    <!-- Week grid -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto pbs-scroll">
+        <div class="min-w-[760px] grid grid-cols-8 text-xs">
+          <!-- header -->
+          <div class="bg-slate-50 p-2 border-b border-r border-slate-200 font-medium text-slate-500">Godz.</div>
+          <div class="bg-slate-50 p-2 border-b border-r border-slate-200 text-center font-semibold text-slate-700">Pon 15</div>
+          <div class="bg-slate-50 p-2 border-b border-r border-slate-200 text-center font-semibold text-slate-700">Wt 16</div>
+          <div class="bg-slate-50 p-2 border-b border-r border-slate-200 text-center font-semibold text-cyan-700">Śr 17 <span class="text-[9px] text-cyan-500">dziś</span></div>
+          <div class="bg-slate-50 p-2 border-b border-r border-slate-200 text-center font-semibold text-slate-700">Czw 18</div>
+          <div class="bg-slate-50 p-2 border-b border-r border-slate-200 text-center font-semibold text-slate-700">Pt 19</div>
+          <div class="bg-slate-50 p-2 border-b border-r border-slate-200 text-center font-semibold text-slate-700">Sob 20</div>
+          <div class="bg-slate-50 p-2 border-b border-slate-200 text-center font-semibold text-slate-700">Nd 21</div>
+
+          <!-- rows -->
+          <div class="p-2 border-r border-b border-slate-100 text-slate-500">06–14</div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top">
+            <div class="bg-cyan-50 border-l-4 border-cyan-500 rounded-md p-2 mb-1"><p class="text-xs font-semibold text-cyan-800">ZL/2026/051</p><p class="text-[10px] text-slate-500">BCT · 200 TEU</p></div>
+          </div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top"></div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top">
+            <div class="bg-emerald-50 border-l-4 border-emerald-500 rounded-md p-2"><p class="text-xs font-semibold text-emerald-800">ZL/2026/053</p><p class="text-[10px] text-slate-500">DCT · rozładunek</p></div>
+          </div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top"></div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top"></div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top"></div>
+          <div class="cal-cell border-b border-slate-100 p-1.5 align-top"></div>
+
+          <div class="p-2 border-r border-b border-slate-100 text-slate-500">14–22</div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top"></div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top">
+            <div class="bg-amber-50 border-l-4 border-amber-500 rounded-md p-2"><p class="text-xs font-semibold text-amber-800">ZL/2026/052</p><p class="text-[10px] text-slate-500">GCT · wagony</p><p class="text-[10px] text-amber-700 font-medium">w realizacji</p></div>
+          </div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top">
+            <div class="bg-rose-50 border-l-4 border-rose-500 rounded-md p-2"><p class="text-xs font-semibold text-rose-800">ZL/2026/054</p><p class="text-[10px] text-slate-500">BCT · awaria sprzętu</p></div>
+          </div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top"></div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top">
+            <div class="bg-cyan-50 border-l-4 border-cyan-500 rounded-md p-2"><p class="text-xs font-semibold text-cyan-800">ZL/2026/055</p><p class="text-[10px] text-slate-500">DCT · 120 TEU</p></div>
+          </div>
+          <div class="cal-cell border-r border-b border-slate-100 p-1.5 align-top"></div>
+          <div class="cal-cell border-b border-slate-100 p-1.5 align-top"></div>
+
+          <div class="p-2 border-r text-slate-500">22–06</div>
+          <div class="cal-cell border-r p-1.5 align-top"></div>
+          <div class="cal-cell border-r p-1.5 align-top"></div>
+          <div class="cal-cell border-r p-1.5 align-top"></div>
+          <div class="cal-cell border-r p-1.5 align-top"></div>
+          <div class="cal-cell border-r p-1.5 align-top"></div>
+          <div class="cal-cell border-r p-1.5 align-top"></div>
+          <div class="cal-cell p-1.5 align-top"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order detail + available resources -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+      <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="od-ico"></span></span>
+            <div><h3 class="font-semibold text-slate-800">ZL/2026/051 — rozładunek 200 TEU</h3><p class="text-xs text-slate-500">Baltic Container Terminal</p></div>
+          </div>
+          <span class="pill pill-info">nowe</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Klient</p><p class="font-medium">Maersk Line</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Realizacja</p><p class="font-medium">15.06 · 06–14</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Wartość</p><p class="font-medium">48 000 PLN</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Status</p><p class="font-medium text-cyan-600">nowe</p></div>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <span class="pill pill-info">M. Nowak (operator)</span>
+          <span class="pill pill-info">A. Kowal (brygadzista)</span>
+          <span class="pill pill-muted">Sprzęt: RS-02, WD-11</span>
+        </div>
+        <!-- Hours & wages summary -->
+        <div class="mt-3 bg-slate-50 rounded-xl p-3 text-sm">
+          <p class="font-semibold text-slate-700 mb-2 text-xs uppercase tracking-wide">Rozliczenie godzin i wynagrodzeń — 15.06.2026</p>
+          <div class="overflow-x-auto pbs-scroll">
+            <table class="w-full text-sm">
+              <thead class="text-xs text-slate-500"><tr><th class="text-left font-medium pb-1">Pracownik</th><th class="text-left font-medium pb-1">Rola</th><th class="text-right font-medium pb-1">Godz.</th><th class="text-right font-medium pb-1">Stawka/h</th><th class="text-right font-medium pb-1">Wynagrodz.</th></tr></thead>
+              <tbody class="divide-y divide-slate-200">
+                <tr><td class="py-1.5 font-medium">Marek Nowak</td><td class="py-1.5"><span class="pill pill-info">operator</span></td><td class="py-1.5 text-right">8 h</td><td class="py-1.5 text-right">45,00 zł</td><td class="py-1.5 text-right font-semibold text-emerald-700">360,00 zł</td></tr>
+                <tr><td class="py-1.5 font-medium">Anna Kowal</td><td class="py-1.5"><span class="pill pill-info">brygadzista</span></td><td class="py-1.5 text-right">8 h</td><td class="py-1.5 text-right">42,00 zł</td><td class="py-1.5 text-right font-semibold text-emerald-700">336,00 zł</td></tr>
+                <tr class="font-semibold border-t border-slate-300"><td class="py-1.5" colspan="2">Suma (BCT)</td><td class="py-1.5 text-right">16 h</td><td class="py-1.5"></td><td class="py-1.5 text-right text-emerald-700">696,00 zł</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-3 bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-sm flex items-center gap-2"><svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 6"/></svg><div><p class="font-semibold text-indigo-800">Przekazanie zmiany: M. Nowak (6–14) → J. Kruk (14–22)</p><p class="text-xs text-indigo-600">Protokół przekazania wypełniony ✓ · stan OK · przebieg 14 820 km</p></div></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600"><span id="av-ico"></span></span>
+          <h3 class="font-semibold text-slate-800">Dostępni pracownicy</h3>
+        </div>
+        <div class="relative mb-3">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="av-search"></span>
+          <input type="text" placeholder="Wybierz (autocomplete)..." class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-cyan-500">
+        </div>
+        <ul class="space-y-2 text-sm">
+          <li class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-brand-900 text-white grid place-items-center text-xs font-semibold">PL</span><div><span class="font-medium">Piotr Lew</span><p class="text-xs text-slate-500">38,00 zł/h · lukowy</p></div></div><button class="px-2.5 py-1 rounded-lg bg-cyan-600 text-white text-xs font-semibold">Przypisz</button></li>
+          <li class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-brand-700 text-white grid place-items-center text-xs font-semibold">JK</span><div><span class="font-medium">Jan Kruk</span><p class="text-xs text-slate-500">40,00 zł/h · operator</p></div></div><button class="px-2.5 py-1 rounded-lg bg-cyan-600 text-white text-xs font-semibold">Przypisz</button></li>
+          <li class="flex items-center justify-between p-2 rounded-lg bg-slate-50"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-slate-300 text-slate-600 grid place-items-center text-xs font-semibold">TS</span><div><span class="font-medium text-slate-400">Tomasz Sik — urlop</span><p class="text-xs text-amber-600">do 22.07.2026</p></div></div><span class="pill pill-warn">urlop</span></li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <nav id="pbs-bottomnav" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex z-30"></nav>
+  <div class="h-14 lg:hidden"></div>
+</div>
+
+<!-- Modal: Create order -->
+<div id="m-add-order" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-2xl w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="mo-ico"></span></span>Nowe zlecenie</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mo-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Numer zlecenia</label><input type="text" value="ZL/2026/056" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Status</label><select class="w-full px-3 py-2 rounded-lg border border-slate-200"><option>nowe</option><option>w realizacji</option><option>zakończone</option></select></div>
+      </div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Klient (autocomplete)</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="mo-s"></span><input type="text" placeholder="Szukaj klienta..." class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Terminal</label><select class="w-full px-3 py-2 rounded-lg border border-slate-200"><option>BCT — Baltic Container Terminal</option><option>DCT — Deepwater Container Terminal</option><option>GCT — Gdynia Cargo Terminal</option></select></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Data</label><input type="text" placeholder="17.06.2026" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Godziny</label><input type="text" placeholder="06:00 – 14:00" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Zakres prac</label><input type="text" placeholder="Rozładunek 200 TEU" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Wartość (PLN)</label><input type="number" placeholder="48000" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Przypisani pracownicy (z rolą dzienną)</label>
+        <div class="flex flex-wrap gap-2">
+          <span class="pill pill-info">+ M. Nowak (operator)</span><span class="pill pill-info">+ A. Kowal (brygadzista)</span><span class="pill pill-info">+ P. Lew (sztauer)</span><span class="pill pill-info">+ J. Kruk (operator żurawia)</span><span class="pill pill-muted">+ T. Sik (lukowy)</span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Przypisany sprzęt</label>
+        <div class="flex flex-wrap gap-2">
+          <span class="pill pill-muted">+ RS-02</span><span class="pill pill-muted">+ WD-11</span>
+        </div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mo-save"></span>Utwórz zlecenie</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Copy week -->
+<div id="m-copy-week" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-md w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600"><span id="mc-ico"></span></span>Kopiuj tydzień jako szablon</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mc-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div class="bg-slate-50 rounded-lg p-3 text-xs text-slate-600"><p class="font-medium mb-0.5">Tydzień źródłowy</p><p>Tydzień 25 · 15–21 czerwca 2026</p></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Skopiuj na tydzień</label><select class="w-full px-3 py-2 rounded-lg border border-slate-200"><option>Tydzień 26 · 22–28 czerwca 2026</option><option>Tydzień 27 · 29 czerwca – 5 lipca 2026</option></select></div>
+      <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2"><span id="mc-warn" class="mt-0.5"></span><p>Skopiowane zostaną zlecenia z przypisanymi pracownikami i sprzętem. Można je następnie edytować w docelowym tygodniu.</p></div>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" checked class="w-4 h-4 rounded accent-cyan-600"> Kopiuj również przypisania pracowników</label>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" checked class="w-4 h-4 rounded accent-cyan-600"> Kopiuj również przypisania sprzętu</label>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mc-save"></span>Kopiuj</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+PBS.init("harmonogram");
+document.getElementById("v-prev").innerHTML = pbsIcon("chevronL","w-5 h-5");
+document.getElementById("v-next").innerHTML = pbsIcon("chevronR","w-5 h-5");
+document.getElementById("v-add").innerHTML = pbsIcon("plus","w-4 h-4");
+document.getElementById("v-copy").innerHTML = pbsIcon("copy","w-4 h-4");
+document.getElementById("od-ico").innerHTML = pbsIcon("doc","w-5 h-5");
+document.getElementById("av-ico").innerHTML = pbsIcon("workers","w-5 h-5");
+document.getElementById("av-search").innerHTML = pbsIcon("search","w-4 h-4");
+// modal icons
+document.getElementById("mo-ico").innerHTML = pbsIcon("doc","w-5 h-5");
+document.getElementById("mo-close").innerHTML = pbsIcon("close","w-5 h-5");
+document.getElementById("mo-s").innerHTML = pbsIcon("search","w-4 h-4");
+document.getElementById("mo-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("mc-ico").innerHTML = pbsIcon("copy","w-5 h-5");
+document.getElementById("mc-close").innerHTML = pbsIcon("close","w-5 h-5");
+document.getElementById("mc-warn").innerHTML = pbsIcon("alert","w-4 h-4");
+document.getElementById("mc-save").innerHTML = pbsIcon("check","w-4 h-4");
+</script>
+</body>
+</html>

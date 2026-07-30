@@ -1,0 +1,77 @@
+{
+  "title": "Pracownicy",
+  "list": {
+    "title": "Lista pracowników",
+    "first_name": "Imię",
+    "last_name": "Nazwisko",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "terminal": "Terminal",
+    "equipment": "Sprzęt",
+    "status": "Status",
+    "hourly_rate": "Stawka godzinowa",
+    "hours_worked": "Przepracowane godziny",
+    "wage": "Wynagrodzenie"
+  },
+  "form": {
+    "add_title": "Dodaj pracownika",
+    "edit_title": "Edytuj pracownika",
+    "first_name": "Imię",
+    "last_name": "Nazwisko",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "hourly_rate": "Stawka godzinowa (PLN/h)",
+    "is_active": "Aktywny",
+    "assign_terminal": "Przypisz terminal",
+    "assign_equipment": "Przypisz sprzęt"
+  },
+  "tabs": {
+    "basic": "Dane podstawowe",
+    "certificates": "Certyfikaty i uprawnienia",
+    "leave": "Urlopy",
+    "rates": "Stawki i rozliczenia"
+  },
+  "certificates": {
+    "title": "Certyfikaty i uprawnienia",
+    "name": "Nazwa dokumentu",
+    "number": "Numer dokumentu",
+    "issue_date": "Data wydania",
+    "expiry_date": "Data ważności",
+    "status_valid": "Ważny",
+    "status_expiring": "Wygasa wkrótce",
+    "status_expired": "Wygasł",
+    "add": "Dodaj dokument",
+    "no_documents": "Brak dokumentów"
+  },
+  "leave": {
+    "title": "Urlopy pracownika",
+    "start_date": "Data początku",
+    "end_date": "Data końca",
+    "type": "Typ urlopu",
+    "type_vacation": "Wypoczynkowy",
+    "type_on_demand": "Na żądanie",
+    "type_sick": "L4",
+    "status": "Status urlopu",
+    "status_planned": "Zaplanowany",
+    "status_approved": "Zatwierdzony",
+    "status_completed": "Zrealizowany",
+    "add": "Dodaj urlop",
+    "on_leave_until": "Na urlopie do {{date}}"
+  },
+  "roles": {
+    "title": "Stanowiska",
+    "operator": "Operator",
+    "foreman": "Brygadzista",
+    "stevedore": "Sztauer",
+    "hatch": "Lukowy",
+    "crane_operator": "Operator żurawia"
+  },
+  "messages": {
+    "deleted": {
+      "success": "Usunięto pracownika {{name}}"
+    },
+    "saved": {
+      "success": "Zapisano dane pracownika {{name}}"
+    }
+  }
+}

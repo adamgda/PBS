@@ -1,0 +1,25 @@
+{
+  "title": "Analityka",
+  "filters": {
+    "date_range": "Zakres dat",
+    "last_30_days": "Ostatnie 30 dni",
+    "custom": "Niestandardowy"
+  },
+  "charts": {
+    "total_hours": "Suma przepracowanych godzin (wszystkie porty)",
+    "hours_per_port": "Suma godzin per port",
+    "hours_per_employee": "Suma godzin i wynagrodzenie per pracownik",
+    "role_distribution": "Rozkład stanowisk",
+    "wages_total": "Suma wynagrodzeń (łącznie)",
+    "wages_period_1": "Wynagrodzenia — okres 1-15",
+    "wages_period_2": "Wynagrodzenia — okres 15-23",
+    "monthly_wages": "Suma wynagrodzeń za miesiąc"
+  },
+  "stats": {
+    "most_serviced_terminals": "Najczęściej obsługiwane terminale",
+    "most_assigned_employees": "Najczęściej przypisywani pracownicy",
+    "most_used_equipment": "Najczęściej używany sprzęt",
+    "relations": "Relacje między zasobami",
+    "incident_downtime": "Czas przestoju awarii"
+  }
+}

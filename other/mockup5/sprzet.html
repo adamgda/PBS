@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Sprzęt</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c' } } } } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<aside id="pbs-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-brand-900 flex-col p-4 z-40"></aside>
+<div id="pbs-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+<aside id="pbs-drawer" class="fixed inset-y-0 right-0 w-72 bg-brand-900 p-4 z-50 lg:hidden overflow-y-auto pbs-scroll"></aside>
+
+<div class="flex-1 min-w-0 flex flex-col min-h-screen lg:ml-64">
+  <header id="pbs-header" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-3 sm:px-5 py-3 flex items-center justify-between"></header>
+
+  <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto pbs-fade">
+    <!-- Toolbar -->
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-4">
+      <div class="relative flex-1 max-w-md">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="s-search"></span>
+        <input type="text" placeholder="Szukaj sprzętu..." class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-cyan-500">
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50"><span id="b-view"></span>Timeline</button>
+        <button data-modal="m-add-sprzet" class="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700"><span id="b-add"></span>Dodaj</button>
+      </div>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="flex gap-2 mb-4">
+      <button class="px-4 py-2 rounded-xl bg-brand-900 text-white text-sm font-semibold">Wszystko (18)</button>
+      <button class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50"><span class="inline-flex items-center gap-1.5"><span id="t-truck"></span>Pojazdy (12)</span></button>
+      <button class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50">Inne (6)</button>
+    </div>
+
+    <!-- Equipment cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <!-- Vehicle card -->
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-10 h-10 rounded-xl bg-amber-50 text-amber-600"><span id="e1-ico"></span></span>
+            <div><p class="font-semibold text-slate-800">Reach Stacker RS-02</p><p class="text-xs text-slate-500">pojazd</p></div>
+          </div>
+          <span class="pill pill-err">Awaria</span>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-slate-500">Przypisany pracownik</span><span class="font-medium">Marek Nowak</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Terminal</span><span class="font-medium">BCT</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Ostatni przebieg</span><span class="font-medium">14 820 km</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Serwis olejowy</span><span class="font-medium text-amber-600">za 180 km</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Ostatnia OC</span><span class="font-medium">15.06 · OK</span></div>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button data-modal="m-assign-sprzet" class="flex-1 px-3 py-2 rounded-lg bg-slate-100 text-sm font-medium text-slate-700">Przypisz</button>
+          <button data-modal="m-edit-sprzet" class="px-3 py-2 rounded-lg bg-cyan-50 text-cyan-700" title="Edytuj"><span id="e1-edit"></span></button>
+          <button data-modal="m-plan" class="px-3 py-2 rounded-lg bg-sky-50 text-sky-700" title="Planowanie przeglądów"><span id="e1-plan"></span></button>
+        </div>
+      </div>
+
+      <!-- Vehicle card 2 -->
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-10 h-10 rounded-xl bg-amber-50 text-amber-600"><span id="e2-ico"></span></span>
+            <div><p class="font-semibold text-slate-800">Wózek widłowy WD-11</p><p class="text-xs text-slate-500">pojazd</p></div>
+          </div>
+          <span class="pill pill-warn">Przegląd 9d</span>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-slate-500">Przypisany pracownik</span><span class="font-medium">Anna Kowal</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Terminal</span><span class="font-medium">DCT</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Ostatni przebieg</span><span class="font-medium">8 410 hm</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Ostatnia awaria</span><span class="font-medium">03.05.2026</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Wynik OC</span><span class="font-medium text-emerald-600">OK</span></div>
+        </div>
+      </div>
+
+      <!-- Other equipment -->
+      <div class="pbs-card bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="grid place-items-center w-10 h-10 rounded-xl bg-slate-100 text-slate-600"><span id="e3-ico"></span></span>
+            <div><p class="font-semibold text-slate-800">Spreader SP-04</p><p class="text-xs text-slate-500">inne</p></div>
+          </div>
+          <span class="pill pill-ok">W użyciu</span>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-slate-500">Przypisany pracownik</span><span class="font-medium">Piotr Lew</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Terminal</span><span class="font-medium">GCT</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Ostatni serwis</span><span class="font-medium">20.05.2026</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline view -->
+    <section class="mt-6 bg-white rounded-2xl border border-slate-200 p-4">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="grid place-items-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600"><span id="tl-ico"></span></span>
+        <div><h3 class="font-semibold text-slate-800">Historia sprzętu — Reach Stacker RS-02</h3><p class="text-xs text-slate-500">Widok timeline</p></div>
+      </div>
+      <ol class="relative border-l-2 border-slate-200 ml-3 space-y-5 pl-5">
+        <li class="relative"><span class="absolute -left-[1.65rem] grid place-items-center w-4 h-4 rounded-full bg-rose-500 ring-4 ring-white"></span><p class="text-sm font-semibold text-slate-800">Awaria — wyciek oleju</p><p class="text-xs text-slate-500">17.06.2026 17:00 · zgłoszona przez M. Nowak · status: w trakcie naprawy</p></li>
+        <li class="relative"><span class="absolute -left-[1.65rem] grid place-items-center w-4 h-4 rounded-full bg-emerald-500 ring-4 ring-white"></span><p class="text-sm font-semibold text-slate-800">Obsługa codzienna (OC)</p><p class="text-xs text-slate-500">17.06.2026 06:30 · wynik: OK · przebieg 14 820 km</p></li>
+        <li class="relative"><span class="absolute -left-[1.65rem] grid place-items-center w-4 h-4 rounded-full bg-sky-500 ring-4 ring-white"></span><p class="text-sm font-semibold text-slate-800">Serwis olejowy</p><p class="text-xs text-slate-500">10.04.2026 · przebieg 14 640 km</p></li>
+        <li class="relative"><span class="absolute -left-[1.65rem] grid place-items-center w-4 h-4 rounded-full bg-slate-400 ring-4 ring-white"></span><p class="text-sm font-semibold text-slate-800">Przypisanie do terminala BCT</p><p class="text-xs text-slate-500">01.03.2026 · przez harmonogram</p></li>
+      </ol>
+    </section>
+
+    <!-- Inspection planning -->
+    <section class="mt-6 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center justify-between p-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-sky-50 text-sky-600"><span id="ip-ico"></span></span>
+          <div><h3 class="font-semibold text-slate-800">Planowanie przeglądów — RS-02</h3><p class="text-xs text-slate-500">Harmonogram serwisów i przeglądów technicznych</p></div>
+        </div>
+        <button data-modal="m-plan" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-50 text-cyan-700 text-sm font-medium"><span id="ip-add"></span>Nowy termin</button>
+      </div>
+      <div class="overflow-x-auto pbs-scroll">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left font-medium px-4 py-3">Typ</th><th class="text-left font-medium px-4 py-3">Cykl</th><th class="text-left font-medium px-4 py-3">Ostatni</th><th class="text-left font-medium px-4 py-3">Następny</th><th class="text-left font-medium px-4 py-3">Status</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr><td class="px-4 py-3 font-medium">Serwis olejowy</td><td class="px-4 py-3 text-slate-600">co 500 km / 90 dni</td><td class="px-4 py-3 text-slate-600">10.04.2026</td><td class="px-4 py-3 text-slate-600">za 180 km</td><td class="px-4 py-3"><span class="pill pill-warn">wkrótce</span></td></tr>
+            <tr><td class="px-4 py-3 font-medium">Przegląd UDT</td><td class="px-4 py-3 text-slate-600">co 12 mies.</td><td class="px-4 py-3 text-slate-600">15.01.2026</td><td class="px-4 py-3 text-slate-600">15.01.2027</td><td class="px-4 py-3"><span class="pill pill-ok">zaplanowano</span></td></tr>
+            <tr><td class="px-4 py-3 font-medium">Przegląd techniczny</td><td class="px-4 py-3 text-slate-600">co 6 mies.</td><td class="px-4 py-3 text-slate-600">02.02.2026</td><td class="px-4 py-3 text-slate-600">02.08.2026</td><td class="px-4 py-3"><span class="pill pill-info">termin</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <nav id="pbs-bottomnav" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex z-30"></nav>
+  <div class="h-14 lg:hidden"></div>
+</div>
+
+<!-- Modal: Add equipment -->
+<div id="m-add-sprzet" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="ms-ico"></span></span>Dodaj sprzęt</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="ms-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Nazwa</label><input type="text" placeholder="Reach Stacker RS-03" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Kategoria</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button class="flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 border-cyan-500 bg-cyan-50 text-cyan-700 font-medium"><span id="ms-truck"></span>Pojazd</button>
+          <button class="flex items-center justify-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 font-medium"><span id="ms-layers"></span>Inne</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Przebieg (km/hm)</label><input type="number" placeholder="0" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Ostatni serwis</label><input type="text" placeholder="—" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="ms-save"></span>Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit equipment -->
+<div id="m-edit-sprzet" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="me-ico"></span></span>Edytuj — RS-02</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="me-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Nazwa</label><input type="text" value="Reach Stacker RS-02" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Ostatni przebieg (km)</label><input type="number" value="14820" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Wynik ostatniej OC</label><select class="w-full px-3 py-2 rounded-lg border border-slate-200"><option>OK</option><option>Uwagi</option><option>NOK</option></select></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="me-save"></span>Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Assign equipment -->
+<div id="m-assign-sprzet" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-md w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600"><span id="ma-ico"></span></span>Przypisz RS-02</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="ma-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Pracownik (autocomplete)</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="ma-s"></span><input type="text" placeholder="Szukaj pracownika..." class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div></div>
+      <div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3 text-xs text-cyan-800 flex items-start gap-2"><span id="ma-auto" class="mt-0.5"></span><p>Przypisanie sprzętu do pracownika <b>automatycznie</b> przypisze sprzęt do tego samego terminala co pracownik.</p></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="ma-save"></span>Przypisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Plan inspection -->
+<div id="m-plan" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-md w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-sky-50 text-sky-600"><span id="mp-ico"></span></span>Zaplanuj przegląd — RS-02</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mp-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Typ przeglądu</label><select class="w-full px-3 py-2 rounded-lg border border-slate-200"><option>Serwis olejowy</option><option>Przegląd UDT</option><option>Przegląd techniczny</option></select></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Cykl</label><input type="text" placeholder="co 500 km / 90 dni" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Data następnego</label><input type="text" placeholder="20.06.2026" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Przypomnij (dni przed)</label><input type="number" value="7" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mp-save"></span>Zapisz termin</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+PBS.init("sprzet");
+document.getElementById("s-search").innerHTML = pbsIcon("search","w-5 h-5");
+document.getElementById("b-view").innerHTML = pbsIcon("history","w-4 h-4");
+document.getElementById("b-add").innerHTML = pbsIcon("plus","w-4 h-4");
+document.getElementById("t-truck").innerHTML = pbsIcon("truck","w-4 h-4");
+document.getElementById("e1-ico").innerHTML = pbsIcon("truck","w-5 h-5");
+document.getElementById("e2-ico").innerHTML = pbsIcon("truck","w-5 h-5");
+document.getElementById("e3-ico").innerHTML = pbsIcon("layers","w-5 h-5");
+document.getElementById("e1-edit").innerHTML = pbsIcon("edit","w-4 h-4");
+document.getElementById("e1-plan").innerHTML = pbsIcon("calendar","w-4 h-4");
+document.getElementById("tl-ico").innerHTML = pbsIcon("history","w-5 h-5");
+document.getElementById("ip-ico").innerHTML = pbsIcon("wrench","w-5 h-5");
+document.getElementById("ip-add").innerHTML = pbsIcon("plus","w-4 h-4");
+// modal icons
+["ms-ico","me-ico"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("gear","w-5 h-5"); });
+document.getElementById("ms-truck").innerHTML = pbsIcon("truck","w-4 h-4");
+document.getElementById("ms-layers").innerHTML = pbsIcon("layers","w-4 h-4");
+["ms-close","me-close","ma-close","mp-close"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("close","w-5 h-5"); });
+document.getElementById("ms-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("me-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("ma-ico").innerHTML = pbsIcon("layers","w-5 h-5");
+document.getElementById("ma-s").innerHTML = pbsIcon("search","w-4 h-4");
+document.getElementById("ma-auto").innerHTML = pbsIcon("refresh","w-4 h-4");
+document.getElementById("ma-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("mp-ico").innerHTML = pbsIcon("wrench","w-5 h-5");
+document.getElementById("mp-save").innerHTML = pbsIcon("check","w-4 h-4");
+</script>
+</body>
+</html>

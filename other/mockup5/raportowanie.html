@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Raportowanie</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c' } } } } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<aside id="pbs-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-brand-900 flex-col p-4 z-40"></aside>
+<div id="pbs-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+<aside id="pbs-drawer" class="fixed inset-y-0 right-0 w-72 bg-brand-900 p-4 z-50 lg:hidden overflow-y-auto pbs-scroll"></aside>
+
+<div class="flex-1 min-w-0 flex flex-col min-h-screen lg:ml-64">
+  <header id="pbs-header" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-3 sm:px-5 py-3 flex items-center justify-between"></header>
+
+  <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto pbs-fade">
+    <!-- Report type selector -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+      <button class="pbs-card text-left p-4 rounded-2xl bg-white border-2 border-cyan-500 ring-2 ring-cyan-100">
+        <div class="flex items-center gap-3">
+          <span class="grid place-items-center w-11 h-11 rounded-xl bg-cyan-50 text-cyan-600"><span id="rt-term"></span></span>
+          <div><p class="font-semibold text-slate-800">Raport z terminala</p><p class="text-xs text-slate-500">Sytuacja w porcie · auto-dane z harmonogramu</p></div>
+        </div>
+      </button>
+      <button data-modal="m-veh-report" class="pbs-card text-left p-4 rounded-2xl bg-white border border-slate-200 hover:border-slate-300">
+        <div class="flex items-center gap-3">
+          <span class="grid place-items-center w-11 h-11 rounded-xl bg-amber-50 text-amber-600"><span id="rt-veh"></span></span>
+          <div><p class="font-semibold text-slate-800">Raport z pojazdu</p><p class="text-xs text-slate-500">Przebieg + obsługa codzienna (OC)</p></div>
+        </div>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Form -->
+      <div class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4">
+        <h3 class="font-semibold text-slate-800 mb-3">Nowy raport — terminal</h3>
+        <div class="space-y-3 text-sm">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Data</label>
+            <input type="text" value="17.06.2026" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Terminal (autocomplete)</label>
+            <div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="f-pin"></span><input type="text" value="BCT — Baltic Container Terminal" class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Osoba sporządzająca</label>
+            <input type="text" value="Jan Kowalski" class="w-full px-3 py-2 rounded-lg border border-slate-200">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Uwagi</label>
+            <textarea rows="3" placeholder="Opis sytuacji..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></textarea>
+          </div>
+          <div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3 text-xs text-cyan-800">
+            <p class="font-semibold mb-1 flex items-center gap-1.5"><span id="f-auto"></span>Automatycznie załączono</p>
+            <p>Pracownicy i sprzęt obecni w terminalu danego dnia (dane z harmonogramu).</p>
+          </div>
+          <button class="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="f-save"></span>Zapisz raport</button>
+        </div>
+      </div>
+
+      <!-- Auto-attached data preview -->
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="grid place-items-center w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600"><span id="d-w"></span></span>
+            <h3 class="font-semibold text-slate-800">Pracownicy obecni — 17.06.2026 · BCT</h3>
+          </div>
+          <div class="overflow-x-auto pbs-scroll">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left font-medium px-3 py-2">Pracownik</th><th class="text-left font-medium px-3 py-2">Rola</th><th class="text-left font-medium px-3 py-2">Zmiana</th><th class="text-right font-medium px-3 py-2">Godz.</th><th class="text-right font-medium px-3 py-2">Stawka/h</th><th class="text-right font-medium px-3 py-2">Wynagrodz.</th><th class="text-left font-medium px-3 py-2">Zlecenie</th></tr></thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr><td class="px-3 py-2 font-medium">Marek Nowak</td><td class="px-3 py-2"><span class="pill pill-info">operator</span></td><td class="px-3 py-2 text-slate-600">06–14</td><td class="px-3 py-2 text-right">8 h</td><td class="px-3 py-2 text-right">45,00 zł</td><td class="px-3 py-2 text-right font-semibold text-emerald-700">360 zł</td><td class="px-3 py-2"><span class="pill pill-info">ZL/2026/051</span></td></tr>
+                <tr><td class="px-3 py-2 font-medium">Jan Kruk</td><td class="px-3 py-2"><span class="pill pill-info">operator żurawia</span></td><td class="px-3 py-2 text-slate-600">06–14</td><td class="px-3 py-2 text-right">8 h</td><td class="px-3 py-2 text-right">40,00 zł</td><td class="px-3 py-2 text-right font-semibold text-emerald-700">320 zł</td><td class="px-3 py-2"><span class="pill pill-info">ZL/2026/051</span></td></tr>
+                <tr><td class="px-3 py-2 font-medium">Tomasz Sik</td><td class="px-3 py-2"><span class="pill pill-muted">lukowy</span></td><td class="px-3 py-2 text-slate-600">14–22</td><td class="px-3 py-2 text-right">8 h</td><td class="px-3 py-2 text-right">38,00 zł</td><td class="px-3 py-2 text-right font-semibold text-emerald-700">304 zł</td><td class="px-3 py-2"><span class="pill pill-info">ZL/2026/054</span></td></tr>
+                <tr class="bg-slate-50 font-semibold"><td class="px-3 py-2" colspan="3">Suma (BCT)</td><td class="px-3 py-2 text-right">24 h</td><td class="px-3 py-2"></td><td class="px-3 py-2 text-right text-emerald-700">984 zł</td><td class="px-3 py-2"></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="d-e"></span></span>
+            <h3 class="font-semibold text-slate-800">Sprzęt obecny — 17.06.2026 · BCT</h3>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+            <div class="bg-slate-50 rounded-lg p-3"><p class="font-medium">RS-02</p><p class="text-xs text-slate-500">Reach Stacker · 14 820 km</p></div>
+            <div class="bg-slate-50 rounded-lg p-3"><p class="font-medium">WD-11</p><p class="text-xs text-slate-500">Wózek · 8 410 hm</p></div>
+            <div class="bg-slate-50 rounded-lg p-3"><p class="font-medium">SP-04</p><p class="text-xs text-slate-500">Spreader</p></div>
+          </div>
+          <!-- Summary: total hours & wages in port -->
+          <div class="mt-3 bg-cyan-50 border border-cyan-100 rounded-lg p-3 text-sm">
+            <div class="flex justify-between items-center">
+              <div><p class="font-semibold text-cyan-800">Suma godzin w porcie BCT (17.06)</p><p class="text-xs text-cyan-700">3 pracowników · 24 h łącznie · Okres 1–15: 10 028 zł · Okres 15–23: 10 028 zł · Razem miesiąc: 20 056 zł</p></div>
+              <p class="text-2xl font-extrabold text-emerald-700">984 zł</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent reports -->
+    <section class="mt-5 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div class="p-4 border-b border-slate-100"><h3 class="font-semibold text-slate-800">Ostatnie raporty</h3></div>
+      <div class="overflow-x-auto pbs-scroll">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left font-medium px-4 py-3">Data</th><th class="text-left font-medium px-4 py-3">Typ</th><th class="text-left font-medium px-4 py-3">Obiekt</th><th class="text-left font-medium px-4 py-3">Autor</th><th class="text-right font-medium px-4 py-3">Akcje</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="hover:bg-slate-50"><td class="px-4 py-3">16.06.2026</td><td class="px-4 py-3"><span class="pill pill-info">terminal</span></td><td class="px-4 py-3">BCT</td><td class="px-4 py-3 text-slate-600">J. Kowalski</td><td class="px-4 py-3 text-right"><button class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="r-v1"></span></button></td></tr>
+            <tr class="hover:bg-slate-50"><td class="px-4 py-3">16.06.2026</td><td class="px-4 py-3"><span class="pill pill-warn">pojazd</span></td><td class="px-4 py-3">RS-02</td><td class="px-4 py-3 text-slate-600">M. Nowak</td><td class="px-4 py-3 text-right"><button class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="r-v2"></span></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <nav id="pbs-bottomnav" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex z-30"></nav>
+  <div class="h-14 lg:hidden"></div>
+</div>
+
+<!-- Modal: Vehicle report -->
+<div id="m-veh-report" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="mv-ico"></span></span>Raport z pojazdu</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mv-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Pojazd (autocomplete)</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="mv-s"></span><input type="text" placeholder="Szukaj pojazdu..." class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Data raportu</label><input type="text" value="17.06.2026" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Aktualny przebieg</label><input type="number" placeholder="14820" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      </div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Przebieg OC</label><select class="w-full px-3 py-2 rounded-lg border border-slate-200"><option>OK — bez uwag</option><option>Uwagi drobne</option><option>NOK — wymagana naprawa</option></select></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Opis przebiegu OC</label><textarea rows="3" placeholder="Opis obsługi codziennej maszyny..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></textarea></div>
+      <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2"><span id="mv-warn" class="mt-0.5"></span><p>Brak raportu OC do godziny ustalonej w Ustawieniach wyzwola alert.</p></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mv-save"></span>Zapisz raport</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+PBS.init("raportowanie");
+document.getElementById("rt-term").innerHTML = pbsIcon("anchor","w-6 h-6");
+document.getElementById("rt-veh").innerHTML = pbsIcon("truck","w-6 h-6");
+document.getElementById("f-pin").innerHTML = pbsIcon("pin","w-4 h-4");
+document.getElementById("f-auto").innerHTML = pbsIcon("refresh","w-4 h-4");
+document.getElementById("f-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("d-w").innerHTML = pbsIcon("workers","w-5 h-5");
+document.getElementById("d-e").innerHTML = pbsIcon("gear","w-5 h-5");
+document.getElementById("r-v1").innerHTML = pbsIcon("eye","w-4 h-4");
+document.getElementById("r-v2").innerHTML = pbsIcon("eye","w-4 h-4");
+// modal icons
+document.getElementById("mv-ico").innerHTML = pbsIcon("truck","w-5 h-5");
+document.getElementById("mv-close").innerHTML = pbsIcon("close","w-5 h-5");
+document.getElementById("mv-s").innerHTML = pbsIcon("search","w-4 h-4");
+document.getElementById("mv-warn").innerHTML = pbsIcon("alert","w-4 h-4");
+document.getElementById("mv-save").innerHTML = pbsIcon("check","w-4 h-4");
+</script>
+</body>
+</html>

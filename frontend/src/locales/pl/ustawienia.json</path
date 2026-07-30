@@ -1,0 +1,42 @@
+{
+  "title": "Ustawienia",
+  "tabs": {
+    "users": "Użytkownicy",
+    "alerts": "Alerty"
+  },
+  "users": {
+    "title": "Zarządzanie użytkownikami",
+    "email": "E-mail",
+    "role": "Rola",
+    "permissions": "Uprawnienia",
+    "is_active": "Aktywny",
+    "add": "Dodaj użytkownika",
+    "send_invite": "Wyślij zaproszenie (e-mail z linkiem)",
+    "block": "Zablokuj",
+    "unblock": "Odblokuj",
+    "permissions_title": "Edycja uprawnień",
+    "sections": "Sekcje aplikacji"
+  },
+  "alerts": {
+    "title": "Konfiguracja alertów",
+    "recipients": "Odbiorcy e-mail",
+    "alert_types": "Typy alertów",
+    "cert_expiry": "Certyfikat wygasa",
+    "inspection_due": "Przegląd pojazdu wymagany",
+    "missing_oc_report": "Brak raportu OC",
+    "incident_reported": "Awaria zgłoszona",
+    "send_time": "Czas wysyłki",
+    "is_active": "Aktywny",
+    "add": "Dodaj konfigurację alertu"
+  },
+  "roles": {
+    "super_admin": "Super Administrator",
+    "admin": "Administrator",
+    "user": "Użytkownik"
+  },
+  "messages": {
+    "user_created": "Utworzono użytkownika — wysłano e-mail z linkiem do ustawienia hasła",
+    "user_blocked": "Zablokowano użytkownika",
+    "permissions_updated": "Zaktualizowano uprawnienia"
+  }
+}

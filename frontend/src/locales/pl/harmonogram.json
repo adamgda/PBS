@@ -1,0 +1,51 @@
+{
+  "title": "Harmonogram",
+  "view": {
+    "week": "Tydzień",
+    "month": "Miesiąc",
+    "day": "Dzień"
+  },
+  "order": {
+    "title": "Zlecenie",
+    "number": "Numer zlecenia",
+    "client": "Klient",
+    "terminal": "Terminal",
+    "start_date": "Data rozpoczęcia",
+    "end_date": "Data zakończenia",
+    "scope": "Zakres prac",
+    "value": "Wartość (PLN)",
+    "status": "Status",
+    "assigned_employees": "Przypisani pracownicy",
+    "assigned_equipment": "Przypisany sprzęt",
+    "role": "Stanowisko"
+  },
+  "form": {
+    "add_title": "Dodaj zlecenie",
+    "edit_title": "Edytuj zlecenie",
+    "number": "Numer zlecenia",
+    "client_name": "Nazwa klienta",
+    "terminal": "Terminal",
+    "start_datetime": "Data i godzina rozpoczęcia",
+    "end_datetime": "Data i godzina zakończenia",
+    "scope": "Zakres prac",
+    "value": "Wartość (PLN)",
+    "status": "Status"
+  },
+  "actions": {
+    "copy_week": "Kopiuj tydzień jako szablon",
+    "assign_employee": "Przypisz pracownika",
+    "assign_equipment": "Przypisz sprzęt",
+    "remove_assignment": "Usuń przypisanie"
+  },
+  "messages": {
+    "deleted": {
+      "success": "Usunięto zlecenie {{number}}"
+    },
+    "saved": {
+      "success": "Zapisano zlecenie {{number}}"
+    },
+    "copied": {
+      "success": "Skopiowano tydzień jako szablon"
+    }
+  }
+}

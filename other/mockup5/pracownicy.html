@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Pracownicy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c' } } } } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<aside id="pbs-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-brand-900 flex-col p-4 z-40"></aside>
+
+<div id="pbs-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+<aside id="pbs-drawer" class="fixed inset-y-0 right-0 w-72 bg-brand-900 p-4 z-50 lg:hidden overflow-y-auto pbs-scroll"></aside>
+
+<div class="flex-1 min-w-0 flex flex-col min-h-screen lg:ml-64">
+  <header id="pbs-header" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-3 sm:px-5 py-3 flex items-center justify-between"></header>
+
+  <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto pbs-fade">
+    <!-- Toolbar -->
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-4">
+      <div class="relative flex-1 max-w-md">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="s-search"></span>
+        <input type="text" placeholder="Szukaj pracownika (autocomplete)..." class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50"><span id="b-filter"></span>Filtruj</button>
+        <button data-modal="m-urlop" class="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50"><span id="b-urlop"></span>Urlopy</button>
+        <button data-modal="m-add-worker" class="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700"><span id="b-add"></span>Dodaj</button>
+      </div>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="flex flex-wrap gap-2 mb-4 text-xs">
+      <button class="px-3 py-1.5 rounded-full bg-cyan-600 text-white font-medium active">Wszyscy (28)</button>
+      <button class="px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">W terenie (42)</button>
+      <button class="px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Dostępni (10)</button>
+      <button class="px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Uprawnienia expirują (5)</button>
+      <button class="px-3 py-1.5 rounded-full bg-amber-100 border border-amber-200 text-amber-700">Na urlopie (3)</button>
+    </div>
+
+    <!-- Mobile cards -->
+    <div class="lg:hidden space-y-3">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-brand-900 text-white grid place-items-center font-semibold">MN</div>
+            <div><p class="font-semibold">Marek Nowak</p><p class="text-xs text-slate-500">+48 600 100 200</p></div>
+          </div>
+          <span class="pill pill-ok">Dostępny</span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Terminal</p><p class="font-medium">BCT</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Sprzęt</p><p class="font-medium">RS-02</p></div>
+        </div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Stawka/h</p><p class="font-medium">45,00 zł</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Godz. (mc)</p><p class="font-medium">168 h</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Wynagrodz.</p><p class="font-medium text-emerald-700">7 560 zł</p></div>
+        </div>
+        <div class="mt-2 flex items-center gap-1.5 text-xs"><span class="pill pill-info">operator</span><span class="text-slate-500">· dzisiaj</span></div>
+        <div class="mt-3 flex gap-2">
+          <button data-modal="m-assign" class="flex-1 px-3 py-2 rounded-lg bg-slate-100 text-sm font-medium text-slate-700">Przypisz</button>
+          <button data-modal="m-edit-worker" class="px-3 py-2 rounded-lg bg-cyan-50 text-cyan-700"><span id="m-edit1"></span></button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-brand-800 text-white grid place-items-center font-semibold">AK</div>
+            <div><p class="font-semibold">Anna Kowal</p><p class="text-xs text-slate-500">anna.k@pbs.pl</p></div>
+          </div>
+          <span class="pill pill-warn">BHP 25d</span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Terminal</p><p class="font-medium">DCT</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Sprzęt</p><p class="font-medium">WD-11</p></div>
+        </div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Stawka/h</p><p class="font-medium">42,00 zł</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Godz. (mc)</p><p class="font-medium">160 h</p></div>
+          <div class="bg-slate-50 rounded-lg p-2"><p class="text-xs text-slate-500">Wynagrodz.</p><p class="font-medium text-emerald-700">6 720 zł</p></div>
+        </div>
+        <div class="mt-2 flex items-center gap-1.5 text-xs"><span class="pill pill-info">brygadzista</span><span class="text-slate-500">· dzisiaj</span></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-slate-300 text-slate-600 grid place-items-center font-semibold">TS</div>
+            <div><p class="font-semibold text-slate-400">Tomasz Sik</p><p class="text-xs text-slate-400">tomasz.s@pbs.pl</p></div>
+          </div>
+          <span class="pill pill-warn">Urlop</span>
+        </div>
+        <div class="mt-3 bg-amber-50 border border-amber-100 rounded-lg p-3 text-sm text-amber-800">
+          <p class="font-medium">Na urlopie do 22.07.2026</p>
+          <p class="text-xs">Typ: wypoczynkowy · status: zatwierdzony</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden lg:block bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto pbs-scroll">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+            <tr>
+              <th class="text-left font-medium px-4 py-3">Pracownik</th>
+              <th class="text-left font-medium px-4 py-3">Telefon</th>
+              <th class="text-left font-medium px-4 py-3">Email</th>
+              <th class="text-left font-medium px-4 py-3">Terminal</th>
+              <th class="text-left font-medium px-4 py-3">Sprzęt</th>
+              <th class="text-left font-medium px-4 py-3">Rola (dziś)</th>
+              <th class="text-left font-medium px-4 py-3">Stawka/h</th>
+              <th class="text-left font-medium px-4 py-3">Godz. (mc)</th>
+              <th class="text-left font-medium px-4 py-3">Wynagrodz.</th>
+              <th class="text-left font-medium px-4 py-3">Uprawnienia</th>
+              <th class="text-right font-medium px-4 py-3">Akcje</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3"><div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-brand-900 text-white grid place-items-center text-xs font-semibold">MN</span><span class="font-medium text-slate-800">Marek Nowak</span></div></td>
+              <td class="px-4 py-3 text-slate-600">+48 600 100 200</td>
+              <td class="px-4 py-3 text-slate-600">marek.n@pbs.pl</td>
+              <td class="px-4 py-3"><span class="pill pill-info">BCT</span></td>
+              <td class="px-4 py-3"><span class="pill pill-muted">RS-02</span></td>
+              <td class="px-4 py-3"><span class="pill pill-info">operator</span></td>
+              <td class="px-4 py-3 font-medium text-slate-800">45,00 zł</td>
+              <td class="px-4 py-3 text-slate-600">168 h</td>
+              <td class="px-4 py-3 font-semibold text-emerald-700">7 560 zł</td>
+              <td class="px-4 py-3"><span class="pill pill-warn">UDT 12d</span></td>
+              <td class="px-4 py-3"><div class="flex items-center justify-end gap-1">
+                <button data-modal="m-edit-worker" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500" title="Edytuj"><span id="t-edit1"></span></button>
+                <button data-modal="m-rate" class="p-2 rounded-lg hover:bg-amber-50 text-amber-600" title="Zmień stawkę"><span id="t-rate1"></span></button>
+                <button data-modal="m-add-cert" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500" title="Certyfikaty"><span id="t-cert1"></span></button>
+                <button data-modal="m-urlop" class="p-2 rounded-lg hover:bg-sky-50 text-sky-600" title="Urlopy"><span id="t-urlop1"></span></button>
+                <button class="p-2 rounded-lg hover:bg-rose-50 text-rose-500" title="Usuń"><span id="t-del1"></span></button>
+              </div></td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3"><div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-brand-800 text-white grid place-items-center text-xs font-semibold">AK</span><span class="font-medium text-slate-800">Anna Kowal</span></div></td>
+              <td class="px-4 py-3 text-slate-600">+48 600 200 300</td>
+              <td class="px-4 py-3 text-slate-600">anna.k@pbs.pl</td>
+              <td class="px-4 py-3"><span class="pill pill-info">DCT</span></td>
+              <td class="px-4 py-3"><span class="pill pill-muted">WD-11</span></td>
+              <td class="px-4 py-3"><span class="pill pill-info">brygadzista</span></td>
+              <td class="px-4 py-3 font-medium text-slate-800">42,00 zł</td>
+              <td class="px-4 py-3 text-slate-600">160 h</td>
+              <td class="px-4 py-3 font-semibold text-emerald-700">6 720 zł</td>
+              <td class="px-4 py-3"><span class="pill pill-warn">BHP 25d</span></td>
+              <td class="px-4 py-3"><div class="flex items-center justify-end gap-1">
+                <button data-modal="m-edit-worker" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="t-edit2"></span></button>
+                <button data-modal="m-rate" class="p-2 rounded-lg hover:bg-amber-50 text-amber-600" title="Zmień stawkę"><span id="t-rate2"></span></button>
+                <button data-modal="m-add-cert" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="t-cert2"></span></button>
+                <button data-modal="m-urlop" class="p-2 rounded-lg hover:bg-sky-50 text-sky-600" title="Urlopy"><span id="t-urlop2"></span></button>
+                <button class="p-2 rounded-lg hover:bg-rose-50 text-rose-500"><span id="t-del2"></span></button>
+              </div></td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3"><div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-brand-700 text-white grid place-items-center text-xs font-semibold">PL</span><span class="font-medium text-slate-800">Piotr Lew</span></div></td>
+              <td class="px-4 py-3 text-slate-600">+48 600 300 400</td>
+              <td class="px-4 py-3 text-slate-600">piotr.l@pbs.pl</td>
+              <td class="px-4 py-3"><span class="pill pill-info">GCT</span></td>
+              <td class="px-4 py-3 text-slate-400">—</td>
+              <td class="px-4 py-3"><span class="pill pill-muted">sztauer</span></td>
+              <td class="px-4 py-3 font-medium text-slate-800">38,00 zł</td>
+              <td class="px-4 py-3 text-slate-600">152 h</td>
+              <td class="px-4 py-3 font-semibold text-emerald-700">5 776 zł</td>
+              <td class="px-4 py-3"><span class="pill pill-err">Orz. lek. prz</span></td>
+              <td class="px-4 py-3"><div class="flex items-center justify-end gap-1">
+                <button data-modal="m-edit-worker" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="t-edit3"></span></button>
+                <button data-modal="m-rate" class="p-2 rounded-lg hover:bg-amber-50 text-amber-600" title="Zmień stawkę"><span id="t-rate3"></span></button>
+                <button data-modal="m-add-cert" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="t-cert3"></span></button>
+                <button data-modal="m-urlop" class="p-2 rounded-lg hover:bg-sky-50 text-sky-600" title="Urlopy"><span id="t-urlop3"></span></button>
+                <button class="p-2 rounded-lg hover:bg-rose-50 text-rose-500"><span id="t-del3"></span></button>
+              </div></td>
+            </tr>
+            <tr class="hover:bg-slate-50 bg-amber-50/50">
+              <td class="px-4 py-3"><div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-slate-300 text-slate-600 grid place-items-center text-xs font-semibold">TS</span><span class="font-medium text-slate-500">Tomasz Sik</span></div></td>
+              <td class="px-4 py-3 text-slate-400">+48 600 400 500</td>
+              <td class="px-4 py-3 text-slate-400">tomasz.s@pbs.pl</td>
+              <td class="px-4 py-3"><span class="pill pill-warn">Urlop</span></td>
+              <td class="px-4 py-3 text-slate-400">—</td>
+              <td class="px-4 py-3 text-slate-400">—</td>
+              <td class="px-4 py-3 font-medium text-slate-500">40,00 zł</td>
+              <td class="px-4 py-3 text-slate-400">0 h</td>
+              <td class="px-4 py-3 text-slate-400">0 zł</td>
+              <td class="px-4 py-3"><span class="pill pill-ok">ważne</span></td>
+              <td class="px-4 py-3"><div class="flex items-center justify-end gap-1">
+                <button data-modal="m-edit-worker" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="t-edit4"></span></button>
+                <button data-modal="m-rate" class="p-2 rounded-lg hover:bg-amber-50 text-amber-600"><span id="t-rate4"></span></button>
+                <button data-modal="m-urlop" class="p-2 rounded-lg hover:bg-sky-50 text-sky-600"><span id="t-urlop4"></span></button>
+                <button class="p-2 rounded-lg hover:bg-rose-50 text-rose-500"><span id="t-del4"></span></button>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Summary bar: total hours & wages -->
+    <section class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4"><p class="text-xs text-slate-500">Suma godzin (mc)</p><p class="text-2xl font-extrabold text-slate-800 mt-1">480 h</p><p class="text-xs text-slate-400">wszystkie porty</p></div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4"><p class="text-xs text-slate-500">Suma wynagrodzeń (mc)</p><p class="text-2xl font-extrabold text-emerald-700 mt-1">20 056 zł</p><div class="mt-1 flex gap-3 text-xs"><span class="text-cyan-600">1–15: 10 028 zł</span><span class="text-indigo-600">15–23: 10 028 zł</span></div></div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4"><p class="text-xs text-slate-500">Na urlopie</p><p class="text-2xl font-extrabold text-amber-600 mt-1">1</p><p class="text-xs text-slate-400">do 22.07.2026</p></div>
+    </section>
+
+    <!-- Rozliczenie per port -->
+    <section class="mt-6 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center gap-2 p-4 border-b border-slate-100">
+        <span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="rp-ico"></span></span>
+        <div><h3 class="font-semibold text-slate-800">Rozliczenie godzin per port — czerwiec 2026 (okres 1–15)</h3><p class="text-xs text-slate-500">Suma godzin przepracowanych w każdym porcie</p></div>
+      </div>
+      <div class="overflow-x-auto pbs-scroll">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left font-medium px-4 py-3">Port</th><th class="text-left font-medium px-4 py-3">Pracownicy</th><th class="text-left font-medium px-4 py-3">Suma godzin</th><th class="text-left font-medium px-4 py-3">Suma wynagrodzeń</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr><td class="px-4 py-3 font-medium">BCT — Baltic Container Terminal</td><td class="px-4 py-3 text-slate-600">2</td><td class="px-4 py-3 font-semibold text-slate-800">192 h</td><td class="px-4 py-3 font-semibold text-emerald-700">8 640 zł</td></tr>
+            <tr><td class="px-4 py-3 font-medium">DCT — Deepwater Container Terminal</td><td class="px-4 py-3 text-slate-600">1</td><td class="px-4 py-3 font-semibold text-slate-800">160 h</td><td class="px-4 py-3 font-semibold text-emerald-700">6 720 zł</td></tr>
+            <tr><td class="px-4 py-3 font-medium">GCT — Gdynia Cargo Terminal</td><td class="px-4 py-3 text-slate-600">1</td><td class="px-4 py-3 font-semibold text-slate-800">128 h</td><td class="px-4 py-3 font-semibold text-emerald-700">4 696 zł</td></tr>
+            <tr class="bg-slate-50 font-semibold"><td class="px-4 py-3">Razem (wszystkie porty)</td><td class="px-4 py-3">4</td><td class="px-4 py-3">480 h</td><td class="px-4 py-3 text-emerald-700">20 056 zł</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Certificates detail panel -->
+    <section class="mt-6 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center justify-between p-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="c-icon"></span></span>
+          <div><h3 class="font-semibold text-slate-800">Certyfikaty i uprawnienia — Marek Nowak</h3><p class="text-xs text-slate-500">Dokumenty z datą wydania i ważności · alerty ≤30 dni</p></div>
+        </div>
+        <button data-modal="m-add-cert" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-50 text-cyan-700 text-sm font-medium"><span id="c-add"></span>Dodaj dokument</button>
+      </div>
+      <div class="overflow-x-auto pbs-scroll">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+            <tr><th class="text-left font-medium px-4 py-3">Nazwa</th><th class="text-left font-medium px-4 py-3">Numer</th><th class="text-left font-medium px-4 py-3">Wydano</th><th class="text-left font-medium px-4 py-3">Ważny do</th><th class="text-left font-medium px-4 py-3">Status</th></tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr><td class="px-4 py-3 font-medium">Uprawnienia UDT HDS</td><td class="px-4 py-3 text-slate-600">UDT-9921</td><td class="px-4 py-3 text-slate-600">12.03.2024</td><td class="px-4 py-3 text-slate-600">29.06.2026</td><td class="px-4 py-3"><span class="pill pill-warn">12 dni</span></td></tr>
+            <tr><td class="px-4 py-3 font-medium">Certyfikat BHP</td><td class="px-4 py-3 text-slate-600">BHP-4471</td><td class="px-4 py-3 text-slate-600">01.09.2025</td><td class="px-4 py-3 text-slate-600">01.09.2027</td><td class="px-4 py-3"><span class="pill pill-ok">ważny</span></td></tr>
+            <tr><td class="px-4 py-3 font-medium">Orzeczenie lekarskie</td><td class="px-4 py-3 text-slate-600">MED-220</td><td class="px-4 py-3 text-slate-600">10.06.2025</td><td class="px-4 py-3 text-slate-600">10.06.2026</td><td class="px-4 py-3"><span class="pill pill-err">wygasło</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <nav id="pbs-bottomnav" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex z-30"></nav>
+  <div class="h-14 lg:hidden"></div>
+</div>
+
+<!-- Modal: Add/Edit worker -->
+<div id="m-add-worker" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="mw-ico"></span></span>Dodaj pracownika</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mw-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Imię</label><input type="text" placeholder="Jan" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Nazwisko</label><input type="text" placeholder="Kowalski" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      </div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Telefon</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="mw-phone"></span><input type="tel" placeholder="+48 600 000 000" class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Email</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="mw-mail"></span><input type="email" placeholder="jan@pbs.pl" class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mw-save"></span>Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit worker -->
+<div id="m-edit-worker" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="me-ico"></span></span>Edytuj — Marek Nowak</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="me-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Imię</label><input type="text" value="Marek" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Nazwisko</label><input type="text" value="Nowak" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      </div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Telefon</label><input type="tel" value="+48 600 100 200" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Email</label><input type="email" value="marek.n@pbs.pl" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Stawka godzinowa (PLN)</label><input type="number" value="45.00" step="0.50" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Rola (dziś)</label><select class="w-full px-3 py-2 rounded-lg border border-slate-200"><option>operator</option><option>brygadzista</option><option>sztauer</option><option>lukowy</option><option>operator żurawia</option></select></div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="me-save"></span>Zapisz zmiany</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Change hourly rate -->
+<div id="m-rate" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-md w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="mr-ico"></span></span>Zmień stawkę — M. Nowak</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mr-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div class="bg-slate-50 rounded-lg p-3 text-xs text-slate-600"><p class="font-medium mb-0.5">Aktualna stawka: 45,00 zł/h</p><p>Wynagrodzenie (mc): 168 h × 45,00 zł = 7 560 zł</p></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Nowa stawka (PLN/h)</label><input type="number" value="45.00" step="0.50" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Data wejścia w życie</label><input type="text" value="17.06.2026" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2"><span id="mr-warn" class="mt-0.5"></span><p>Stawka obowiązuje od daty wejścia w życie. System przechowa historię zmian — godziny sprzed tej daty rozliczone po starej stawce.</p></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mr-save"></span>Zapisz stawkę</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Urlopy -->
+<div id="m-urlop" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-sky-50 text-sky-600"><span id="mu-ico"></span></span>Urlopy — M. Nowak</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mu-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div class="overflow-x-auto pbs-scroll">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left font-medium px-3 py-2">Od</th><th class="text-left font-medium px-3 py-2">Do</th><th class="text-left font-medium px-3 py-2">Typ</th><th class="text-left font-medium px-3 py-2">Status</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr><td class="px-3 py-2">10.07.2026</td><td class="px-3 py-2">17.07.2026</td><td class="px-3 py-2">wypoczynkowy</td><td class="px-3 py-2"><span class="pill pill-ok">zatwierdzony</span></td></tr>
+            <tr><td class="px-3 py-2">02.05.2026</td><td class="px-3 py-2">05.05.2026</td><td class="px-3 py-2">na żądanie</td><td class="px-3 py-2"><span class="pill pill-muted">zrealizowany</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Od</label><input type="text" placeholder="20.08.2026" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Do</label><input type="text" placeholder="27.08.2026" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      </div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Typ urlopu</label><select class="w-full px-3 py-2 rounded-lg border border-slate-200"><option>wypoczynkowy</option><option>na żądanie</option><option>L4</option></select></div>
+      <div class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-sky-800 flex items-start gap-2"><span id="mu-warn" class="mt-0.5"></span><p>Pracownik na urlopie jest automatycznie wykluczony z dostępnych do przypisania w harmonogramie.</p></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mu-save"></span>Dodaj urlop</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Quick assign terminal/equipment -->
+<div id="m-assign" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-md w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600"><span id="ma-ico"></span></span>Szybkie przypisanie — M. Nowak</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="ma-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Terminal (autocomplete)</label>
+        <div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="ma-pin"></span><input type="text" placeholder="Szukaj terminala..." class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+        <div class="mt-1.5 text-xs text-slate-400 flex items-center gap-1"><span id="ma-info"></span>Sugerowane: BCT (aktualnie przypisany)</div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Sprzęt (autocomplete)</label>
+        <div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="ma-s"></span><input type="text" placeholder="Szukaj sprzętu..." class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      </div>
+      <div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3 text-xs text-cyan-800 flex items-start gap-2"><span id="ma-auto" class="mt-0.5"></span><p>Przypisanie jest <b>czasowe</b> — zarządzane przez harmonogram/zlecenia. Przypisanie sprzętu do pracownika automatycznie przypisze sprzęt do tego samego terminala.</p></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="ma-save"></span>Przypisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add certificate -->
+<div id="m-add-cert" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-md w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="mc-ico"></span></span>Dodaj certyfikat</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mc-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Nazwa</label><input type="text" placeholder="Uprawnienia UDT HDS" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Numer dokumentu</label><input type="text" placeholder="UDT-9921" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Data wydania</label><input type="text" placeholder="12.03.2024" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Ważny do</label><input type="text" placeholder="12.03.2026" class="w-full px-3 py-2 rounded-lg border border-slate-200"></div>
+      </div>
+      <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2"><span id="mc-warn" class="mt-0.5"></span><p>System automatycznie oznaczy dokument jako wygasły lub expirujący (≤30 dni) i wyśle alert wg konfiguracji w Ustawieniach.</p></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mc-save"></span>Dodaj</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+PBS.init("pracownicy");
+document.getElementById("s-search").innerHTML = pbsIcon("search","w-5 h-5");
+document.getElementById("b-filter").innerHTML = pbsIcon("filter","w-4 h-4");
+document.getElementById("b-add").innerHTML = pbsIcon("plus","w-4 h-4");
+document.getElementById("m-edit1").innerHTML = pbsIcon("edit","w-4 h-4");
+["t-edit1","t-edit2","t-edit3"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("edit","w-4 h-4"); });
+["t-cert1","t-cert2","t-cert3","c-icon"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("shield","w-4 h-4"); });
+["t-del1","t-del2","t-del3"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("trash","w-4 h-4"); });
+document.getElementById("c-add").innerHTML = pbsIcon("plus","w-4 h-4");
+document.getElementById("b-urlop").innerHTML = pbsIcon("clock","w-4 h-4");
+document.getElementById("rp-ico").innerHTML = pbsIcon("anchor","w-5 h-5");
+["t-rate1","t-rate2","t-rate3","t-rate4"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("money","w-4 h-4"); });
+["t-urlop1","t-urlop2","t-urlop3","t-urlop4"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("clock","w-4 h-4"); });
+["t-edit4","t-edit2","t-edit3"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("edit","w-4 h-4"); });
+["t-del4","t-del2","t-del3"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("trash","w-4 h-4"); });
+// modal icons
+document.getElementById("mr-ico").innerHTML = pbsIcon("money","w-5 h-5");
+document.getElementById("mr-close").innerHTML = pbsIcon("close","w-5 h-5");
+document.getElementById("mr-warn").innerHTML = pbsIcon("alert","w-4 h-4");
+document.getElementById("mr-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("mu-ico").innerHTML = pbsIcon("clock","w-5 h-5");
+document.getElementById("mu-close").innerHTML = pbsIcon("close","w-5 h-5");
+document.getElementById("mu-warn").innerHTML = pbsIcon("alert","w-4 h-4");
+document.getElementById("mu-save").innerHTML = pbsIcon("plus","w-4 h-4");
+["mw-ico","me-ico"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("user","w-5 h-5"); });
+["mw-close","me-close","ma-close","mc-close","mr-close","mu-close"].forEach(function(i){ document.getElementById(i).innerHTML = pbsIcon("close","w-5 h-5"); });
+document.getElementById("mw-phone").innerHTML = pbsIcon("phone","w-4 h-4");
+document.getElementById("mw-mail").innerHTML = pbsIcon("mail","w-4 h-4");
+document.getElementById("mw-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("me-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("ma-ico").innerHTML = pbsIcon("layers","w-5 h-5");
+document.getElementById("ma-pin").innerHTML = pbsIcon("pin","w-4 h-4");
+document.getElementById("ma-s").innerHTML = pbsIcon("search","w-4 h-4");
+document.getElementById("ma-info").innerHTML = pbsIcon("pin","w-3 h-3");
+document.getElementById("ma-auto").innerHTML = pbsIcon("refresh","w-4 h-4");
+document.getElementById("ma-save").innerHTML = pbsIcon("check","w-4 h-4");
+document.getElementById("mc-ico").innerHTML = pbsIcon("shield","w-5 h-5");
+document.getElementById("mc-warn").innerHTML = pbsIcon("alert","w-4 h-4");
+document.getElementById("mc-save").innerHTML = pbsIcon("plus","w-4 h-4");
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+{
+  "title": "Sprzęt",
+  "list": {
+    "title": "Lista sprzętu",
+    "category": "Kategoria",
+    "name": "Nazwa",
+    "serial_number": "Numer seryjny",
+    "employee": "Pracownik",
+    "terminal": "Terminal",
+    "status": "Status",
+    "category_vehicle": "Pojazdy",
+    "category_other": "Inne"
+  },
+  "form": {
+    "add_title": "Dodaj sprzęt",
+    "edit_title": "Edytuj sprzęt",
+    "category": "Kategoria",
+    "name": "Nazwa",
+    "serial_number": "Numer seryjny",
+    "is_active": "Aktywny",
+    "assign_employee": "Przypisz pracownika",
+    "assign_terminal": "Przypisz terminal"
+  },
+  "vehicle": {
+    "last_mileage": "Ostatni przebieg (km)",
+    "last_oil_service": "Ostatni serwis olejowy",
+    "last_incident": "Ostatnia awaria",
+    "last_oc_date": "Data ostatniej OC",
+    "last_oc_result": "Wynik ostatniej OC"
+  },
+  "timeline": {
+    "title": "Oś czasu sprzętu",
+    "type_mileage": "Przebieg",
+    "type_service": "Serwis",
+    "type_incident": "Awaria",
+    "type_assignment": "Przypisanie",
+    "type_other": "Inne"
+  },
+  "service_plans": {
+    "title": "Planowanie przeglądów",
+    "inspection_type": "Typ przeglądu",
+    "interval_km": "Interwał (km)",
+    "interval_days": "Interwał (dni)",
+    "last_done": "Ostatnie wykonanie",
+    "next_planned": "Następny planowany",
+    "needs_service": "Wymaga serwisu",
+    "add": "Dodaj plan przeglądu"
+  },
+  "handover": {
+    "title": "Protokół przekazania zmiany",
+    "handover_date": "Data/czas przekazania",
+    "handing_operator": "Operator zdający",
+    "receiving_operator": "Operator przyjmujący",
+    "meter_state": "Stan licznika",
+    "notes": "Uwagi o uszkodzeniach",
+    "oc_result": "Wynik OC",
+    "report_incident": "Zgłoś awarię z protokołu"
+  },
+  "messages": {
+    "deleted": {
+      "success": "Usunięto sprzęt {{name}}"
+    },
+    "saved": {
+      "success": "Zapisano dane sprzętu {{name}}"
+    }
+  }
+}

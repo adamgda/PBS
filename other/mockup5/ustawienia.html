@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBS — Ustawienia</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { brand: { 900:'#0b2a4a',800:'#113555',700:'#1c417c' } } } } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<aside id="pbs-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-brand-900 flex-col p-4 z-40"></aside>
+<div id="pbs-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+<aside id="pbs-drawer" class="fixed inset-y-0 right-0 w-72 bg-brand-900 p-4 z-50 lg:hidden overflow-y-auto pbs-scroll"></aside>
+
+<div class="flex-1 min-w-0 flex flex-col min-h-screen lg:ml-64">
+  <header id="pbs-header" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-3 sm:px-5 py-3 flex items-center justify-between"></header>
+
+  <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto pbs-fade">
+    <!-- Sub-tabs -->
+    <div class="flex gap-2 mb-5 overflow-x-auto pbs-scroll">
+      <button class="px-4 py-2 rounded-xl bg-brand-900 text-white text-sm font-semibold whitespace-nowrap">Użytkownicy i uprawnienia</button>
+      <button class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-medium whitespace-nowrap">Alerty</button>
+      <button class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-medium whitespace-nowrap">Ogólne</button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Users & permissions -->
+      <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-slate-100">
+          <div class="flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="u-ico"></span></span><h3 class="font-semibold text-slate-800">Użytkownicy</h3></div>
+          <button data-modal="m-add-user" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700"><span id="u-add"></span>Nowy użytkownik</button>
+        </div>
+        <div class="overflow-x-auto pbs-scroll">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left font-medium px-4 py-3">Imię i nazwisko</th><th class="text-left font-medium px-4 py-3">Email</th><th class="text-left font-medium px-4 py-3">Sekcje (uprawnienia)</th><th class="text-left font-medium px-4 py-3">Status</th></tr></thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="hover:bg-slate-50"><td class="px-4 py-3 font-medium">Jan Kowalski</td><td class="px-4 py-3 text-slate-600">jan@pbs.pl</td><td class="px-4 py-3"><span class="pill pill-ok">wszystko (admin)</span></td><td class="px-4 py-3"><span class="pill pill-ok">aktywny</span></td></tr>
+              <tr class="hover:bg-slate-50"><td class="px-4 py-3 font-medium">Marek Nowak</td><td class="px-4 py-3 text-slate-600">marek@pbs.pl</td><td class="px-4 py-3"><span class="pill pill-info">Harmonogram</span> <span class="pill pill-info">Zgłaszanie awarii</span></td><td class="px-4 py-3"><span class="pill pill-ok">aktywny</span></td></tr>
+              <tr class="hover:bg-slate-50"><td class="px-4 py-3 font-medium">Anna Kowal</td><td class="px-4 py-3 text-slate-600">anna@pbs.pl</td><td class="px-4 py-3"><span class="pill pill-info">Raportowanie</span></td><td class="px-4 py-3"><span class="pill pill-warn">zaproszony</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="p-3 bg-cyan-50/50 border-t border-slate-100 text-xs text-slate-600 flex items-center gap-2"><span id="u-mail"></span>Nowy użytkownik otrzymuje e-mail z linkiem do samodzielnego ustawienia hasła.</div>
+      </div>
+
+      <!-- Permissions legend -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center gap-2 mb-3"><span class="grid place-items-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600"><span id="p-ico"></span></span><h3 class="font-semibold text-slate-800">Dostępne sekcje</h3></div>
+        <ul class="text-sm space-y-2">
+          <li class="flex items-center justify-between"><span>Dashboard</span><span class="pill pill-muted">podgląd</span></li>
+          <li class="flex items-center justify-between"><span>Pracownicy</span><span class="pill pill-muted">pełny</span></li>
+          <li class="flex items-center justify-between"><span>Sprzęt</span><span class="pill pill-muted">pełny</span></li>
+          <li class="flex items-center justify-between"><span>Terminale</span><span class="pill pill-muted">pełny</span></li>
+          <li class="flex items-center justify-between"><span>Harmonogram</span><span class="pill pill-muted">pełny</span></li>
+          <li class="flex items-center justify-between"><span>Analityka</span><span class="pill pill-muted">podgląd</span></li>
+          <li class="flex items-center justify-between"><span>Raportowanie</span><span class="pill pill-muted">pełny</span></li>
+          <li class="flex items-center justify-between"><span>Ustawienia</span><span class="pill pill-err">admin</span></li>
+          <li class="flex items-center justify-between"><span>Awaria! — zgłaszanie</span><span class="pill pill-muted">specjalne</span></li>
+        </ul>
+      </div>
+
+      <!-- Alerts config -->
+      <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex items-center gap-2 mb-4"><span class="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><span id="a-ico"></span></span><div><h3 class="font-semibold text-slate-800">Zarządzanie alertami</h3><p class="text-xs text-slate-500">Wybierz e-mail docelowy i rodzaj powiadomień</p></div></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">E-mail dla alertów</label>
+            <div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="a-mail"></span><input type="email" value="ops@pbs.pl" class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Godzina alertu „brak raportu OC"</label>
+            <div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="a-clock"></span><input type="text" value="08:00" class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200"></div>
+          </div>
+        </div>
+        <div class="mt-4 space-y-2">
+          <label class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 cursor-pointer"><input type="checkbox" checked class="w-4 h-4 rounded accent-cyan-600"><div class="text-sm"><p class="font-medium">Zgłoszenie awarii</p><p class="text-xs text-slate-500">Powiadom natychmiast o każdej nowej awarii</p></div></label>
+          <label class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 cursor-pointer"><input type="checkbox" checked class="w-4 h-4 rounded accent-cyan-600"><div class="text-sm"><p class="font-medium">Brak raportu OC do określonej godziny</p><p class="text-xs text-slate-500">Alert, gdy raport codziennej obsługi nie wpłynął na czas</p></div></label>
+          <label class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 cursor-pointer"><input type="checkbox" checked class="w-4 h-4 rounded accent-cyan-600"><div class="text-sm"><p class="font-medium">Uprawnienia pracowników expirują (≤30 dni)</p><p class="text-xs text-slate-500">Certyfikaty, orzeczenia, UDT</p></div></label>
+          <label class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 cursor-pointer"><input type="checkbox" checked class="w-4 h-4 rounded accent-cyan-600"><div class="text-sm"><p class="font-medium">Zbliżające się przeglądy sprzętu</p><p class="text-xs text-slate-500">Serwisy i przeglądy UDT wg planu</p></div></label>
+        </div>
+        <div class="mt-4 flex justify-end"><button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="a-save"></span>Zapisz ustawienia</button></div>
+      </div>
+    </div>
+  </main>
+
+  <nav id="pbs-bottomnav" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex z-30"></nav>
+  <div class="h-14 lg:hidden"></div>
+</div>
+
+<!-- Modal: Add user -->
+<div id="m-add-user" class="pbs-modal hidden fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto pbs-scroll">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-auto mt-8 shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600"><span id="mu-ico"></span></span>Nowy użytkownik</h3>
+      <button data-modal-close class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><span id="mu-close"></span></button>
+    </div>
+    <div class="p-4 space-y-3 text-sm">
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Imię i nazwisko</label><input type="text" placeholder="Jan Kowalski" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div>
+      <div><label class="block text-xs font-medium text-slate-500 mb-1">Email</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" id="mu-mail"></span><input type="email" placeholder="jan@pbs.pl" class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-cyan-500"></div></div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Uprawnienia (sekcje)</label>
+        <div class="flex flex-wrap gap-2">
+          <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs"><input type="checkbox" class="w-3.5 h-3.5 rounded accent-cyan-600"> Dashboard</label>
+          <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs"><input type="checkbox" class="w-3.5 h-3.5 rounded accent-cyan-600"> Pracownicy</label>
+          <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs"><input type="checkbox" class="w-3.5 h-3.5 rounded accent-cyan-600"> Sprzęt</label>
+          <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs"><input type="checkbox" class="w-3.5 h-3.5 rounded accent-cyan-600"> Terminale</label>
+          <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs"><input type="checkbox" class="w-3.5 h-3.5 rounded accent-cyan-600"> Harmonogram</label>
+          <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs"><input type="checkbox" class="w-3.5 h-3.5 rounded accent-cyan-600"> Raportowanie</label>
+          <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-xs"><input type="checkbox" class="w-3.5 h-3.5 rounded accent-rose-600"> Awaria! (zgłaszanie)</label>
+        </div>
+      </div>
+      <div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3 text-xs text-cyan-800 flex items-start gap-2"><span id="mu-info" class="mt-0.5"></span><p>Nowy użytkownik otrzyma <b>e-mail z linkiem</b> do podstrony, gdzie sam ustawi sobie hasło. Konto pozostaje w statusie „zaproszony" do pierwszego logowania.</p></div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-modal-close class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">Anuluj</button>
+      <button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-semibold hover:bg-cyan-700"><span id="mu-save"></span>Wyślij zaproszenie</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+PBS.init("ustawienia");
+document.getElementById("u-ico").innerHTML = pbsIcon("user","w-5 h-5");
+document.getElementById("u-add").innerHTML = pbsIcon("plus","w-4 h-4");
+document.getElementById("u-mail").innerHTML = pbsIcon("mail","w-4 h-4");
+document.getElementById("p-ico").innerHTML = pbsIcon("shield","w-5 h-5");
+document.getElementById("a-ico").innerHTML = pbsIcon("bell","w-5 h-5");
+document.getElementById("a-mail").innerHTML = pbsIcon("mail","w-4 h-4");
+document.getElementById("a-clock").innerHTML = pbsIcon("clock","w-4 h-4");
+document.getElementById("a-save").innerHTML = pbsIcon("check","w-4 h-4");
+// modal icons
+document.getElementById("mu-ico").innerHTML = pbsIcon("user","w-5 h-5");
+document.getElementById("mu-close").innerHTML = pbsIcon("close","w-5 h-5");
+document.getElementById("mu-mail").innerHTML = pbsIcon("mail","w-4 h-4");
+document.getElementById("mu-info").innerHTML = pbsIcon("mail","w-4 h-4");
+document.getElementById("mu-save").innerHTML = pbsIcon("send","w-4 h-4");
+</script>
+</body>
+</html>
