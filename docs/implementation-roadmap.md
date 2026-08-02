@@ -32,28 +32,28 @@ Legenda statusów:
 
 ## Etap 1 — Fundamenty backendu
 
-- [ ] Implementacja router'a (FastRoute lub autorski)
-- [ ] Pipeline middleware (CORS, Auth, Permission, Rate Limiter)
-- [ ] Warstwa bazowa kontrolerów + abstrakcja odpowiedzi JSON
-- [ ] Warstwa repozytoriów (PDO + prepared statements)
-- [ ] Konfiguracja połączenia z MySQL (PDO)
-- [ ] System migracji bazy danych (tworzenie, rollbacks)
-- [ ] System seedów danych (dane testowe i początkowe)
+- [x] Implementacja router'a (FastRoute lub autorski)
+- [x] Pipeline middleware (CORS, Auth, Permission, Rate Limiter)
+- [x] Warstwa bazowa kontrolerów + abstrakcja odpowiedzi JSON
+- [x] Warstwa repozytoriów (PDO + prepared statements)
+- [x] Konfiguracja połączenia z MySQL (PDO)
+- [x] System migracji bazy danych (tworzenie, rollbacks)
+- [x] System seedów danych (dane testowe i początkowe)
 - [x] Konfiguracja PHPUnit/Pest + pierwszy smoke test API
 - [x] Konfiguracja PHPStan level 9
 
 ## Etap 2 — Baza danych i schemat
 
-- [ ] Migracja: `users`
-- [ ] Migracja: `employees` + `employee_documents`
-- [ ] Migracja: `terminals`
-- [ ] Migracja: `equipment` + `vehicle_details` + `vehicle_service_plans` + `equipment_history`
-- [ ] Migracja: `orders` + `order_employees` + `order_equipment`
-- [ ] Migracja: `incidents` + `incident_comments` + `incident_status_history`
-- [ ] Migracja: `daily_terminal_reports` + `daily_vehicle_reports`
-- [ ] Migracja: `alert_settings`
-- [ ] Seeder: konto `super_admin`
-- [ ] Seeder: dane testowe (terminale, pracownicy, sprzęt)
+- [x] Migracja: `users`
+- [x] Migracja: `employees` + `employee_documents`
+- [x] Migracja: `terminals`
+- [x] Migracja: `equipment` + `vehicle_details` + `vehicle_service_plans` + `equipment_history`
+- [x] Migracja: `orders` + `order_employees` + `order_equipment`
+- [x] Migracja: `incidents` + `incident_comments` + `incident_status_history`
+- [x] Migracja: `daily_terminal_reports` + `daily_vehicle_reports`
+- [x] Migracja: `alert_settings`
+- [x] Seeder: konto `super_admin`
+- [x] Seeder: dane testowe (terminale, pracownicy, sprzęt)
 
 ## Etap 3 — Autentykacja i autoryzacja
 

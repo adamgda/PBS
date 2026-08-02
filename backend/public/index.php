@@ -10,13 +10,40 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Application bootstrap will be implemented in Etap 1
-http_response_code(200);
-header('Content-Type: application/json');
+// === Bezpieczeństwo: walidacja konfiguracji środowiska (CRED-02) ===
+$appDebug = filter_var($_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOL);
+$apiBaseUrl = $_ENV['API_BASE_URL'] ?? getenv('API_BASE_URL') ?: 'http://localhost:8080';
+$isProduction = !str_contains($apiBaseUrl, 'localhost');
 
-echo json_encode([
-    'status' => 'ok',
-    'service' => 'PBS Backend API',
-    'version' => '1.0.0',
-    'timestamp' => date('c'),
-], JSON_PRETTY_PRINT);
+if ($isProduction && $appDebug) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Server misconfiguration']);
+    exit;
+}
+
+$jwtSecret = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?: '';
+if ($isProduction && ($jwtSecret === '' || $jwtSecret === 'dev-secret-key-change-in-production' || strlen($jwtSecret) < 32)) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Server misconfiguration']);
+    exit;
+}
+
+// === Bezpieczeństwo: security headers (HEAD-01) ===
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+
+if ($isProduction) {
+    header('Strict-Transport-Security: max-age=63072000; includeSubDomains; preload');
+}
+
+// === Bootstrap aplikacji ===
+use App\Config\App;
+use App\Config\Config;
+
+$config = Config::fromEnvFile(__DIR__ . '/../.env');
+$app = new App($config);
+$app->run();

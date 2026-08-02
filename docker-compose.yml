@@ -1,3 +1,6 @@
+# Konfiguracja środowiskowa ładowana z backend/.env (gitignored).
+# Wszystkie zmienne (DATABASE_*, MYSQL_*, JWT_*, itp.) są definiowane w jednym pliku: backend/.env.
+
 services:
   backend:
     build:
@@ -10,11 +13,11 @@ services:
       - ./backend:/var/www/html
     depends_on:
       - db
+    env_file:
+      - backend/.env
     environment:
+      # W kontenerze backend łączy się z bazą przez hostname "db", nie 127.0.0.1
       - DATABASE_HOST=db
-      - DATABASE_NAME=srv82152_PBS
-      - DATABASE_LOGIN=srv82152_PBS
-      - DATABASE_PASSWORD=PtMsJaQLk7t428ze8haA
 
   frontend:
     build:
@@ -31,13 +34,12 @@ services:
   db:
     image: mysql:8.4
     container_name: pbs-db
+    # W środowisku produkcyjnym USUNĄĆ mapowanie portów — kontenery komunikują się
+    # w sieci Docker. W dev dostęp tylko z localhost (127.0.0.1), nigdy 0.0.0.0.
     ports:
-      - "3306:3306"
-    environment:
-      MYSQL_DATABASE: srv82152_PBS
-      MYSQL_USER: srv82152_PBS
-      MYSQL_PASSWORD: PtMsJaQLk7t428ze8haA
-      MYSQL_ROOT_PASSWORD: root
+      - "127.0.0.1:3307:3306"
+    env_file:
+      - backend/.env
     volumes:
       - pbs-db-data:/var/lib/mysql
 

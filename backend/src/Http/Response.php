@@ -1,0 +1,111 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http;
+
+/**
+ * Abstrakcja odpowiedzi JSON API.
+ */
+final class Response
+{
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, string> $headers
+     */
+    public function __construct(
+        private readonly int $statusCode,
+        private readonly array $data,
+        private array $headers = [],
+    ) {}
+
+    /**
+     * @param array<string, mixed>|null $data
+     * @param array<string, string> $headers
+     */
+    public static function json(int $statusCode, ?array $data = null, array $headers = []): self
+    {
+        return new self($statusCode, $data ?? [], $headers);
+    }
+
+    public static function success(mixed $data = null, int $statusCode = 200): self
+    {
+        return new self($statusCode, ['data' => $data]);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public static function created(array $data = []): self
+    {
+        return new self(201, $data);
+    }
+
+    public static function noContent(): self
+    {
+        return new self(204, []);
+    }
+
+    /**
+     * @param array<string, mixed>|null $details
+     */
+    public static function error(int $statusCode, string $message, ?array $details = null): self
+    {
+        $data = ['error' => $message];
+        if ($details !== null) {
+            $data['details'] = $details;
+        }
+
+        return new self($statusCode, $data);
+    }
+
+    public function statusCode(): int
+    {
+        return $this->statusCode;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function data(): array
+    {
+        return $this->data;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function headers(): array
+    {
+        return $this->headers;
+    }
+
+    public function header(string $name, string $value): void
+    {
+        $this->headers[$name] = $value;
+    }
+
+    public function getHeader(string $name): ?string
+    {
+        return $this->headers[$name] ?? null;
+    }
+
+    /**
+     * Wysyła odpowiedź do klienta.
+     */
+    public function send(): void
+    {
+        http_response_code($this->statusCode);
+
+        foreach ($this->headers as $name => $value) {
+            header("{$name}: {$value}");
+        }
+
+        if ($this->statusCode === 204) {
+            return;
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($this->data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+}

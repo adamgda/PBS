@@ -9,8 +9,10 @@
 
 # Node modules and dependency files
 /node_modules/
-/package-lock.json
 /yarn.lock
+
+# Lockfiles SHOULD be commitowane (deterministyczne buildy)
+# package-lock.json i composer.lock są commitowane celowo
 
 # Environment files
 /.env

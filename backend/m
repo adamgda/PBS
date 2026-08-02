@@ -1,0 +1,74 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Migrations\AbstractMigration;
+use PDO;
+
+final class CreateIncidentsTable extends AbstractMigration
+{
+    public function up(PDO $pdo): void
+    {
+        $this->execute($pdo, "
+            CREATE TABLE `incidents` (
+                `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `typ` ENUM('sprzet', 'inne') NOT NULL,
+                `equipment_id` INT UNSIGNED NULL,
+                `opis` TEXT NOT NULL,
+                `status` ENUM('zgloszona', 'w_trakcie_naprawy', 'naprawiona', 'zamknieta') NOT NULL DEFAULT 'zgloszona',
+                `data_zgloszenia` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `data_zakonczenia` DATETIME NULL,
+                `zgloszona_przez` INT UNSIGNED NOT NULL,
+                `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                CONSTRAINT `fk_incidents_equipment` FOREIGN KEY (`equipment_id`) REFERENCES `equipment`(`id`) ON DELETE SET NULL,
+                CONSTRAINT `fk_incidents_user` FOREIGN KEY (`zgloszona_przez`) REFERENCES `users`(`id`) ON DELETE RESTRICT
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
+        $this->execute($pdo, "
+            CREATE TABLE `incident_comments` (
+                `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `incident_id` INT UNSIGNED NOT NULL,
+                `tresc` TEXT NOT NULL,
+                `user_id` INT UNSIGNED NOT NULL,
+                `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT `fk_incident_comments_incident` FOREIGN KEY (`incident_id`) REFERENCES `incidents`(`id`) ON DELETE CASCADE,
+                CONSTRAINT `fk_incident_comments_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
+        $this->execute($pdo, "
+            CREATE TABLE `incident_status_history` (
+                `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `incident_id` INT UNSIGNED NOT NULL,
+                `status_od` ENUM('zgloszona', 'w_trakcie_naprawy', 'naprawiona', 'zamknieta') NOT NULL,
+                `status_do` ENUM('zgloszona', 'w_trakcie_naprawy', 'naprawiona', 'zamknieta') NOT NULL,
+                `zmieniony_przez` INT UNSIGNED NOT NULL,
+                `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT `fk_incident_status_history_incident` FOREIGN KEY (`incident_id`) REFERENCES `incidents`(`id`) ON DELETE CASCADE,
+                CONSTRAINT `fk_incident_status_history_user` FOREIGN KEY (`zmieniony_przez`) REFERENCES `users`(`id`) ON DELETE RESTRICT
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+    }
+
+    public function down(PDO $pdo): void
+    {
+        if ($this->tableExists($pdo, 'incident_status_history')) {
+            $this->execute($pdo, 'DROP TABLE `incident_status_history`');
+        }
+        if ($this->tableExists($pdo, 'incident_comments')) {
+            $this->execute($pdo, 'DROP TABLE `incident_comments`');
+        }
+        if ($this->tableExists($pdo, 'incidents')) {
+            $this->execute($pdo, 'DROP TABLE `incidents`');
+        }
+    }
+
+    public function name(): string
+    {
+        return '20260609010500_create_incidents_table';
+    }
+}
+
+return new CreateIncidentsTable();
