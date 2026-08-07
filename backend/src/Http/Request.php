@@ -80,7 +80,18 @@ final class Request
 
     public function header(string $name): ?string
     {
-        return $this->headers[$name] ?? null;
+        // Wielkość liter w nazwach nagłówków HTTP jest nieistotna (RFC 7230 §3.2).
+        // $_SERVER przechowuje je jako wielkoliterowe (HTTP_ORIGIN → „ORIGIN"),
+        // a kod wywołuje header('Origin') (mixed-case) — lookup musi być
+        // case-insensitive, inaczej CORS (Origin) i JWT (Authorization) nigdy
+        // nie zostaną odnalezione.
+        foreach ($this->headers as $key => $value) {
+            if (strcasecmp($key, $name) === 0) {
+                return $value;
+            }
+        }
+
+        return null;
     }
 
     /**

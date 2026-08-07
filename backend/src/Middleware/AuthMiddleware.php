@@ -6,15 +6,17 @@ namespace App\Middleware;
 
 use App\Http\Request;
 use App\Http\Response;
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException;
-use Firebase\JWT\ExpiredException;
 use UnexpectedValueException;
 
 /**
  * Middleware Auth — weryfikuje token JWT (access) w nagłówku Authorization.
  * Poprawny token ładuje claims do atrybutów requesta: user_id, role, permissions.
+ *
+ * Algorytm: HS256 (dev) — docelowo RS256 na produkcji (Etap 15).
  */
 final class AuthMiddleware implements MiddlewareInterface
 {
@@ -57,6 +59,12 @@ final class AuthMiddleware implements MiddlewareInterface
             return Response::error(401, 'Invalid token signature');
         } catch (UnexpectedValueException) {
             return Response::error(401, 'Invalid token');
+        }
+
+        // Weryfikacja, że to access token (nie refresh)
+        /** @var object{typ?: string} $decoded */
+        if (!isset($decoded->typ) || $decoded->typ !== 'access') {
+            return Response::error(401, 'Invalid token type');
         }
 
         /** @var object{sub?: int|string, role?: string, permissions?: array<string,bool>} $decoded */

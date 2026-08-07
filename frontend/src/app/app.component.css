@@ -1,0 +1,5 @@
+/* Style globalne komponentu app — Tailwind zarządza resztą */
+:host {
+  display: block;
+  min-height: 100vh;
+}

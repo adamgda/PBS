@@ -118,6 +118,30 @@ it('CORS middleware passes through for OPTIONS', function (): void {
     expect($response->statusCode())->toBe(204);
 });
 
+it('CORS middleware handles preflight OPTIONS with allowed origin and short-circuits', function (): void {
+    $middleware = new CorsMiddleware(['http://localhost:4200']);
+
+    $request = new Request(query: [], body: [], headers: ['Origin' => 'http://localhost:4200']);
+    $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
+
+    $called = false;
+    $finalHandler = function (Request $req) use (&$called): Response {
+        $called = true;
+
+        return Response::json(200);
+    };
+
+    $response = $middleware->process($request, $finalHandler);
+
+    // Preflight nie powinien trafiać do routera (short-circuit)
+    expect($called)->toBeFalse();
+    expect($response->statusCode())->toBe(204);
+    expect($response->getHeader('Access-Control-Allow-Origin'))->toBe('http://localhost:4200');
+    expect($response->getHeader('Access-Control-Allow-Methods'))->toContain('OPTIONS');
+    expect($response->getHeader('Access-Control-Allow-Headers'))->toContain('Authorization');
+    expect($response->getHeader('Access-Control-Allow-Credentials'))->toBe('true');
+});
+
 it('RateLimiter allows requests within limit', function (): void {
     $middleware = new RateLimiterMiddleware(maxRequests: 5, windowSeconds: 60);
 

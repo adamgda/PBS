@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Dokumentacja Techniczna
 
-> **Wersja dokumentu:** 1.0  
-> **Data:** 2026-06-09  
+> **Wersja dokumentu:** 1.1  
+> **Data:** 2026-08-07  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -579,35 +579,118 @@ incidents ──┬── incident_comments
 
 ### 9.1 Szyfrowanie i hasła
 
-- Hasła: bcrypt (PASSWORD_BCRYPT) lub Argon2id (PASSWORD_ARGON2ID)
-- Klucze API / tokeny: random_bytes() + base64 encode
-- Szyfrowanie danych wrażliwych: AES-256-GCM (openssl_encrypt)
+- Hasła: **Argon2id** (preferowany, `PASSWORD_ARGON2ID`) lub bcrypt (`PASSWORD_BCRYPT`) z kosztem ≥ bcrypt cost 12
+- Klucze API / tokeni: `random_bytes(32)` + base64url encode
+- Szyfrowanie danych wrażliwych w spoczynku (at-rest): **AES-256-GCM** (`openssl_encrypt`) z kluczem z zmiennej `APP_KEY` (32 bajty, base64) przechowywanym w `.env`
+- Szyfrowanie w tranzycie: TLS 1.3 (wymuszone), TLS 1.2 jako fallback z restrykcyjnymi cipher suites (ECDHE, AEAD)
+- Hashe haseł przechowywane wyłącznie jako `password_hash` — nigdy plaintext ani odwracalnie
 
-### 9.2 Ochrona danych osobowych
+### 9.1.1 Polityka haseł
 
-- Minimalizacja: tylko niezbędne dane pracowników przechowywane
-- Ekspozycja przez API: odpowiednie mapowanie DTO, bez przesyłania niepotrzebnych pól
-- Pseudonimizacja tam gdzie możliwe
+- Minimalna długość: **12 znaków**
+- Wymagane klasy znaków: małe litery, wielkie litery, cyfry, znaki specjalne (min. 3 z 4 klas)
+- Blokada 10 najczęściej używanych haseł (lista `haveibeenpwned` lub statyczna lista)
+- Maksymalna długość: 128 znaków (ochrona przed DoS hash)
+- Hasło nie może zawierać adresu e-mail użytkownika
+- Wymuszona zmiana hasła przy pierwszym logowaniu (po utworzeniu konta przez `super_admin`)
+- Historia haseł: blokada ponownego użycia 5 ostatnich haseł
+
+### 9.2 Ochrona danych osobowych (RODO/GDPR)
+
+- **Minimalizacja**: tylko niezbędne dane pracowników przechowywane
+- **Ekspozycja przez API**: odpowiednie mapowanie DTO, bez przesyłania niepotrzebnych pól (np. `password_hash` nigdy nie wychodzi z API)
+- **Pseudonimizacja** tam gdzie możliwe (np. identyfikatory zamiast imion w logach)
+- **Prawo do bycia zapomnianym**: endpoint `DELETE /api/v1/employees/{id}` realizuje anonymizację (nadpisanie danych osobowych wartościami `[deleted]`) zamiast fizycznego usunięcia, gdy wymagane przez RODO
+- **Retencja danych**: dane pracowników nieaktywnych archiwizowane po 2 latach, usuwane po 5 latach (konfigurowalne w ustawieniach)
+- **Dostęp do danych osobowych**: logowany w audit log (kto, kiedy, jakie dane obejrzał)
+- **Zgoda**: aplikacja przetwarza dane na podstawie zgody/wiążącego polecenia — dokumentacja prawna prowadzona osobno
 
 ### 9.3 REST API Security
 
-- HTTPS (TLS 1.3)
-- CORS: whitelist dozwolonych originów
-- Rate limiting (np. 100 req/min na IP, 1000 req/min na użytkownika)
-- Input validation i sanitization
-- SQL Injection: prepared statements (PDO)
-- XSS: Content-Security-Policy headers, Output encoding
-- CSRF: tokeny w nagłówkach dla mutate endpoints
-- Helmet-style HTTP headers
+- **HTTPS** (TLS 1.3 wymuszone, przekierowanie HTTP → HTTPS)
+- **CORS**: whitelist dozwolonych originów z `.env` (`CORS_ALLOWED_ORIGINS`), brak wildcard `*` na produkcji
+- **Rate limiting**:
+  - Globalnie: 100 req/min na IP, 1000 req/min na użytkownika
+  - **Logowanie** (`/auth/login`): 5 prób/min na IP + 10 prób/h na konto (ochrona przed brute-force)
+  - **Set-password**: 3 próby/h na token (ochrona przed przejęciem linku)
+  - Po przekroczeniu limitu logowania → blokada konta na 15 min + powiadomienie e-mail
+- **Input validation i sanitization**: walidacja na poziomie kontrolera (typ, długość, format) + sanityzacja na poziomie serwisu
+- **SQL Injection**: prepared statements (PDO) — **zabronione** łączenie stringów w zapytaniach SQL
+- **XSS**: Content-Security-Policy headers, output encoding w szablonach Angular (`{{ }}` domyślnie escapuje), brak `innerHTML` bez sanityzacji (`DomSanitizer`)
+- **CSRF**: tokeny w nagłówkach (`X-CSRF-Token`) dla mutate endpoints, walidacja `Origin` header
+- **Mass assignment**: DTO z jawnym whitelistem pól — nigdy nie bindować `$_POST` bezpośrednio do modelu
+- **IDOR**: autoryzacja per zasób — sprawdzanie czy użytkownik ma dostęp do konkretnego `{id}` (nie tylko do sekcji)
+- **File upload** (dokumenty pracowników):
+  - Walidacja typu MIME przez `finfo_file()` + whitelist rozszerzeń (`.pdf`, `.jpg`, `.png`)
+  - Limit rozmiaru: 5 MB
+  - Skanowanie antywirusowe (ClamAV) w tle
+  - Pliki przechowywane poza document root, dostęp przez signed URL z krótkim TTL
+  - Generowanie nowej nazwy pliku (UUID) — nie ufać nazwie od klienta
+
+### 9.3.1 Nagłówki bezpieczeństwa (HTTP Security Headers)
+
+Wszystkie odpowiedzi API muszą zawierać:
+
+| Nagłówek | Wartość | Cel |
+|---|---|---|
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | HSTS — wymuszenie HTTPS |
+| `X-Content-Type-Options` | `nosniff` | Blokada MIME sniffing |
+| `X-Frame-Options` | `DENY` | Clickjacking (dla API) |
+| `Content-Security-Policy` | `default-src 'none'; frame-ancestors 'none'` | CSP dla API |
+| `Referrer-Policy` | `no-referrer` | Ograniczenie wycieku URL |
+| `Permissions-Policy` | `geolocation=(), camera=(), microphone=()` | Blokada niepotrzebnych API |
+| `Cache-Control` | `no-store` dla odpowiedzi z danymi osobowymi | Ochrona przed cache'owaniem |
+| `X-Robots-Tag` | `noindex, nofollow` | Brak indeksowania API |
+
+Frontend (Angular) dodatkowo:
+
+| Nagłówek | Wartość | Cel |
+|---|---|---|
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' <API_URL>;` | Ograniczenie źródeł zasobów |
+| `X-Frame-Options` | `SAMEORIGIN` | Zezwolenie na embedding w tej samej domenie |
 
 ### 9.4 JWT Security
 
-- Krótki czas wygaśnięcia access tokena (15 minut)
-- Refresh token z rotacją
-- Token przechowywany w HttpOnly cookie (opcjonalnie)
-- Sygnowanie RS256 z dedykowaną parą kluczy
+- **Algorytm podpisywania**: dokumentacja określa **RS256** (asymetryczne); implementacja referencyjna używa HS256. Docelowo **RS256** z dedykowaną parą kluczy RSA (2048-bit), klucz prywatny w `.env`, publiczny dystrybuowany. Jeśli HS256 używany w dev, musi być zastąpiony RS256 na produkcji.
+- **Krótki czas wygaśnięcia access tokena**: 15 minut (`JWT_ACCESS_TTL=900`)
+- **Refresh token**: jednorazowy (single-use) z rotacją — każde użycie generuje nowy token i unieważnia stary
+- **Denylist refresh tokenów**: unieważnione tokeny przechowywane w tabeli `revoked_refresh_tokens` (z TTL równym `JWT_REFRESH_TTL`), sprawdzane przy każdym `/auth/refresh`
+- **Wylogowanie**: `POST /auth/logout` dodaje refresh token do denylist + czyści cookie
+- **Przechowywanie tokena**:
+  - Preferowane: **HttpOnly + Secure + SameSite=Strict cookie** — ochrona przed XSS kradzieżą
+  - Alternatywa (jeśli cookie niemożliwe): `localStorage` + ochrona przed XSS (CSP, sanityzacja)
+  - **Zabronione**: `sessionStorage` (krótszy TTL, podatny na ataki)
+- **Claims**: `sub` (user ID), `role`, `permissions`, `iat`, `exp`, `jti` (unikalne ID do denylist)
+- **Rotacja kluczy**: co 90 dni, z okresem overlap 7 dni (stare i nowe klucze akceptowane)
+- **Audyt**: każde wystawienie/odświeżenie/wylogowanie logowane w `audit_log`
 
----
+### 9.5 Audyt i logowanie bezpieczeństwa
+
+- **Audit log**: tabela `audit_log` rejestruje wszystkie istotne akcje:
+  - Logowanie (sukces + niepowodzenie), wylogowanie
+  - Zmiana uprawnień, utworzenie/usunięcie użytkownika
+  - Dostęp do danych osobowych pracowników
+  - Zmiana statusu awarii, usunięcie zasobu
+- Struktura: `id`, `user_id`, `action`, `resource_type`, `resource_id`, `ip_address`, `user_agent`, `details` (JSON), `created_at`
+- Retencja logów: 12 miesięcy
+- Logi chronione przed modyfikacją (append-only, brak UPDATE/DELETE)
+
+### 9.6 Zarządzanie sekretami
+
+- Pliki `.env` **nigdy** commitowane do Git (weryfikacja w `.gitignore`)
+- Na produkcji: sekrety z Docker Secrets, Vault lub cloud-specific secret manager (AWS Secrets Manager, GCP Secret Manager)
+- Rotacja sekretów: `JWT_SECRET`, `APP_KEY` rotowane co 90 dni, procedura rotacji udokumentowana
+- Brak sekretów w kodzie źródłowym, logach, komunikatach błędów
+- Weryfikacja braku sekretów w repozytorium (pre-commit hook + skanowanie np. `gitleaks`)
+
+### 9.7 Blokada konta i odzyskiwanie dostępu
+
+- Po **5 nieudanych** próbach logowania konto blokowane na **15 minut**
+- Po **20 nieudanych** próbach w 24h konto blokowane do ręcznego odblokowania przez `super_admin`
+- Powiadomienie e-mail przy blokadzie konta
+- Odzyskiwanie hasła: `POST /api/v1/auth/forgot-password` → e-mail z jednorazowym tokenem (TTL 1h)
+- Token resetujący: `random_bytes(32)`, przechowywany hash w `password_reset_tokens`, jednorazowy
+
 
 ## 10. Sekcje aplikacji — szczegółowy opis
 
@@ -617,6 +700,7 @@ incidents ──┬── incident_comments
 - KPI: liczba aktywnych pracowników, obsługiwane terminale, pojazdy w użyciu, aktywne awarie
 - Alerty: certyfikaty bliskie wygaśnięcia, zbliżające się przeglądy, nierozwiązane awarie
 - Skróty: zgłoś awarię, utwórz raport, dodaj zlecenie
+- Motyw: przełącznik pomiędzy ciemnym a jasnym motywem (dark/light theme toggle) — wybór zapamiętywany w `localStorage` i aplikowany globalnie; domyślnie nastawiony na preferencje systemu (`prefers-color-scheme`)
 - Responsywność: mobile-friendly, priorytet szybkiego podglądu
 
 ### 10.2 Pracownicy
@@ -984,7 +1068,7 @@ final readonly class EmployeeDTO
 
 | Wymaganie | Opis |
 |---|---|
-| Wydajność | Czas odpowiedzi API < 500ms dla 95% zapytań |
+| Wydajność | Czas odpowiedzi API < 500ms dla 95% zapytań, < 200ms dla 99% zapytań odczytu z cache |
 | Responsywność | Mobile first, wszystkie widoki działają na ekranach ≥ 320px |
 | Dostępność | Aplikacja dostępna 24/7 (SLA 99.5%) |
 | Bezpieczeństwo | OWASP Top 10, HTTPS, Content Security Policy |
@@ -992,7 +1076,114 @@ final readonly class EmployeeDTO
 | Testowalność | Frontend: Jasmine/Karma; Backend: PHPUnit/Pest |
 | Monitorowanie | Logowanie błędów, metryki API |
 
----
+### 14.1 Indeksowanie bazy danych
+
+Każda tabela musi posiadać indeksy na kolumnach używanych w klauzulach `WHERE`, `JOIN`, `ORDER BY` i `GROUP BY`. Poniżej minimalny zestaw:
+
+| Tabela | Indeksy |
+|---|---|
+| `users` | `UNIQUE(email)`, `INDEX(is_active)` |
+| `employees` | `INDEX(is_active)`, `INDEX(current_terminal_id)`, `INDEX(current_sprzet_id)`, `INDEX(nazwisko, imie)` |
+| `equipment` | `INDEX(is_active)`, `INDEX(kategoria)`, `INDEX(current_employee_id)`, `INDEX(current_terminal_id)` |
+| `orders` | `INDEX(terminal_id)`, `INDEX(status)`, `INDEX(data_rozpoczecia)`, `INDEX(data_zakonczenia)`, `INDEX(numer_zlecenia UNIQUE)` |
+| `incidents` | `INDEX(status)`, `INDEX(equipment_id)`, `INDEX(data_zgloszenia)`, `INDEX(zgloszona_przez)` |
+| `equipment_history` | `INDEX(equipment_id, data)` |
+| `daily_terminal_reports` | `INDEX(terminal_id, data_raportu)` |
+| `daily_vehicle_reports` | `INDEX(equipment_id, data_raportu)` |
+| `audit_log` | `INDEX(user_id, created_at)`, `INDEX(action)`, `INDEX(resource_type, resource_id)` |
+| `order_employees` | `INDEX(order_id)`, `INDEX(employee_id)` |
+| `order_equipment` | `INDEX(order_id)`, `INDEX(equipment_id)` |
+
+Zasady:
+- Klucze obce **muszą** mieć indeks (`FOREIGN KEY` automatycznie tworzy w MySQL)
+- Złożone indeksy dla częstych kombinacji filtrów (np. `(status, data_rozpoczecia)` w `orders`)
+- Indeksy dodawane w migracjach — nie ręcznie w bazie
+- Monitorowanie wolnych zapytań (`slow_query_log` z `long_query_time = 0.1`)
+
+### 14.2 Strategia cache
+
+| Warstwa | Technologia | TTL | Cel |
+|---|---|---|---|
+| HTTP cache (browser) | `Cache-Control`, `ETag` | 5 min dla GET, `no-store` dla mutacji | Redukcja żądań |
+| CDN / reverse proxy | Nginx FastCGI cache / Redis | 1–60 min | Cache odpowiedzi API |
+| Backend cache | Redis lub APCu | 60 s–5 min | Cache zapytań DB, KPI dashboard |
+| Frontend cache | Angular `HttpInterceptor` + Signals | 60 s | Redukcja zapytań do API |
+
+Zasady:
+- **Cache invalidation**: tag-based cache (np. `employees:all`, `employee:{id}`) — zapis mutuje odpowiedni tag
+- **Stale-while-revalidate**: dla danych rzadko się zmieniających (np. lista terminali)
+- Dashboard KPI: cache 60 s (dane mogą być nieświeże o minutę — akceptowalne)
+- **Nigdy** nie cache'ować danych osobowych bez `Cache-Control: private`
+- Backend cache konfigurowalny przez `.env` (`CACHE_DRIVER=redis|apcu|file`)
+
+### 14.3 Kompresja i optymalizacja transferu
+
+- **Backend**: gzip/brotli compression dla odpowiedzi > 1 KB (pozwala zaoszczędzić do 70% transferu)
+- **Frontend**: build z `outputHashing: all` (obecnie w konfiguracji), lazy loading wszystkich route'ów (`loadComponent`)
+- **Obrazy**: WebP/AVIF dla zdjęć, SVG dla ikon, `srcset` dla responsywnych rozmiarów
+- **JSON**: minimalizacja — brak zbędnych pól, użycie `sparse fieldsets` (`?fields=id,nazwa,status`)
+- **Paginacja**: domyślnie 25 rekordów na stronę, max 100
+
+### 14.4 Optymalizacja zapytań DB (anti-N+1)
+
+- **Eager loading**: relacje ładowane w jednym zapytaniu z `JOIN` — nie jedno na rekord
+  - Przykład: `GET /api/v1/orders` → 1 zapytanie + JOIN na `order_employees`, `employees`, `order_equipment`, `equipment`
+- **Lazy loading** na frontend (rozwijanie wiersza), ale na backendzie zawsze eager
+- **Selektywność**: `SELECT` tylko potrzebnych kolumn, nie `SELECT *`
+- **Bounded queries**: każdy `GET /list` **musi** mieć paginację — zabronione zwracanie całej tabeli
+- **Transakcje**: krótkie, bez wywołań HTTP wewnątrz, izolacja `READ COMMITTED`
+- **Connection pooling**: PDO persistent connections (`PDO::ATTR_PERSISTENT`) opcjonalnie, timeout 5 s
+
+### 14.5 Timeout'y i resilience
+
+| Zasób | Timeout | Retry |
+|---|---|---|
+| HTTP żądanie frontend → API | 10 s | 1 retry z exponential backoff |
+| Backend → MySQL | 5 s (`PDO::ATTR_TIMEOUT`) | brak — błąd natychmiast |
+| Backend → Redis | 1 s | fallback na brak cache |
+| Backend → SMTP | 10 s | 3 retry w queue |
+| Cron job (alerty) | 60 s | brak |
+
+Zasady:
+- Frontend: `AbortController` / `HttpClient` timeout dla każdego żądania
+- Backend: circuit breaker dla zależności zewnętrznych (SMTP), graceful degradation
+- Błędy 5xx: nie ujawniać stack trace w produkcji (`display_errors=Off`), logować do pliku
+
+### 14.6 PWA i offline-first
+
+Aplikacja deklaruje "offline-first" w założeniach — musi być zrealizowana przez:
+
+- **Service Worker**: `@angular/service-worker` dodany do zależności i skonfigurowany w `angular.json` (`"ngswConfigPath": "ngsw-config.json"`)
+- **Web App Manifest**: `manifest.webmanifest` w `assets/`, zdefiniowane ikony, `display: standalone`, `theme_color`, `background_color`
+- **Strategia cache offline**:
+  - **App shell**: precache HTML, CSS, JS (stale-while-revalidate)
+  - **API GET**: cache-first z network timeout (jeśli offline → zwróć z cache)
+  - **API POST/PUT/DELETE**: background sync queue — żądania kolejkowane i wysyłane po odzyskaniu połączenia
+  - **Dane krytyczne** (awaria): `IndexedDB` jako lokalny store, synchronizacja gdy online
+- **UX offline**: wskaźnik statusu połączenia (online/offline banner), feedback dla akcji w kolejce
+- **Minimalizacja transferu**: delta updates gdzie możliwe, `If-None-Match` / `ETag`
+
+### 14.7 Optymalizacja bundle frontendu
+
+- **Lazy loading**: każdy route w `app.routes.ts` używa `loadComponent` (brak eager importów stron)
+  ```typescript
+  { path: 'pracownicy', loadComponent: () => import('./pages/pracownicy/list').then(m => m.PracownicyListComponent) }
+  ```
+- **Bundle budgets** (w `angular.json`):
+  - `initial`: warning 500 kB, error 1 MB (obecnie) — docelowo warning 300 kB, error 700 kB
+  - `anyComponentStyle`: warning 4 kB, error 8 kB
+- **Tree shaking**: brak importów całych bibliotek (np. `import _ from 'lodash'` → `import debounce from 'lodash/debounce'`)
+- **Prefetching**: strategia `prefetch` dla prawdopodobnych nawigacji (Angular `preloadStrategy`)
+- **Web Vitals targets**: LCP < 2.5 s, FID < 100 ms, CLS < 0.1
+
+### 14.8 Monitorowanie wydajności
+
+- **Backend**: metryki Prometheus lub strukturalne logi JSON (monolog) — czas żądania, status, endpoint, user_id
+- **APM**: opcjonalnie Sentry / New Relic dla śledzenia transakcji i błędów
+- **Frontend**: Angular error handler → Sentry / logi; web vitals reporting
+- **Alerty**: auto-alert jeśli p95 > 1000 ms lub error rate > 1%
+- **Dashboardy**: Grafana z metrykami API, DB, cache hit rate
+
 
 ## 15. Środowiska
 
@@ -1051,4 +1242,4 @@ Projekt wykorzystuje dwa skille AI zarejestrowane w `skills-lock.json`:
 
 ---
 
-> **Koniec dokumentacji technicznej PBS v1.0**
+> **Koniec dokumentacji technicznej PBS v1.1**

@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Plan wdrożenia
 
-> **Wersja:** 1.0  
-> **Data:** 2026-06-09  
+> **Wersja:** 1.1  
+> **Data:** 2026-08-07  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -57,32 +57,49 @@ Legenda statusów:
 
 ## Etap 3 — Autentykacja i autoryzacja
 
-- [ ] Endpoint: `POST /api/v1/auth/login`
-- [ ] Endpoint: `POST /api/v1/auth/refresh`
-- [ ] Endpoint: `POST /api/v1/auth/logout`
-- [ ] Endpoint: `POST /api/v1/auth/set-password` (link z e-maila)
-- [ ] Generacja i walidacja JWT (access + refresh)
-- [ ] Middleware `AuthMiddleware` (weryfikacja tokena)
-- [ ] Middleware `PermissionMiddleware` (uprawnienia per sekcja)
-- [ ] Zarządzanie rolami (`super_admin`, `admin`, `user`)
-- [ ] Mechanizm rotacji refresh tokena
-- [ ] Testy: login, refresh, logout, set-password, permission denied
+- [x] Endpoint: `POST /api/v1/auth/login` (z rate limiting: 5 prób/min na IP)
+- [x] Endpoint: `POST /api/v1/auth/refresh` (single-use refresh + rotacja)
+- [x] Endpoint: `POST /api/v1/auth/logout` (dodanie refresh tokena do denylist)
+- [x] Endpoint: `POST /api/v1/auth/set-password` (link z e-maila, 3 próby/h na token)
+- [x] Endpoint: `POST /api/v1/auth/forgot-password` (jednorazowy token resetujący, TTL 1h)
+- [x] Generacja i walidacja JWT (access + refresh), claim `jti` dla denylist
+- [x] Middleware `AuthMiddleware` (weryfikacja tokena, algorytm RS256 na produkcji)
+- [x] Middleware `PermissionMiddleware` (uprawnienia per sekcja + autoryzacja per zasób IDOR)
+- [x] Zarządzanie rolami (`super_admin`, `admin`, `user`)
+- [x] Migracja: `revoked_refresh_tokens` (denylist z TTL)
+- [x] Migracja: `password_reset_tokens` (tokeny resetujące, jednorazowe)
+- [x] Migracja: `audit_log` (logowanie akcji bezpieczeństwa)
+- [x] Polityka haseł: min. 12 znaków, 3/4 klasy znaków, blokada popularnych, max 128, historia 5
+- [x] Blokada konta: 5 nieudanych prób → 15 min, 20 prób/24h → ręczne odblokowanie
+- [x] Powiadomienie e-mail przy blokadzie konta
+- [x] Hash haseł: Argon2id (preferowany) lub bcrypt cost ≥ 12
+- [x] Testy: login, refresh, logout, set-password, forgot-password, permission denied, IDOR, blokada konta
 
 ## Etap 4 — Fundamenty frontendu
 
 - [x] Konfiguracja Tailwind CSS + design system (kolory firmowe, spacing, typografia)
 - [x] Konfiguracja routingu Angular (lazy-loaded standalone components)
-- [ ] `AuthGuard` (wymóg zalogowania)
-- [ ] `PermissionGuard` (uprawnienia per sekcja)
-- [ ] Serwis `AuthService` (login, refresh, logout, przechowywanie tokena)
-- [ ] HTTP Interceptor: dołączanie JWT + automatyczny refresh
+- [x] `AuthGuard` (wymóg zalogowania)
+- [x] `PermissionGuard` (uprawnienia per sekcja)
+- [x] Serwis `AuthService` (login, refresh, logout, przechowywanie tokena)
+- [x] HTTP Interceptor: dołączanie JWT + automatyczny refresh
 - [x] **Struktura katalogu lokalizacji `frontend/src/locales/pl/`** (common, dashboard, pracownicy, sprzet, terminale, harmonogram, analityka, raportowanie, ustawienia, awaria)
-- [ ] Serwis `TranslateService` + pipe `translate`
-- [ ] Współdzielone komponenty: `ToastNotificationComponent`, `ConfirmDialogComponent`
-- [ ] Współdzielone komponenty: `DataTableComponent`, `FilterBarComponent`, `AutocompleteSelectComponent`
-- [ ] Współdzielone komponenty: `KpiCardComponent`, `AlertWidgetComponent`, `TimelineComponent`, `CalendarComponent`
-- [ ] Wszystkie listy rozwijane z autocomplete
-- [ ] Wszystkie listy z opcją filtrowania
+- [x] Serwis `TranslateService` + pipe `translate`
+- [x] Współdzielone komponenty: `ToastNotificationComponent`, `ConfirmDialogComponent`
+- [x] Współdzielone komponenty: `DataTableComponent`, `FilterBarComponent`, `AutocompleteSelectComponent`
+- [x] Współdzielone komponenty: `KpiCardComponent`, `AlertWidgetComponent`, `TimelineComponent`, `CalendarComponent`
+- [x] Wszystkie listy rozwijane z autocomplete
+- [x] Wszystkie listy z opcją filtrowania
+- [x] **PWA**: `@angular/service-worker` dodany do zależności, `ngsw-config.json` skonfigurowany
+- [x] **PWA**: `manifest.webmanifest` w `assets/` (ikony, `display: standalone`, `theme_color`)
+- [x] **Offline-first**: wskaźnik statusu połączenia (online/offline banner)
+- [x] **Offline-first**: background sync queue dla POST/PUT/DELETE (żądania kolejkowane)
+- [x] **Offline-first**: `IndexedDB` jako lokalny store dla danych krytycznych (awaria)
+- [x] **Wydajność**: lazy loading `loadComponent` dla wszystkich route'ów w `app.routes.ts`
+- [x] **Wydajność**: bundle budgets — docelowo initial warning 300 kB, error 700 kB
+- [x] **Wydajność**: HTTP Interceptor z cache (TTL 60 s dla GET)
+- [x] **Wydajność**: timeout `HttpClient` (10 s) + retry z exponential backoff
+- [x] Token JWT przechowywany w HttpOnly + Secure + SameSite=Strict cookie (preferowane)
 
 ## Etap 5 — Sekcja: Użytkownicy (Ustawienia → Użytkownicy)
 
@@ -111,10 +128,14 @@ Legenda statusów:
 - [ ] Backend: `PATCH /api/v1/employees/{id}/assignment` (terminal/sprzęt)
 - [ ] Backend: `GET/POST /api/v1/employees/{id}/documents`
 - [ ] Backend: `PUT/DELETE /api/v1/documents/{id}`
+- [ ] Backend: upload plików — walidacja MIME (`finfo_file`), whitelist (`.pdf`, `.jpg`, `.png`), limit 5 MB
+- [ ] Backend: upload plików — skanowanie ClamAV, nazwa UUID, przechowywanie poza document root
+- [ ] Backend: upload plików — dostęp przez signed URL z krótkim TTL
 - [ ] Frontend: lista pracowników (DataTable + filtry: imię, nazwisko, terminal, sprzęt)
 - [ ] Frontend: formularz dodawania/edycji pracownika
 - [ ] Frontend: zakładka "Certyfikaty i uprawnienia" (dokumenty + detekcja wygaśnięcia)
 - [ ] Frontend: szybkie przypisanie terminala/sprzętu
+- [ ] Frontend: anonimizacja danych przy usunięciu (RODO — prawo do bycia zapomnianym)
 - [ ] Lokalizacje: `pracownicy.json` w `locales/pl/`
 
 ## Etap 8 — Sekcja: Sprzęt
@@ -203,17 +224,46 @@ Legenda statusów:
 
 ## Etap 15 — Bezpieczeństwo i hardening
 
-- [ ] HTTPS/TLS 1.3 na wszystkich środowiskach
-- [ ] CORS whitelist
-- [ ] Rate limiting (100 req/min IP, 1000 req/min user)
-- [ ] CSRF tokeny dla mutate endpoints
-- [ ] Content-Security-Policy + Helmet-style headers
-- [ ] Walidacja i sanitization wejścia (kontroler + serwis)
-- [ ] Prepared statements (PDO) — weryfikacja braku SQL injection
-- [ ] Szyfrowanie danych wrażliwych (AES-256-GCM)
-- [ ] Hash haseł: bcrypt/Argon2id
-- [ ] JWT RS256 + krótki TTL + rotacja refresh
-- [ ] Audyt bezpieczeństwa / penetration test
+- [ ] HTTPS/TLS 1.3 na wszystkich środowiskach (przekierowanie HTTP → HTTPS)
+- [ ] CORS whitelist z `.env` (`CORS_ALLOWED_ORIGINS`), brak wildcard `*` na produkcji
+- [ ] Rate limiting (100 req/min IP, 1000 req/min user) + logowanie 5/min, set-password 3/h
+- [ ] CSRF tokeny (`X-CSRF-Token`) dla mutate endpoints + walidacja `Origin` header
+- [ ] Nagłówki bezpieczeństwa: HSTS, X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, Permissions-Policy
+- [ ] `Cache-Control: no-store` dla odpowiedzi z danymi osobowymi, `X-Robots-Tag: noindex`
+- [ ] Walidacja i sanitization wejścia (kontroler + serwis) + mass assignment protection (DTO whitelist)
+- [ ] Prepared statements (PDO) — weryfikacja braku SQL injection (brak łączenia stringów)
+- [ ] Szyfrowanie danych wrażliwych at-rest: AES-256-GCM z `APP_KEY` w `.env`
+- [ ] Hash haseł: Argon2id (preferowany) lub bcrypt cost ≥ 12
+- [ ] JWT RS256 na produkcji (HS256 tylko dev) + krótki TTL (15 min) + single-use refresh z rotacją
+- [ ] Denylist refresh tokenów (`revoked_refresh_tokens`) sprawdzana przy każdym `/auth/refresh`
+- [ ] Audit log (`audit_log`): logowanie, uprawnienia, dostęp do danych osobowych, zmiana statusu awarii
+- [ ] IDOR protection: autoryzacja per zasób — sprawdzanie dostępu do konkretnego `{id}`
+- [ ] Zarządzanie sekretami: `.env` nie commitowane, Docker Secrets/Vault na produkcji, rotacja co 90 dni
+- [ ] Skanowanie sekretów w repozytorium (pre-commit hook + `gitleaks`)
+- [ ] `display_errors=Off` na produkcji, stack trace tylko w logach
+- [ ] RODO: anonimizacja danych przy usunięciu, retencja (2 lata archiwizacja, 5 lat usuwanie)
+- [ ] Audyt bezpieczeństwa / penetration test (zewnętrzny)
+
+## Etap 15a — Wydajność i optymalizacja
+
+- [ ] Indeksy DB: dodanie indeksów z dokumentacji (sekcja 14.1) w migracjach dla wszystkich tabel
+- [ ] `slow_query_log` z `long_query_time = 0.1` na staging/produkcji
+- [ ] Cache backend: Redis lub APCu (`CACHE_DRIVER` w `.env`), TTL 60 s–5 min dla KPI
+- [ ] Cache invalidation: tag-based cache (`employees:all`, `employee:{id}`) — zapis mutuje tag
+- [ ] Cache HTTP: `Cache-Control`, `ETag` dla GET (5 min), `no-store` dla mutacji
+- [ ] Kompresja gzip/brotli dla odpowiedzi > 1 KB (backend + reverse proxy)
+- [ ] Eager loading relacji (anti-N+1): JOIN w jednym zapytaniu, nie jedno na rekord
+- [ ] `SELECT` tylko potrzebnych kolumn (nie `SELECT *`), sparse fieldsets (`?fields=id,nazwa`)
+- [ ] Paginacja obowiązkowa dla wszystkich list (domyślnie 25, max 100)
+- [ ] Timeout DB: `PDO::ATTR_TIMEOUT` 5 s, connection pooling opcjonalnie
+- [ ] Timeout HTTP frontend → API: 10 s + 1 retry z exponential backoff
+- [ ] Circuit breaker dla zależności zewnętrznych (SMTP), graceful degradation
+- [ ] Web Vitals: LCP < 2.5 s, FID < 100 ms, CLS < 0.1
+- [ ] Obrazy: WebP/AVIF, SVG dla ikon, `srcset` responsywny
+- [ ] Tree shaking: brak importów całych bibliotek (np. `lodash` → `lodash/debounce`)
+- [ ] Monitorowanie: metryki Prometheus/monolog (czas żądania, status, endpoint, user_id)
+- [ ] APM: Sentry / New Relic dla śledzenia transakcji i błędów
+- [ ] Auto-alerty: p95 > 1000 ms lub error rate > 1%
 
 ## Etap 16 — Testy i jakość
 
@@ -223,9 +273,16 @@ Legenda statusów:
 - [ ] Backend: PHPUnit/Pest — testy kontrolerów i serwisów
 - [ ] Backend: testy repozytoriów i migracji
 - [ ] Backend: testy integracyjne API
+- [ ] Backend: testy bezpieczeństwa — rate limiting, blokada konta, IDOR, JWT expiry/denylist
+- [ ] Backend: testy uploadu plików — MIME, rozmiar, UUID, signed URL
+- [ ] Backend: testy polityki haseł — min. długość, klasy znaków, historia, blokada popularnych
+- [ ] Frontend: testy PWA — service worker, offline cache, background sync
+- [ ] Frontend: testy interceptora HTTP — cache, timeout, retry, JWT attach
 - [ ] PHPStan level 9 — brak błędów
 - [ ] Pokrycie testów ≥ 80% (backend)
 - [ ] CI/CD: uruchomienie testów na każdym PR
+- [ ] CI/CD: skanowanie sekretów (`gitleaks`) na każdym PR
+- [ ] CI/CD: analiza podatności zależności (`composer audit`, `npm audit`)
 
 ## Etap 17 — Środowiska i wdrożenie
 
@@ -245,8 +302,19 @@ Legenda statusów:
 - [ ] Weryfikacja autocomplete w wszystkich selectach
 - [ ] Weryfikacja filtrowania we wszystkich listach
 - [ ] Weryfikacja responsywności (≥ 320px)
-- [ ] Weryfikacja uprawnień per sekcja
-- [ ] Weryfikacja wydajności API (< 500ms dla 95% zapytań)
+- [ ] Weryfikacja uprawnień per sekcja + autoryzacja per zasób (IDOR)
+- [ ] Weryfikacja wydajności API (< 500ms dla 95%, < 200ms dla 99% cache'owanych odczytów)
+- [ ] Weryfikacja PWA: service worker, offline mode, background sync
+- [ ] Weryfikacja Web Vitals: LCP < 2.5 s, FID < 100 ms, CLS < 0.1
+- [ ] Weryfikacja nagłówków bezpieczeństwa (HSTS, CSP, X-Content-Type-Options, itp.)
+- [ ] Weryfikacja polityki haseł (min. 12 znaków, 3/4 klasy, historia)
+- [ ] Weryfikacja blokady konta (5 prób → 15 min, 20 prób/24h → ręczne)
+- [ ] Weryfikacja audit log (logowanie akcji, retencja 12 miesięcy)
+- [ ] Weryfikacja RODO (anonimizacja, retencja danych)
+- [ ] Weryfikacja indeksów DB (slow_query_log, EXPLAIN na krytycznych zapytaniach)
+- [ ] Weryfikacja cache (tag-based invalidation, hit rate > 80%)
+- [ ] Weryfikacja sekretów (brak w repo, `gitleaks` clean, rotacja udokumentowana)
+- [ ] Penetration test (zewnętrzny) — OWASP Top 10
 - [ ] Aktualizacja dokumentacji technicznej
 - [ ] Szkolenie użytkowników / handover
 

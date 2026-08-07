@@ -26,22 +26,38 @@ final class CorsMiddleware implements MiddlewareInterface
     public function process(Request $request, callable $next): Response
     {
         $origin = $request->header('Origin');
+        $isAllowed = $origin !== null && in_array($origin, $this->allowedOrigins, true);
 
-        if ($origin !== null && in_array($origin, $this->allowedOrigins, true)) {
-            $response = $next($request);
-            $response->header('Access-Control-Allow-Origin', $origin);
-            $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-            $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-            $response->header('Access-Control-Allow-Credentials', 'true');
-            $response->header('Access-Control-Max-Age', '86400');
-
+        // Preflight (OPTIONS) — krótka odpowiedź z nagłówkami CORS, bez wywoływania
+        // routera i pozostałego pipeline'u. Preflight nigdy nie powinien trafiać
+        // do warstwy biznesowej (router zwróciłby 405, a ewentualny wyjątek
+        // ominąłby dodawanie nagłówków CORS → błąd w przeglądarce).
+        if ($request->method() === 'OPTIONS') {
+            $response = Response::noContent();
+            if ($isAllowed && $origin !== null) {
+                $this->addCorsHeaders($response, $origin);
+            }
             return $response;
         }
 
-        if ($request->method() === 'OPTIONS') {
-            return Response::json(204, []);
+        // Zwykłe żądanie — przepuść przez pipeline i dodaj nagłówki CORS.
+        $response = $next($request);
+        if ($isAllowed && $origin !== null) {
+            $this->addCorsHeaders($response, $origin);
         }
 
-        return $next($request);
+        return $response;
+    }
+
+    /**
+     * Dodaje zestaw nagłówków CORS do odpowiedzi dla dozwolonego originu.
+     */
+    private function addCorsHeaders(Response $response, string $origin): void
+    {
+        $response->header('Access-Control-Allow-Origin', $origin);
+        $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+        $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+        $response->header('Access-Control-Allow-Credentials', 'true');
+        $response->header('Access-Control-Max-Age', '86400');
     }
 }
