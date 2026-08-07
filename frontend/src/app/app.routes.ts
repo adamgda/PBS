@@ -13,6 +13,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+  },
+  {
+    path: 'set-password',
+    loadComponent: () =>
+      import('./pages/set-password/set-password.component').then((m) => m.SetPasswordComponent),
+  },
+  {
     path: 'dashboard',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'dashboard' },

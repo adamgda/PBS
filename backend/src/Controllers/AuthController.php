@@ -20,6 +20,7 @@ final class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService,
+        private readonly bool $debug = false,
     ) {}
 
     /**
@@ -95,10 +96,20 @@ final class AuthController extends Controller
             return $this->error(422, 'Email is required');
         }
 
-        $this->authService->forgotPassword($email, $request);
+        $result = $this->authService->forgotPassword($email, $request);
 
         // Zawsze zwracamy 200 aby nie ujawnić czy email istnieje
-        return $this->json(['message' => 'If the email exists, a reset link has been sent.'], 200);
+        $payload = ['message' => 'If the email exists, a reset link has been sent.'];
+
+        // W trybie debug (APP_DEBUG=true) ujawniamy token + link resetujący dla testów.
+        // W produkcji te pola nigdy nie są zwracane — token wychodzi wyłącznie e-mailem.
+        $resetUrl = is_string($result['reset_url']) ? $result['reset_url'] : '';
+        if ($this->debug && $resetUrl !== '') {
+            $payload['token'] = $result['token'];
+            $payload['reset_url'] = $resetUrl;
+        }
+
+        return $this->json($payload, 200);
     }
 
     /**

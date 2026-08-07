@@ -100,6 +100,16 @@ Legenda statusów:
 - [x] **Wydajność**: HTTP Interceptor z cache (TTL 60 s dla GET)
 - [x] **Wydajność**: timeout `HttpClient` (10 s) + retry z exponential backoff
 - [x] Token JWT przechowywany w HttpOnly + Secure + SameSite=Strict cookie (preferowane)
+- [x] Frontend: podstrona **przypomnienia hasła** — `ForgotPasswordComponent` (route `/forgot-password`, publiczny, bez `AuthGuard`)
+- [x] Frontend: formularz „Zapomniałeś hasła?" (pole e-mail + walidacja), aktywacja przez kliknięcie linku w `login.component.html` (obecnie martwy `href="javascript:void(0)"`)
+- [x] Frontend: `AuthService.forgotPassword(email)` → `POST /api/v1/auth/forgot-password` (komunikat: „jeśli konto istnieje, wysłano link resetujący" — bez ujawniania czy e-mail istnieje w bazie)
+- [x] Frontend: podstrona **ustawiania nowego hasła** — `SetPasswordComponent` (route `/set-password`, publiczny, bez `AuthGuard`)
+- [x] Frontend: odczyt `token` z query string (`?token=...`), walidacja lokalna formatu + komunikat błędu dla brakującego/wygasłego tokena
+- [x] Frontend: formularz nowego hasła (pole hasło + potwierdzenie), wskaźnik siły hasła zgodny z polityką (min. 12 znaków, 3/4 klasy), blokada wysłania przy niezgodności z polityką
+- [x] Frontend: `AuthService.setPassword(token, password)` → `POST /api/v1/auth/set-password` (limit 3 prób/h na token), po sukcesie przekierowanie na `/login` + toast potwierdzający
+- [x] Frontend: obsługa błędów z backendu (token wygasły/zużyty → komunikat + link do ponownego `forgot-password`)
+- [x] Lokalizacje: rozszerzenie `auth` w `locales/pl/common.json` (tytuły, podtytuły, etykiety, placeholdery, przyciski, komunikaty sukcesu/błędu, wskaźnik siły hasła)
+- [x] Testy: frontend — `ForgotPasswordComponent` (walidacja e-mail, stan loading, komunikat sukcesu niezależny od istnienia konta), `SetPasswordComponent` (walidacja siły hasła, niezgodność pól, błąd wygasłego tokena, przekierowanie po sukcesie)
 
 ## Etap 5 — Sekcja: Użytkownicy (Ustawienia → Użytkownicy)
 
@@ -317,6 +327,32 @@ Legenda statusów:
 - [ ] Penetration test (zewnętrzny) — OWASP Top 10
 - [ ] Aktualizacja dokumentacji technicznej
 - [ ] Szkolenie użytkowników / handover
+
+## Etap 19 — Szybkie notatki to-do (widget globalny)
+
+> Widget w formie wysuwającego się z boku ekranu panelu, dostępny z poziomu każdej podstrony i wersji mobilnej. Notatki to-do są prywatne, przypisane do zalogowanego konta (`user_id` z JWT).
+
+- [ ] Migracja: `user_notes` (`id`, `user_id` FK → users.id, `tresc` VARCHAR(500), `is_done` BOOLEAN, `kolejnosc` INT, `created_at`, `updated_at`)
+- [ ] Indeksy DB: `INDEX(user_id)`, `INDEX(user_id, is_done)`, `INDEX(user_id, kolejnosc)`
+- [ ] Backend: `GET /api/v1/notes` (lista notatek zalogowanego użytkownika, filtry `?is_done=`, sortowanie)
+- [ ] Backend: `POST /api/v1/notes` (walidacja `tresc` max 500 znaków, `user_id` z JWT)
+- [ ] Backend: `PATCH /api/v1/notes/{id}` (edycja treści)
+- [ ] Backend: `PATCH /api/v1/notes/{id}/done` (odznaczanie / cofnięcie `is_done`)
+- [ ] Backend: `DELETE /api/v1/notes/{id}` (usuwanie pojedynczej notatki)
+- [ ] Backend: `DELETE /api/v1/notes` (czyszczenie całej listy; opcja `?is_done=1` — tylko wykonane)
+- [ ] Backend: IDOR protection — każda operacja weryfikuje `user_notes.user_id` = ID zalogowanego użytkownika
+- [ ] Backend: kaskadowe usuwanie notatek przy usuwaniu użytkownika (lub anonimizacja wg polityki retencji)
+- [ ] Frontend: komponent `QuickNotesWidgetComponent` (współdzielony, renderowany w `AppComponent` / layout)
+- [ ] Frontend: przycisk-uchwyt na krawędzi ekranu + wysuwany panel (`translate-x`, Tailwind CSS), licznik nieodznaczonych notatek
+- [ ] Frontend: dodawanie, odznaczanie jako wykonane, usuwanie pojedynczej notatki
+- [ ] Frontend: czyszczenie całej listy z `ConfirmDialogComponent`
+- [ ] Frontend: dostęp z poziomu każdej podstrony i wersji mobilnej (responsywność ≥ 320px)
+- [ ] Frontend: dostępność klawiatury (Esc zamyka panel, focus trap wewnątrz)
+- [ ] Frontend: offline-first — kolejkowanie żądań przez background sync, lokalny store w `IndexedDB`
+- [ ] Serwis `NotesService` (CRUD, synchronizacja offline, sygnalizacja stanu przez Signals)
+- [ ] Lokalizacje: `notatki.json` w `locales/pl/` (etykiety, przyciski, komunikaty, placeholder, potwierdzenia)
+- [ ] Testy: backend — CRUD notatek, IDOR (próba dostępu do notatki innego użytkownika → 403/404), walidacja `tresc`
+- [ ] Testy: frontend — `QuickNotesWidgetComponent` (dodawanie, odznaczanie, usuwanie, czyszczenie, stan offline)
 
 ---
 

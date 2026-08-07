@@ -3,3 +3,10 @@
   display: block;
   min-height: 100vh;
 }
+
+/* Respektuj preferencję użytkownika: wyłącz animacje draweru, gdy ruch ma być zredukowany */
+@media (prefers-reduced-motion: reduce) {
+  aside {
+    transition: none !important;
+  }
+}

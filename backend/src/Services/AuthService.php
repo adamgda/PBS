@@ -32,6 +32,7 @@ final class AuthService
         private readonly PasswordPolicyService $passwordPolicy,
         private readonly MailService $mailService,
         private readonly string $frontendBaseUrl = 'http://localhost:4200',
+        private readonly bool $debug = false,
     ) {}
 
     /**
@@ -183,7 +184,7 @@ final class AuthService
     /**
      * Generuje token resetujący hasło (forgot-password).
      *
-     * @return array{token: string}
+     * @return array{token: string, reset_url: ?string}
      */
     public function forgotPassword(string $email, Request $request): array
     {
@@ -193,7 +194,7 @@ final class AuthService
             $this->auditLogRepository->logFromRequest(null, 'password_reset_requested', $request, 'user', null, ['email' => $email, 'found' => false]);
 
             // Zwracamy sukces aby nie ujawnić informacji
-            return ['token' => ''];
+            return ['token' => '', 'reset_url' => null];
         }
 
         $userId = $this->toInt($user['id'] ?? 0);
@@ -210,8 +211,13 @@ final class AuthService
             $this->mailService->sendPasswordResetEmail($userEmail, $token, $this->frontendBaseUrl);
         }
 
-        // W dev mode zwracamy token (do testów); w produkcji token nie wychodzi z API
-        return ['token' => $token];
+        // W dev mode (APP_DEBUG) ujawniamy link resetujący w odpowiedzi dla testów.
+        // W produkcji token nie wychodzi z API — wysyłany jest wyłącznie e-mailem.
+        $resetUrl = $this->debug
+            ? rtrim($this->frontendBaseUrl, '/') . '/set-password?token=' . $token
+            : null;
+
+        return ['token' => $token, 'reset_url' => $resetUrl];
     }
 
     /**

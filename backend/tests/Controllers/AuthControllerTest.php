@@ -253,6 +253,70 @@ it('forgot-password returns 422 when email missing', function (): void {
     expect($response->statusCode())->toBe(422);
 });
 
+it('forgot-password in debug mode returns token and reset_url for existing user', function (): void {
+    $jwtService = new JwtService('test-secret-key-for-testing-only-32chars!', 900, 604800);
+    $passwordPolicy = new PasswordPolicyService();
+    $mailService = m::mock(MailService::class);
+    $mailService->shouldReceive('sendPasswordResetEmail')->once();
+
+    $debugAuthService = new AuthService(
+        $this->userRepository,
+        $this->refreshTokenRepository,
+        $this->passwordResetRepository,
+        $this->auditLogRepository,
+        $jwtService,
+        $passwordPolicy,
+        $mailService,
+        'http://localhost:4200',
+        true, // debug = true
+    );
+    $debugController = new AuthController($debugAuthService, true);
+
+    $this->userRepository->shouldReceive('findByEmail')->with('admin@pbs.local')->andReturn([
+        'id' => 1,
+        'email' => 'admin@pbs.local',
+    ]);
+    $this->passwordResetRepository->shouldReceive('createToken')->once();
+    $this->auditLogRepository->shouldReceive('logFromRequest')->byDefault();
+
+    $request = new Request(query: [], body: ['email' => 'admin@pbs.local'], headers: []);
+    $response = $debugController->forgotPassword($request);
+
+    expect($response->statusCode())->toBe(200);
+    expect($response->data())->toHaveKey('token');
+    expect($response->data()['token'])->not->toBe('');
+    expect($response->data()['reset_url'])->toStartWith('http://localhost:4200/set-password?token=');
+});
+
+it('forgot-password in debug mode hides token for non-existent user', function (): void {
+    $jwtService = new JwtService('test-secret-key-for-testing-only-32chars!', 900, 604800);
+    $passwordPolicy = new PasswordPolicyService();
+    $mailService = m::mock(MailService::class);
+
+    $debugAuthService = new AuthService(
+        $this->userRepository,
+        $this->refreshTokenRepository,
+        $this->passwordResetRepository,
+        $this->auditLogRepository,
+        $jwtService,
+        $passwordPolicy,
+        $mailService,
+        'http://localhost:4200',
+        true,
+    );
+    $debugController = new AuthController($debugAuthService, true);
+
+    $this->userRepository->shouldReceive('findByEmail')->with('ghost@pbs.local')->andReturnNull();
+    $this->auditLogRepository->shouldReceive('logFromRequest')->byDefault();
+
+    $request = new Request(query: [], body: ['email' => 'ghost@pbs.local'], headers: []);
+    $response = $debugController->forgotPassword($request);
+
+    expect($response->statusCode())->toBe(200);
+    expect($response->data())->not->toHaveKey('token');
+    expect($response->data())->not->toHaveKey('reset_url');
+});
+
 it('set-password returns 422 when token or password missing', function (): void {
     $request = new Request(query: [], body: ['token' => 'abc'], headers: []);
     $response = $this->authController->setPassword($request);

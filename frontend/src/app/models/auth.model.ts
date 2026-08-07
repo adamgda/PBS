@@ -26,3 +26,23 @@ export interface AuthUser {
 }
 
 export interface RefreshResponse extends AuthTokens {}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  /** Obecny tylko w trybie debug (APP_DEBUG=true) — link resetujący do testów dev. */
+  token?: string;
+  reset_url?: string;
+}
+
+export interface SetPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface SetPasswordResponse {
+  success: boolean;
+}

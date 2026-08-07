@@ -5,37 +5,152 @@
 <app-confirm-dialog />
 
 @if (isLoggedIn()) {
-  <!-- Layout z nawigacją dla zalogowanych -->
-  <nav class="bg-pbs-primary text-white shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-lg">PBS</span>
-        </div>
-        <div class="hidden md:flex items-center gap-1">
-          @for (item of visibleMenuItems(); track item.path) {
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="bg-white/20"
-              class="px-3 py-2 rounded text-sm font-medium hover:bg-white/10 transition-colors"
-            >
-              {{ item.label | translate }}
-            </a>
-          }
-        </div>
+  <!-- ===== Współdzielona lista nawigacji (używana w drawerze i w sidebarze) ===== -->
+  <ng-template #navList>
+    <nav class="flex flex-col gap-1 px-3" aria-label="Główna nawigacja">
+      @for (item of visibleMenuItems(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="bg-white/15 text-white"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-blue-100/80 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <span class="shrink-0 text-blue-100/80 transition-colors group-hover:text-white">
+            <app-svg-icon [name]="item.icon" />
+          </span>
+          <span class="truncate">{{ item.label | translate }}</span>
+        </a>
+      }
+    </nav>
+  </ng-template>
+
+  <!-- ===== Współdzielony profil użytkownika ===== -->
+  <ng-template #userBlock>
+    <div class="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5">
+      <span
+        class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-pbs-secondary text-sm font-semibold text-white"
+      >
+        {{ userInitial() }}
+      </span>
+      <span class="min-w-0 flex-1">
+        <span class="block truncate text-sm font-medium text-white">{{ userEmail() }}</span>
+        <span class="block text-xs text-blue-100/60">{{ 'common.nav.account' | translate }}</span>
+      </span>
+      <button
+        type="button"
+        (click)="logout()"
+        class="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-blue-100/80 transition-colors hover:bg-white/15 hover:text-white"
+        [attr.aria-label]="'common.auth.logout' | translate"
+      >
+        <app-svg-icon name="logout" />
+      </button>
+    </div>
+  </ng-template>
+
+  <!-- ===== Overlay draweru (mobile) ===== -->
+  @if (mobileOpen()) {
+    <div
+      class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+      (click)="closeMobile()"
+      role="presentation"
+    ></div>
+  }
+
+  <!-- ===== Drawer nawigacji (mobile) ===== -->
+  <aside
+    class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-pbs-primary shadow-2xl transition-transform duration-300 ease-out md:hidden"
+    [class.translate-x-0]="mobileOpen()"
+    [class.-translate-x-full]="!mobileOpen()"
+    [attr.aria-hidden]="!mobileOpen()"
+  >
+    <!-- Nagłówek draweru -->
+    <div class="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
+      <div class="flex items-center gap-2">
+        <span
+          class="grid h-9 w-9 place-items-center rounded-lg bg-white/15 text-base font-bold text-white"
+        >P</span>
+        <span class="text-lg font-bold tracking-tight text-white">PORTBS</span>
+      </div>
+      <button
+        type="button"
+        (click)="closeMobile()"
+        class="grid h-9 w-9 place-items-center rounded-lg text-blue-100/80 transition-colors hover:bg-white/15 hover:text-white"
+        [attr.aria-label]="'common.nav.close' | translate"
+      >
+        <app-svg-icon name="close" />
+      </button>
+    </div>
+
+    <!-- Lista nawigacji -->
+    <div class="flex-1 overflow-y-auto py-2">
+      <ng-container [ngTemplateOutlet]="navList" />
+    </div>
+
+    <!-- Profil użytkownika -->
+    <div class="px-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+      <ng-container [ngTemplateOutlet]="userBlock" />
+    </div>
+  </aside>
+
+  <!-- ===== Stały sidebar (desktop) ===== -->
+  <aside
+    class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-pbs-primary shadow-xl md:flex"
+  >
+    <div class="flex items-center gap-2 px-5 py-5">
+      <span
+        class="grid h-9 w-9 place-items-center rounded-lg bg-white/15 text-base font-bold text-white"
+      >P</span>
+      <span class="text-lg font-bold tracking-tight text-white">PORTBS</span>
+    </div>
+
+    <div class="flex-1 overflow-y-auto py-2">
+      <ng-container [ngTemplateOutlet]="navList" />
+    </div>
+
+    <div class="px-3 pb-5">
+      <ng-container [ngTemplateOutlet]="userBlock" />
+    </div>
+  </aside>
+
+  <!-- ===== Górny app-bar ===== -->
+  <header
+    class="sticky top-0 z-20 bg-pbs-primary/95 text-white shadow-sm backdrop-blur supports-[backdrop-filter]:bg-pbs-primary/80"
+  >
+    <div class="flex h-14 items-center justify-between gap-2 px-4 pt-[env(safe-area-inset-top)] md:pl-[calc(16rem+1rem)] md:pr-6">
+      <!-- Po lewej: hamburger (mobile) / tytuł sekcji (desktop) -->
+      <div class="flex items-center gap-2">
         <button
           type="button"
-          class="px-3 py-1.5 rounded text-sm font-medium bg-white/10 hover:bg-white/20 transition-colors"
-          (click)="logout()"
+          (click)="toggleMobile()"
+          class="-ml-1 grid h-10 w-10 place-items-center rounded-lg text-blue-100/90 transition-colors hover:bg-white/15 hover:text-white md:hidden"
+          [attr.aria-label]="'common.nav.menu' | translate"
+          [attr.aria-expanded]="mobileOpen()"
         >
-          {{ 'common.auth.logout' | translate }}
+          <app-svg-icon name="menu" />
         </button>
+        <span class="text-base font-semibold tracking-tight md:text-lg">
+          @if (activeTitle()) {
+            {{ activeTitle() | translate }}
+          } @else {
+            PORTBS
+          }
+        </span>
+      </div>
+
+      <!-- Po prawej: awatar + wyloguj (mobile) -->
+      <div class="flex items-center gap-2 md:hidden">
+        <span
+          class="grid h-8 w-8 place-items-center rounded-full bg-pbs-secondary text-sm font-semibold text-white"
+        >{{ userInitial() }}</span>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <router-outlet />
+  <!-- ===== Obszar treści ===== -->
+  <main class="md:pl-64">
+    <div class="mx-auto max-w-7xl px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-6 lg:px-8">
+      <router-outlet />
+    </div>
   </main>
 } @else {
   <!-- Tylko router-outlet dla stron publicznych (login) -->

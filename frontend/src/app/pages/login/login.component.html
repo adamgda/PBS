@@ -1,0 +1,120 @@
+<div class="flex min-h-screen bg-gray-50">
+  <!-- ===== Lewy panel brand (desktop) ===== -->
+  <aside
+    class="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-pbs-primary to-[#102640] p-12 text-white lg:flex"
+  >
+    <div class="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pbs-secondary/20 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-pbs-secondary/10 blur-3xl"></div>
+
+    <div class="relative flex items-center gap-3">
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-white/15 text-lg font-bold">P</span>
+      <span class="text-xl font-bold tracking-tight">PORTBS</span>
+    </div>
+
+    <div class="relative max-w-sm">
+      <h1 class="text-3xl mt-4 font-bold leading-tight">{{ 'common.auth.tagline' | translate }}</h1>
+      <p class="mt-8 text-xs font-semibold uppercase tracking-wider text-blue-100/50">{{ 'common.auth.options' | translate }}</p>
+      <ul class="mt-3 mb-6 space-y-2.5 text-sm text-blue-100/90">
+        <li class="flex items-center gap-3">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-white/10"><app-svg-icon name="pracownicy" /></span>
+          {{ 'common.menu.pracownicy' | translate }}
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-white/10"><app-svg-icon name="sprzet" /></span>
+          {{ 'common.menu.sprzet' | translate }}
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-white/10"><app-svg-icon name="terminale" /></span>
+          {{ 'common.menu.terminale' | translate }}
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-white/10"><app-svg-icon name="harmonogram" /></span>
+          {{ 'common.menu.harmonogram' | translate }}
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-white/10"><app-svg-icon name="analityka" /></span>
+          {{ 'common.menu.analityka' | translate }}
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-white/10"><app-svg-icon name="raportowanie" /></span>
+          {{ 'common.menu.raportowanie' | translate }}
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-white/10"><app-svg-icon name="awaria" /></span>
+          {{ 'common.menu.awaria' | translate }}
+        </li>
+      </ul>
+    </div>
+
+    <p class="relative text-xs text-blue-100/50">{{ 'common.auth.copyright' | translate }}</p>
+  </aside>
+
+  <!-- ===== Prawy panel formularza ===== -->
+  <div class="flex w-full items-center justify-center px-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-[calc(env(safe-area-inset-bottom)+2.5rem)] sm:px-6 lg:w-1/2">
+    <div class="w-full max-w-md">
+      <div class="mb-8 flex items-center gap-3 lg:hidden">
+        <span class="grid h-11 w-11 place-items-center rounded-xl bg-pbs-primary text-lg font-bold text-white">P</span>
+        <span class="text-xl font-bold tracking-tight text-gray-900">PORTBS</span>
+      </div>
+
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ 'common.auth.login_title' | translate }}</h2>
+        <p class="mt-2 text-gray-600">{{ 'common.auth.login_subtitle' | translate }}</p>
+      </div>
+
+      <form class="mt-8 space-y-5" (ngSubmit)="onSubmit()" novalidate>
+        <app-form-input
+          type="email"
+          name="email"
+          icon="mail"
+          autocomplete="email"
+          [required]="true"
+          labelKey="common.auth.email"
+          placeholderKey="common.auth.email"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+        />
+        <app-form-input
+          type="password"
+          name="password"
+          icon="lock"
+          autocomplete="current-password"
+          [required]="true"
+          [passwordToggle]="true"
+          labelKey="common.auth.password"
+          placeholderKey="common.auth.password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+        />
+
+        <div class="flex items-center justify-between">
+          <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" name="remember" class="h-4 w-4 rounded border-gray-300 text-pbs-primary focus:ring-pbs-primary" [ngModel]="remember()" (ngModelChange)="remember.set($event)" />
+            {{ 'common.auth.remember_me' | translate }}
+          </label>
+          <a class="text-sm font-medium text-pbs-secondary hover:text-blue-700" routerLink="/forgot-password">{{ 'common.auth.forgot_password' | translate }}</a>
+        </div>
+
+        @if (error()) {
+          <div class="flex items-start gap-2.5 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <span class="mt-0.5 shrink-0 text-red-500"><app-svg-icon name="alert" /></span>
+            <span>{{ error() }}</span>
+          </div>
+        }
+
+        <button
+          type="submit"
+          class="flex w-full items-center justify-center gap-2 rounded-lg bg-pbs-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-pbs-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <app-svg-icon class="h-5 w-5 animate-spin text-white" name="spinner" />
+            {{ 'common.auth.login_loading' | translate }}
+          } @else {
+            {{ 'common.auth.login_button' | translate }}
+          }
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,6 @@
 # Port Baltic Shipping (PBS) — Dokumentacja Techniczna
 
-> **Wersja dokumentu:** 1.1  
+> **Wersja dokumentu:** 1.3  
 > **Data:** 2026-08-07  
 > **Projekt:** Port Baltic Shipping (PBS)
 
@@ -36,6 +36,7 @@
 - Raportowanie dzienne i awaryjne
 - Analitykę i statystyki
 - Zarządzanie użytkownikami i uprawnieniami
+- Szybkie notatki to-do przypisane do zalogowanego konta (widget globalny, dostępny z każdej podstrony i wersji mobilnej)
 
 Aplikacja jest podzielona na sekcje funkcyjne z granulowanym systemem uprawnień.
 
@@ -213,7 +214,8 @@ frontend/
 │           ├── analityka.json   # Teksty sekcji Analityka
 │           ├── raportowanie.json# Teksty sekcji Raportowanie
 │           ├── ustawienia.json  # Teksty sekcji Ustawienia
-│           └── awaria.json      # Teksty sekcji Awaria
+│           ├── awaria.json      # Teksty sekcji Awaria
+│           └── notatki.json     # Teksty widgetu szybkich notatek to-do
 ```
 
 Zasady:
@@ -225,6 +227,16 @@ Zasady:
 - Struktura obiektu w `locales/pl/` jest jedynym źródłem prawdy dla tekstów UI — ułatwia to przyszłą internacjonalizację i utrzymanie spójności.
 - Komunikaty błędów i powodzenia (toast, alerty) również pochodzą z plików lokalizacji, z podziałem na `success`, `error`, `warning`, `info`.
 - Zmienne dynamiczne w tłumaczeniach obsługiwane są przez interpolację (np. `pracownicy.deleted.success: "Usunięto pracownika {{name}}"`).
+
+### 6.1.2 Szablony komponentów — pliki vs inline
+
+Konwencja rozmieszczania szablonów (zgodna ze wzorcem `AppComponent`):
+
+- **Szablony w osobnych plikach `.html`** (`templateUrl: './nazwa.component.html'`) — **obowiązkowe** dla komponentów stron (`pages/*`, np. `LoginComponent`) oraz shella aplikacji (`AppComponent`). Decyduje o tym rozmiar i czytelność: widoki stron są rozbudowane i mieszanie ich z logiką `.ts` pogarsza nawigację po kodzie.
+- **Inline `template`** — dopuszczalne **tylko** dla małych komponentów prezentacyjnych / współdzielonych (`components/*`), których szablon ma do kilkudziesięciu linii (np. `KpiCardComponent`, `OfflineBannerComponent`, `ToastNotificationComponent`, `SvgIconComponent`). Dla takich komponentów inline template + ewentualny `styles: []` utrzymują wszystko w jednym miejscu i poprawiają lokalną czytelność.
+- **Zasada progowa:** jeżeli szablon komponentu przekracza ~50 linii lub zawiera rozbudowaną strukturę (panel, formularz, grid), przenieś go do osobnego pliku `.html` i użyj `templateUrl` zamiast inline `template`.
+- **Style komponentu:** analogicznie — `styleUrl: './nazwa.component.css'` dla pliku zewnętrznego lub `styles: []` dla drobnych reguł. Pamiętaj o budżecie stylu komponentu (warning 4 kB / error 8 kB — patrz 14.7).
+- **Nazewnictwo plików:** `nazwa.component.ts` + `nazwa.component.html` (+ opcjonalnie `nazwa.component.css`), trzymane razem w tym samym katalogu komponentu.
 
 ### 6.2 Routing
 
@@ -267,6 +279,60 @@ Zasady:
 | `CalendarComponent` | Komponent kalendarza (harmonogram) |
 | `ConfirmDialogComponent` | Dialog potwierdzenia akcji |
 | `ToastNotificationComponent` | Powiadomienia toast |
+| `FormInputComponent` | Współdzielone pole formularza (input z opcjonalną ikoną wiodącą, etykietą/placeholderem przez klucze tłumaczeń oraz opcjonalnym przełącznikiem widoczności hasła). Implementuje `ControlValueAccessor` — baza biblioteki elementów UI formularzy (patrz 6.4.1) |
+| `QuickNotesWidgetComponent` | Wysuwany z boku ekranu widget szybkich notatek to-do (dodawanie, odznaczanie jako wykonane, usuwanie, czyszczenie całej listy) — dostępny globalnie na każdej podstronie i w wersji mobilnej, dane przypisane do zalogowanego użytkownika |
+
+### 6.4.1 Biblioteka elementów UI formularzy
+
+Zamiast definiować pola formularzy (email, hasło, tekst, numer itp.) od nowa w każdym widoku, projekt udostępnia bazę reużywalnych elementów UI w `src/app/components/`. Podstawą jest `FormInputComponent` (`app-form-input`), który pokrywa najczęstszy przypadek: pole `<input>` z ikoną wiodącą, etykietą i placeholderem.
+
+**`FormInputComponent`** (`src/app/components/form-input/form-input.component.ts`):
+
+- Standalone, `OnPush`, implementuje `ControlValueAccessor` → współpracuje z formami szablonowymi (`[ngModel]` + `(ngModelChange)` lub `[(ngModel)]`) i reaktywnymi (`formControlName`).
+- `@Input()`:
+  - `labelKey` / `label` — etykieta przez klucz tłumaczeń (zalecane, 6.1.1) lub bezpośrednia,
+  - `placeholderKey` / `placeholder` — placeholder przez klucz tłumaczeń lub bezpośredni,
+  - `type` — `text` | `email` | `password` | `number` | `tel` | `url` | `search`,
+  - `icon` — nazwa ikony z `SvgIconComponent` (np. `mail`, `lock`); pusty = brak ikony,
+  - `name`, `autocomplete`, `required`, `inputId` (auto-generowane gdy puste),
+  - `passwordToggle` — włącza przycisk pokazywania/ukrywania hasła (ikony `eye`/`eye-off`), z `aria-label` tłumaczonym przez `showPasswordLabelKey` / `hidePasswordLabelKey`.
+- Stylizacja wg 6.8.5 (tokeny `pbs-*`, skala `gray-*`, `focus:ring-pbs-primary`), w pełni Tailwind utility-first — bez własnego CSS.
+
+**Przykład użycia (pola logowania):**
+
+```html
+<app-form-input
+  type="email"
+  name="email"
+  icon="mail"
+  autocomplete="email"
+  [required]="true"
+  labelKey="common.auth.email"
+  placeholderKey="common.auth.email"
+  [ngModel]="email()"
+  (ngModelChange)="email.set($event)"
+/>
+<app-form-input
+  type="password"
+  name="password"
+  icon="lock"
+  autocomplete="current-password"
+  [required]="true"
+  [passwordToggle]="true"
+  labelKey="common.auth.password"
+  placeholderKey="common.auth.password"
+  [ngModel]="password()"
+  (ngModelChange)="password.set($event)"
+/>
+```
+
+**Zasady rozszerzania biblioteki:**
+
+1. Każde pole formularza używane więcej niż raz **musi** być zrealizowane jako współdzielony komponent w `components/`, nie powielane w szablonach stron.
+2. Nowe elementy (textarea, select, checkbox, radio) budujemy jako `ControlValueAccessor` i dodajemy wpis w tabeli 6.4 oraz (jeśli potrzeba) w 6.4.1.
+3. Etykiety, placeholdery, komunikaty błędów i `aria-label` zawsze przez klucze tłumaczeń (`*Key`) — zgodnie z 6.1.1.
+4. Ikony wyłącznie z `SvgIconComponent` — brak zewnętrznych bibliotek (6.8.7 pkt 4).
+5. Komponenty pól formularza nie zawierają logiki biznesowej — są czysto prezentacyjne/wiązanie wartości.
 
 ### 6.5 State Management
 
@@ -279,6 +345,185 @@ Zasady:
 - Tailwind CSS — utility-first, brak osobnych plików CSS (poza globalnymi)
 - Design system: zmienne Tailwind dla kolorów firmowych, spacing, typografii
 - Responsywność: breakpointy Tailwind (`sm`, `md`, `lg`, `xl`)
+
+### 6.6.1 Design tokens (paleta i typografia)
+
+Źródłem prawdy dla kolorów jest `frontend/tailwind.config.js` — kategoryzacja `pbs.*`. **Wszystkie nowe komponenty używają wyłącznie tokenów `pbs.*`** (oraz skali neutralnej Tailwind), nie surowych wartości hex. Zapewnia to spójny wygląd i pozwala w przyszłości przejść na zmienne CSS / ciemny motyw bez refaktoryzacji szablonów.
+
+| Token Tailwind | Wartość | Zastosowanie |
+|---|---|---|
+| `bg-pbs-primary` | `#1e3a5f` (granat) | Tła nawigacji (sidebar, drawer, app-bar), przyciski pierwszorzędne, nagłówki |
+| `bg-pbs-secondary` | `#3b82f6` (niebieski) | Akcenty, awatary, linki/elementy aktywne |
+| `bg-pbs-accent` / `pbs-warning` | `#f59e0b` (bursztyn) | Oznaczenia ostrzegawcze, akcenty |
+| `bg-pbs-danger` | `#ef4444` (czerwony) | Błędy, akcje destrukcyjne, awarie |
+| `bg-pbs-success` | `#22c55e` (zielony) | Komunikaty sukcesu, statusy pozytywne, trendy rosnące |
+| `bg-pbs-info` | `#3b82f6` | Komunikaty informacyjne |
+
+Konwencje typografii (Tailwind):
+
+| Element | Klasy |
+|---|---|
+| Tytuł sekcji / strony | `text-2xl font-bold text-gray-900` |
+| Podtytuł / opis | `text-gray-600` |
+| Etykieta karty KPI | `text-sm text-gray-500` |
+| Wartość KPI | `text-3xl font-bold text-gray-900` |
+| Treść w nawigacji | `text-sm font-medium text-blue-100/80` (na tle `pbs-primary`) |
+### 6.7 Layout aplikacji (app shell)
+
+Shell aplikacji (główny szkielet nawigacji i obszaru treści) jest zdefiniowany w `app.component.html` / `app.component.ts` i **musi pozostać wspólny dla wszystkich sekcji**. Sekcje (pages) renderują się w `<router-outlet />` wewnątrz obszaru treści — **nie definiują własnej nawigacji ani własnego app-baru**.
+
+#### 6.7.1 Struktura responsywna (mobile-first)
+
+| Breakpoint | Nawigacja | Brand | Profil / wyloguj |
+|---|---|---|---|
+| Mobile (`< md`) | Górny app-bar + wysuwany **drawer** (hamburger) | W nagłówku draweru i app-baru | W stopce draweru (blok profilu) |
+| Desktop (`≥ md`) | Stały lewy **sidebar** (`w-64`) | Na górze sidebaru | W stopce sidebaru (blok profilu) |
+
+Elementy:
+
+- **App-bar** (`<header>`, `sticky top-0 z-20`, `h-14`, `bg-pbs-primary/95` z `backdrop-blur`): po lewej hamburger (mobile) + tytuł aktywnej sekcji (`activeTitle`); po prawej awatar (mobile). Tytuł sekcji jest wyliczany w `AppComponent` z `NavigationEnd` (dopasowanie `currentUrl.startsWith(item.path)`).
+- **Drawer** (mobile, `fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw]`, animacja `transform` + `-translate-x-full`): zawiera brand, listę nawigacji (`navList`) i blok profilu (`userBlock`). Zamykany automatycznie po nawigacji (subskrypcja `router.events`) oraz kliknięciu w overlay.
+- **Overlay** (`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm`, tylko mobile, tylko gdy drawer otwarty).
+- **Sidebar** (desktop, `fixed inset-y-0 left-0 z-30 w-64`): brand, lista nawigacji, blok profilu.
+- **Obszar treści** (`<main class="md:pl-64">` → `<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">`): `<router-outlet />`.
+
+Lista nawigacji i blok profilu są współdzielone między drawerem a sidebarzem przez `<ng-template #navList>` / `<ng-template #userBlock>` i `NgTemplateOutlet` (zasada DRY — **nigdy nie duplikować** listy elementów menu).
+
+Aktywne stany linków: `routerLinkActive="bg-white/15 text-white"` z `routerLinkActiveOptions: { exact: false }`. Każdy element menu posiada ikonę (pole `icon` w `menuItems`).
+
+#### 6.7.2 Komponent ikon `SvgIconComponent`
+
+`src/app/components/svg-icon/svg-icon.component.ts` — standalone, `OnPush`, brak zewnętrznych zależności. Ikony liniowe SVG `24×24`, `fill="none"`, `stroke="currentColor"`, `stroke-width="1.8"`, przez co dziedziczą kolor tekstu (np. `text-white`, `text-blue-100/80`).
+
+Dostępne nazwy (`@Input() name`): `dashboard`, `pracownicy`, `sprzet`, `terminale`, `harmonogram`, `analityka`, `raportowanie`, `ustawienia`, `awaria`, `menu`, `close`, `logout`.
+
+```html
+<span class="text-blue-100/80"><app-svg-icon name="sprzet" /></span>
+```
+
+**Zasada:** nowe ikony dodajemy do `SvgIconComponent` (kolejny `@case`), nie wprowadzamy zewnętrznej biblioteki ikon. Rozmiar kontrolujemy klasami na `:host` / wrapperze, nie atrybutami SVG.
+
+#### 6.7.3 Internacjonalizacja layoutu
+
+Klucze layoutu w `locales/pl/common.json`, sekcja `nav`:
+
+```json
+"nav": { "menu": "Menu", "close": "Zamknij menu", "account": "Konto" }
+```
+
+Etykiety elementów menu pochodzą z `common.menu.*` (zgodnie z 6.1.1).
+
+#### 6.7.4 Dostępność i motion
+
+- Wszystkie przyciski ikonowe mają `aria-label` (tłumaczone).
+- Drawer ma `aria-hidden` zależne od stanu; przycisk hamburgera `aria-expanded`.
+- `env(safe-area-inset-*)` w paddingach (notch / domowy pasek) dla app-baru, draweru i obszaru treści.
+- Animacje draweru wyłączane przy `prefers-reduced-motion: reduce` (`app.component.css`).
+- Minimalny cel dotykowy: 40–44 px (`h-10`/`h-11` dla przycisków w nawigacji).
+
+### 6.8 Zasady budowy widoków sekcji (spójność dashboard i stron)
+
+Aby zachować stały wygląd wszystkich przyszłych komponentów (dashboard, listy, formularze), twórcy sekcji **muszą** trzymać się poniższych wzorców. Wzorce są zgodne z istniejącymi komponentami (`KpiCardComponent`, `AlertWidgetComponent`, strony `login`/`dashboard`).
+
+#### 6.8.1 Kontener strony
+
+Każda strona sekcji renderuje się już we wspólnym kontenerze shellu (`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6`). **Strona nie powtarza tego kontenera ani nie dodaje własnego app-baru.** Strona zaczyna się od nagłówka sekcji:
+
+```html
+<div>
+  <h1 class="text-2xl font-bold text-gray-900">{{ 'sekcja.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600">{{ 'sekcja.subtitle' | translate }}</p>
+  <!-- treść -->
+</div>
+```
+
+#### 6.8.2 Karta (card) — podstawowy blok
+
+Standardowa karta: `bg-white rounded-lg shadow p-5` (wzór z `KpiCardComponent`). Warianty:
+
+| Wariant | Klasy |
+|---|---|
+| Karta KPI | `bg-white rounded-lg shadow p-5 flex flex-col gap-2` |
+| Karta sekcji / panel | `bg-white rounded-lg shadow p-5` (lub `p-6`) |
+| Karta interaktywna | dodać `hover:shadow-md transition-shadow cursor-pointer` |
+
+#### 6.8.3 Siatki responsywne (mobile-first)
+
+Siatki zawsze zaczynają się od 1 kolumny na mobile i rosną na większych ekranach:
+
+```html
+<!-- KPI dashboard -->
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <app-kpi-card ... />
+</div>
+
+<!-- Lista kart -->
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+  ...
+</div>
+```
+
+#### 6.8.4 Przyciski
+
+| Typ | Klasy bazowe |
+|---|---|
+| Pierwszorzędny | `px-4 py-2 text-sm font-medium text-white bg-pbs-primary rounded-md hover:bg-blue-700 transition-colors` |
+| Destrukcyjny | `... bg-pbs-danger hover:bg-red-600 ...` |
+| Zabarwiony (secondary) | `... bg-pbs-secondary hover:bg-blue-600 ...` |
+| Ghost / w nawigacji | `text-blue-100/80 hover:bg-white/10 hover:text-white rounded-lg` (na tle `pbs-primary`) |
+| Ikona | `grid h-10 w-10 place-items-center rounded-lg` |
+
+Wszystkie przyciski mają `type="button"` (lub `submit` w formularzu) i `transition-colors`. Stany `disabled` przez `disabled:opacity-50`.
+
+#### 6.8.5 Pola formularzowe
+
+Wzór z `LoginComponent`:
+
+```html
+<input
+  class="block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm
+         focus:ring-2 focus:ring-pbs-primary focus:border-transparent"
+/>
+```
+
+Etykiety: `block text-sm font-medium text-gray-700`. Błędy walidacji: `text-sm text-red-600 bg-red-50 p-3 rounded-md`.
+
+**Preferowane podejście:** zamiast pisać pola ręcznie, używaj współdzielonych komponentów z biblioteki (6.4.1), w szczególności `FormInputComponent` — pokrywa pole z ikoną, etykietą, placeholderem i przełącznikiem hasła, utrzymując spójne style i tokeny. Ręczne `<input>` z wiodącą ikoną / przełącznikiem hasła w widokach stron jest uznawane za duplikację i powinno być zastępowane `app-form-input`.
+
+#### 6.8.6 Statusy i kolory semantyczne
+
+Mapowanie statusów biznesowych na tokeny (stosowane w `DataTableComponent`, `KpiCardComponent`, listach awarii):
+
+| Status / znaczenie | Klasa |
+|---|---|
+| Sukces / aktywny / trend ↑ | `text-pbs-success` (lub `text-green-600`) |
+| Błąd / awaria / trend ↓ | `text-pbs-danger` (lub `text-red-600`) |
+| Ostrzeżenie / wygasające | `text-pbs-warning` (lub `text-amber-600`) |
+| Informacja | `text-pbs-info` (lub `text-blue-600`) |
+
+W `KpiCardComponent` trend >= 0 → `text-green-600`, < 0 → `text-red-600` (z górą/dół `▲`/`▼`).
+
+#### 6.8.7 Reguły wymuszane
+
+1. **Brak własnego CSS** — wyłącznie klasy Tailwind; wyjątki tylko dla globalnych animacji/motion w `app.component.css` (maksymalnie kilka reguł). Budżet stylu komponentu: **warning 4 kB / error 8 kB** (patrz 14.7) — wymusza to utility-first.
+2. **Brak surowych kolorów** — używać `pbs-*` i skali `gray-*`/`red-*`/`green-*` z Tailwind.
+3. **Brak duplikacji shella** — sekcje nie renderują nawigacji, app-baru, overlay; korzystają z `<router-outlet />`.
+4. **Brak zewnętrznych bibliotek UI/ikon** — jedynym źródłem ikon jest `SvgIconComponent`. Wprowadzenie nowej biblioteki komponentów UI wymaga aktualizacji tej dokumentacji i akceptacji.
+5. **Teksty przez `translate`** — zgodnie z 6.1.1, żadnych hardcodowanych stringów w widokach.
+6. **Standalone + Signals** — nowe komponenty: `standalone: true`, `ChangeDetectionStrategy.OnPush`, stan przez `signal()`/`computed()`; wstrzykiwanie przez `inject()`.
+7. **Touch target ≥ 40 px** — wszystkie elementy klikalne na mobile.
+8. **Safe-area** — dolny padding obszaru treści uwzględnia `env(safe-area-inset-bottom)`; elementy przy krawędziach górnych `env(safe-area-inset-top)`.
+
+### 6.9 Strony publiczne (autoryzacja)
+
+Strony publiczne (logowanie, ustawienie hasła) **nie korzystają z app-shellu** (6.7) — renderują się bezpośrednio w `<router-outlet />` pustego shella (`@else` w `AppComponent`). Wzorzec referencyjny to `LoginComponent`:
+
+- **Split-screen (desktop ≥ lg):** lewy panel brandowy w gradiencie `bg-gradient-to-br from-pbs-primary to-[#102640]` z logo „P" (badge `bg-white/15`), tagline, listą wyróżników (ikony z `SvgIconComponent` na `bg-white/10`) i stopką copyright; prawy panel formularza na `bg-gray-50`.
+- **Mobile:** tylko prawy panel z brandem (`lg:hidden`, badge `bg-pbs-primary`), nagłówkiem i formularzem; paddingi `env(safe-area-inset-*)`.
+- **Pola z ikoną:** ikona wewnątrz `relative` kontenera (`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400`), input z `pl-11`. Pole hasła ma przełącznik widoczności (`showPassword` signal → `eye`/`eye-off`, `aria-label` tłumaczone).
+- **Spinner** ładowania: `<app-svg-icon class="animate-spin" name="spinner" />` zamiast tekstu „…".
+- **Alert błędu:** `bg-red-50 text-red-700` z ikoną `alert`, `role="alert"`.
+- Wszystkie teksty pochodzą z `common.auth.*` oraz `common.menu.*`. Panel brandowy wyświetla listę opcji zarządzania (na bazie nawigacji dashboard) — każdy wiersz: ikona z `SvgIconComponent` + etykieta z `common.menu.*` (Dashboard, Pracownicy, Sprzęt, Terminale, Harmonogram, Analityka, Raportowanie, Awaria, Ustawienia), z nagłówkiem `common.auth.options` („Zakres zarządzania"). Pozostałe klucze: `login_subtitle`, `login_loading`, `show_password`, `hide_password`, `tagline`, `copyright`.
 
 ---
 
@@ -543,12 +788,30 @@ Request → CORS Middleware → Auth Middleware → Permission Middleware
 | created_at | DATETIME | |
 | updated_at | DATETIME | |
 
+#### 8.1.18 Szybkie notatki to-do (`user_notes`)
+
+| Kolumna | Typ | Opis |
+|---|---|---|
+| id | INT UNSIGNED AUTO_INCREMENT PK | |
+| user_id | INT UNSIGNED FK → users.id | Właściciel notatki (zalogowane konto) |
+| tresc | VARCHAR(500) | Treść notatki to-do |
+| is_done | BOOLEAN | Czy odznaczona jako wykonana (domyślnie `false`) |
+| kolejnosc | INT | Opcjonalna kolejność wyświetlania (domyślnie `0`) |
+| created_at | DATETIME | Data utworzenia |
+| updated_at | DATETIME | Data ostatniej aktualizacji |
+
+Zasady:
+- Notatki są prywatne i przypisane wyłącznie do konta (`user_id`) — brak współdzielenia między użytkownikami
+- IDOR protection obowiązkowe: każda operacja musi weryfikować, że `user_notes.user_id` odpowiada ID zalogowanego użytkownika (z JWT)
+- Usunięcie użytkownika (`DELETE /api/v1/users/{id}`) kaskadowo usuwa jego notatki (lub anonimizuje — zależnie od polityki retencji)
+
 ### 8.2 Diagram relacji (uproszczony)
 
 ```
 users ──┬── incident_comments
         └── incidents (zgloszona_przez)
         └── daily_*_reports (utworzony_przez)
+        └── user_notes (user_id — prywatne notatki to-do)
 
 employees ──┬── employee_documents
             └── order_employees
@@ -755,6 +1018,20 @@ Frontend (Angular) dodatkowo:
 - Widok szczegółowy: zmiana statusu (+ data zakończenia), komentarze, historia statusów
 - Czas przestoju: dostępny w analityce
 
+### 10.10 Szybkie notatki to-do (widget globalny)
+
+- Widget w formie wysuwającego się z boku ekranu panelu (przycisk-uchwyt zawsze widoczny na krawędzi), dostępny z poziomu **każdej podstrony** aplikacji oraz w wersji mobilnej (od ≥ 320px)
+- Notatki to-do są **prywatne** — przypisane do zalogowanego konta użytkownika (`user_id` z JWT)
+- Funkcje widgetu:
+  - Dodawanie nowej notatki (krótki tekst, max 500 znaków)
+  - Odznaczanie notatki jako wykonana / cofnięcie oznaczenia (`is_done`)
+  - Usuwanie pojedynczej notatki z listy
+  - Czyszczenie całej listy notatek (z `ConfirmDialogComponent`)
+  - Opcjonalnie: licznik nieodznaczonych notatek na przycisku-uchwycie
+- Dostępność: widget widoczny dla wszystkich zalogowanych użytkowników (nie wymaga osobnego uprawnienia per sekcja)
+- Tryb offline-first: notatki kolejkowane przez background sync i synchronizowane po odzyskaniu połączenia; lokalny store w `IndexedDB`
+- Stylowanie: Tailwind CSS, wsuwany panel (`translate-x`), dostępność klawiatury (Esc zamyka, focus trap wewnątrz panelu)
+
 ---
 
 ## 11. API Endpoints
@@ -894,6 +1171,19 @@ Frontend (Angular) dodatkowo:
 | GET | `/api/v1/dashboard/summary` | Podsumowanie KPI |
 | GET | `/api/v1/dashboard/alerts` | Lista alertów |
 
+### 11.14 Szybkie notatki to-do
+
+Endpointy prywatne — każda operacja ograniczona do notatek właściciela (`user_id` z JWT). IDOR protection obowiązkowe.
+
+| Metoda | Endpoint | Opis |
+|---|---|---|
+| GET | `/api/v1/notes` | Lista notatek zalogowanego użytkownika (z filtrem `?is_done=0/1`, sortowaniem) |
+| POST | `/api/v1/notes` | Utworzenie notatki (walidacja `tresc`, max 500 znaków) |
+| PATCH | `/api/v1/notes/{id}` | Aktualizacja treści notatki |
+| PATCH | `/api/v1/notes/{id}/done` | Odznaczenie / cofnięcie oznaczenia jako wykonana (`is_done`) |
+| DELETE | `/api/v1/notes/{id}` | Usunięcie pojedynczej notatki |
+| DELETE | `/api/v1/notes` | Wyczyszczenie całej listy notatek (z filtrem `?is_done=1` — tylko wykonane, lub bez filtra — wszystkie) |
+
 ---
 
 ## 12. Modele danych
@@ -1010,6 +1300,16 @@ export interface DailyVehicleReport {
   przebieg_oc: string;
   uwagi?: string;
 }
+
+export interface UserNote {
+  id: number;
+  user_id: number;
+  tresc: string;
+  is_done: boolean;
+  kolejnosc?: number;
+  created_at: string;
+  updated_at: string;
+}
 ```
 
 ### 12.2 Backend (DTO / Value Objects)
@@ -1093,6 +1393,7 @@ Każda tabela musi posiadać indeksy na kolumnach używanych w klauzulach `WHERE
 | `audit_log` | `INDEX(user_id, created_at)`, `INDEX(action)`, `INDEX(resource_type, resource_id)` |
 | `order_employees` | `INDEX(order_id)`, `INDEX(employee_id)` |
 | `order_equipment` | `INDEX(order_id)`, `INDEX(equipment_id)` |
+| `user_notes` | `INDEX(user_id)`, `INDEX(user_id, is_done)`, `INDEX(user_id, kolejnosc)` |
 
 Zasady:
 - Klucze obce **muszą** mieć indeks (`FOREIGN KEY` automatycznie tworzy w MySQL)
@@ -1242,4 +1543,4 @@ Projekt wykorzystuje dwa skille AI zarejestrowane w `skills-lock.json`:
 
 ---
 
-> **Koniec dokumentacji technicznej PBS v1.1**
+> **Koniec dokumentacji technicznej PBS v1.3**

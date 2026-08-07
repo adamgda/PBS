@@ -9,6 +9,8 @@ import {
   LoginResponse,
   RefreshResponse,
   AuthUser,
+  ForgotPasswordResponse,
+  SetPasswordResponse,
 } from '../models/auth.model';
 
 /**
@@ -78,6 +80,23 @@ export class AuthService {
         return throwError(() => new Error('Logout failed'));
       }),
     );
+  }
+
+  /**
+   * Prośba o reset hasła — POST /auth/forgot-password.
+   * Backend zawsze zwraca 200 (nie ujawnia czy e-mail istnieje w bazie).
+   */
+  forgotPassword(email: string): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>(`${this.apiUrl}/auth/forgot-password`, { email });
+  }
+
+  /**
+   * Ustawienie nowego hasła — POST /auth/set-password.
+   * Token pochodzi z linku w e-mailu resetującym (query param `?token=...`).
+   * Limit: 3 próby/h na token (wymuszane przez backend).
+   */
+  setPassword(token: string, password: string): Observable<SetPasswordResponse> {
+    return this.http.post<SetPasswordResponse>(`${this.apiUrl}/auth/set-password`, { token, password });
   }
 
   /**

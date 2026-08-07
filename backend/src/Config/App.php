@@ -53,6 +53,7 @@ final class App
         $passwordPolicyService = new PasswordPolicyService();
         $mailService = new MailService($config);
         $frontendBaseUrl = $config->get('FRONTEND_BASE_URL', 'http://localhost:4200') ?? 'http://localhost:4200';
+        $appDebug = filter_var($config->get('APP_DEBUG', 'false'), FILTER_VALIDATE_BOOL);
         $authService = new AuthService(
             $userRepository,
             $refreshTokenRepository,
@@ -62,11 +63,12 @@ final class App
             $passwordPolicyService,
             $mailService,
             $frontendBaseUrl,
+            $appDebug,
         );
 
         // === Kontrolery ===
         $healthController = new HealthController();
-        $authController = new AuthController($authService);
+        $authController = new AuthController($authService, $appDebug);
 
         // === Trasy ===
         $routes = [
