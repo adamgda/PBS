@@ -1,0 +1,180 @@
+<!-- Nagłówek sekcji -->
+<div>
+  <h1 class="text-2xl font-bold text-gray-900">{{ 'ustawienia.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600">{{ 'ustawienia.users.subtitle' | translate }}</p>
+</div>
+
+<!-- Sub-tabs -->
+<div class="mt-5 flex gap-2 overflow-x-auto">
+  <button
+    type="button"
+    class="whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors"
+    [class.bg-pbs-primary]="activeTab() === 'users'"
+    [class.text-white]="activeTab() === 'users'"
+    [class.bg-white]="activeTab() !== 'users'"
+    [class.border]="activeTab() !== 'users'"
+    [class.border-gray-200]="activeTab() !== 'users'"
+    [class.text-gray-600]="activeTab() !== 'users'"
+    (click)="setTab('users')"
+  >
+    {{ 'ustawienia.tabs.users' | translate }}
+  </button>
+  <button
+    type="button"
+    class="whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600"
+    (click)="setTab('alerts')"
+  >
+    {{ 'ustawienia.tabs.alerts' | translate }}
+  </button>
+</div>
+
+<!-- Tab: Użytkownicy -->
+@if (activeTab() === 'users') {
+  <div class="mt-5">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900">{{ 'ustawienia.users.all_users' | translate }}</h2>
+      <app-add-button [label]="'ustawienia.users.add'" (add)="openCreate()" />
+    </div>
+
+    <app-filter-bar
+      [filters]="filterConfigs()"
+      [values]="{}"
+      (filterApply)="onFilterApply($event)"
+      (filterClear)="onFilterClear()"
+    />
+
+    <app-data-table
+      [columns]="columns()"
+      [data]="users()"
+      [total]="total()"
+      [page]="page()"
+      [perPage]="perPage()"
+      [loading]="loading()"
+      [sortKey]="sortKey()"
+      [sortDirection]="sortDirection()"
+      [actionsTemplate]="actionsTpl"
+      (sortChange)="onSort($event)"
+      (pageChange)="onPageChange($event)"
+      (perPageChange)="onPerPageChange($event)"
+    />
+
+    <ng-template #actionsTpl let-user>
+      <div class="flex justify-end gap-1">
+        <app-icon-button
+          icon="settings"
+          tone="primary"
+          [ariaLabel]="'ustawienia.users.permissions' | translate"
+          [disabled]="!canManage(user)"
+          (clicked)="openPermissions(user)"
+        />
+        <app-icon-button
+          [icon]="user.is_active ? 'lock' : 'check'"
+          tone="warning"
+          [ariaLabel]="user.is_active ? ('ustawienia.users.block' | translate) : ('ustawienia.users.unblock' | translate)"
+          [disabled]="!canManage(user)"
+          (clicked)="toggleBlock(user)"
+        />
+        <app-icon-button
+          icon="close"
+          tone="danger"
+          [ariaLabel]="'ustawienia.users.delete' | translate"
+          [disabled]="!canManage(user)"
+          (clicked)="deleteUser(user)"
+        />
+      </div>
+    </ng-template>
+  </div>
+}
+
+<!-- Tab: Alerty (placeholder — Etap 14) -->
+@if (activeTab() === 'alerts') {
+  <div class="mt-5 rounded-lg bg-white p-8 text-center text-gray-500 shadow">
+    {{ 'ustawienia.alerts.title' | translate }} — implementacja w Etapie 14
+  </div>
+}
+
+<!-- ===== Modal: tworzenie użytkownika ===== -->
+@if (modalMode() === 'create') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'ustawienia.users.add' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
+      </div>
+
+      <app-form-input
+        type="email"
+        name="email"
+        icon="mail"
+        autocomplete="email"
+        labelKey="ustawienia.users.email"
+        placeholderKey="ustawienia.users.email"
+        [ngModel]="modalEmail()"
+        (ngModelChange)="modalEmail.set($event)"
+      />
+
+      <div class="mb-4">
+        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'ustawienia.users.role' | translate }}</label>
+        <app-select
+          [options]="roles"
+          size="lg"
+          [ngModel]="modalRole()"
+          (ngModelChange)="modalRole.set($event)"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label class="mb-2 block text-sm font-medium text-gray-700">{{ 'ustawienia.users.sections' | translate }}</label>
+        <div class="flex flex-wrap gap-2">
+          @for (s of sections; track s) {
+            <label class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs">
+              <input type="checkbox" class="h-3.5 w-3.5 rounded accent-pbs-primary" [checked]="isPermissionChecked(s)" (change)="togglePermission(s, $event)" />
+              {{ sectionLabel(s) }}
+            </label>
+          }
+        </div>
+      </div>
+
+      <div class="mb-4 flex items-start gap-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
+        <app-svg-icon name="alert" />
+        <p>{{ 'ustawienia.users.invite_info' | translate }}</p>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeModal()" />
+        <app-button variant="primary" [label]="'ustawienia.users.send_invite'" [disabled]="modalSaving()" (clicked)="saveCreate()" />
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Modal: edycja uprawnień ===== -->
+@if (modalMode() === 'permissions') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'ustawienia.users.permissions_title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
+      </div>
+
+      @if (modalUser(); as u) {
+        <p class="mb-1 text-sm text-gray-600">{{ 'ustawienia.users.permissions_subtitle' | translate }}</p>
+        <p class="mb-4 truncate text-sm font-medium text-gray-900">{{ u.email }}</p>
+      }
+
+      <div class="mb-4 flex flex-wrap gap-2">
+        @for (s of sections; track s) {
+          <label class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs">
+            <input type="checkbox" class="h-3.5 w-3.5 rounded accent-pbs-primary" [checked]="isPermissionChecked(s)" (change)="togglePermission(s, $event)" />
+            {{ sectionLabel(s) }}
+          </label>
+        }
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeModal()" />
+        <app-button variant="primary" [label]="'common.buttons.save'" [disabled]="modalSaving()" (clicked)="savePermissions()" />
+      </div>
+    </div>
+  </div>
+}

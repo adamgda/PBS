@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { ConfirmService } from '../../services/confirm.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { ButtonComponent } from '../button/button.component';
 
 /**
  * Komponent dialogu potwierdzenia — globalny, sterowany przez ConfirmService.
@@ -11,7 +12,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, ButtonComponent],
   template: `
     @if (state(); as s) {
       <div
@@ -26,24 +27,8 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
           </h3>
           <p class="text-sm text-gray-600 mb-6">{{ s.message }}</p>
           <div class="flex justify-end gap-3">
-            <button
-              type="button"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-              (click)="respond(false)"
-            >
-              {{ s.cancelText || ('common.buttons.cancel' | translate) }}
-            </button>
-            <button
-              type="button"
-              class="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
-              [class.bg-red-600]="s.danger"
-              [class.hover:bg-red-700]="s.danger"
-              [class.bg-pbs-primary]="!s.danger"
-              [class.hover:bg-blue-700]="!s.danger"
-              (click)="respond(true)"
-            >
-              {{ s.confirmText || ('common.buttons.confirm' | translate) }}
-            </button>
+            <app-button variant="secondary" (clicked)="respond(false)">{{ s.cancelText || ('common.buttons.cancel' | translate) }}</app-button>
+            <app-button [variant]="s.danger ? 'danger' : 'primary'" (clicked)="respond(true)">{{ s.confirmText || ('common.buttons.confirm' | translate) }}</app-button>
           </div>
         </div>
       </div>

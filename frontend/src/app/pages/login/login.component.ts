@@ -9,6 +9,7 @@ import { TranslateService } from '../../services/translate.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
 import { FormInputComponent } from '../../components/form-input/form-input.component';
+import { ButtonComponent } from '../../components/button/button.component';
 
 /**
  * Strona logowania — jedyna publiczna strona.
@@ -17,7 +18,7 @@ import { FormInputComponent } from '../../components/form-input/form-input.compo
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, SvgIconComponent, FormInputComponent, RouterLink],
+  imports: [CommonModule, FormsModule, TranslatePipe, SvgIconComponent, FormInputComponent, RouterLink, ButtonComponent],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {

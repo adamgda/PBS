@@ -57,7 +57,7 @@ export class AppComponent {
     { path: '/analityka', label: 'common.menu.analityka', permission: 'analityka', icon: 'analityka' },
     { path: '/raportowanie', label: 'common.menu.raportowanie', permission: 'raportowanie', icon: 'raportowanie' },
     { path: '/awaria', label: 'common.menu.awaria', permission: 'awaria', icon: 'awaria' },
-    { path: '/ustawienia', label: 'common.menu.ustawienia', permission: 'ustawienia', icon: 'ustawienia' },
+    { path: '/settings', label: 'common.menu.ustawienia', permission: 'ustawienia', icon: 'settings' },
   ];
 
   readonly visibleMenuItems = computed(() =>

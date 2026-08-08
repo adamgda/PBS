@@ -1,13 +1,14 @@
-import { Component, Input, Output, EventEmitter, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, ChangeDetectionStrategy, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { SelectComponent, SelectOption } from '../select/select.component';
 
 export type SortDirection = 'asc' | 'desc' | null;
 
 export interface DataTableColumn<T> {
-  key: keyof T | string;
+  key: string;
   label: string;
   sortable?: boolean;
   width?: string;
@@ -26,7 +27,7 @@ export interface DataTableSortEvent {
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, SelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="overflow-x-auto bg-white rounded-lg shadow">
@@ -112,16 +113,13 @@ export interface DataTableSortEvent {
               >
                 →
               </button>
-              <select
-                class="ml-2 px-2 py-1 rounded border border-gray-200 text-sm"
+              <app-select
+                [options]="perPageOptions"
+                size="sm"
+                extraClass="ml-2"
                 [ngModel]="perPage()"
                 (ngModelChange)="onPerPageChange($event)"
-              >
-                <option [value]="10">10</option>
-                <option [value]="25">25</option>
-                <option [value]="50">50</option>
-                <option [value]="100">100</option>
-              </select>
+              />
             </div>
           </div>
         }
@@ -129,36 +127,44 @@ export interface DataTableSortEvent {
     </div>
   `,
 })
-export class DataTableComponent<T extends Record<string, unknown>> {
-  @Input({ required: true }) set columns(value: DataTableColumn<T>[]) {
+export class DataTableComponent<T extends object> {
+  @Input({ required: true, alias: 'columns' }) set columnsInput(value: DataTableColumn<T>[]) {
     this._columns.set(value);
   }
-  @Input({ required: true }) set data(value: T[]) {
+  @Input({ required: true, alias: 'data' }) set dataInput(value: T[]) {
     this._data.set(value);
   }
-  @Input() set total(value: number) {
+  @Input({ alias: 'total' }) set totalInput(value: number) {
     this._total.set(value);
   }
-  @Input() set page(value: number) {
+  @Input({ alias: 'page' }) set pageInput(value: number) {
     this._page.set(value);
   }
-  @Input() set perPage(value: number) {
+  @Input({ alias: 'perPage' }) set perPageInput(value: number) {
     this._perPage.set(value);
   }
-  @Input() set loading(value: boolean) {
+  @Input({ alias: 'loading' }) set loadingInput(value: boolean) {
     this._loading.set(value);
   }
-  @Input() set sortKey(value: string) {
+  @Input({ alias: 'sortKey' }) set sortKeyInput(value: string) {
     this._sortKey.set(value);
   }
-  @Input() set sortDirection(value: SortDirection) {
+  @Input({ alias: 'sortDirection' }) set sortDirectionInput(value: SortDirection) {
     this._sortDirection.set(value);
   }
-  @Input() actionsTemplate: unknown = null;
+  @Input() actionsTemplate: TemplateRef<{ $implicit: T }> | null = null;
 
   @Output() sortChange = new EventEmitter<DataTableSortEvent>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() perPageChange = new EventEmitter<number>();
+
+  /** Opcje wyboru rozmiaru strony (perPage). */
+  readonly perPageOptions: SelectOption[] = [
+    { value: 10, label: '10' },
+    { value: 25, label: '25' },
+    { value: 50, label: '50' },
+    { value: 100, label: '100' },
+  ];
 
   private readonly _columns = signal<DataTableColumn<T>[]>([]);
   private readonly _data = signal<T[]>([]);

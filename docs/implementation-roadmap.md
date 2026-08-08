@@ -113,14 +113,14 @@ Legenda statusów:
 
 ## Etap 5 — Sekcja: Użytkownicy (Ustawienia → Użytkownicy)
 
-- [ ] Backend: `GET/POST /api/v1/users`
-- [ ] Backend: `GET/PUT/DELETE /api/v1/users/{id}`
-- [ ] Backend: `PATCH /api/v1/users/{id}/permissions`
-- [ ] Frontend: lista użytkowników (DataTable + filtry)
-- [ ] Frontend: formularz tworzenia użytkownika (email → link)
-- [ ] Frontend: edycja uprawnień (per sekcja)
-- [ ] Frontend: blokowanie/usuwanie użytkownika
-- [ ] Lokalizacje: `ustawienia.json` w `locales/pl/`
+- [x] Backend: `GET/POST /api/v1/users`
+- [x] Backend: `GET/PUT/DELETE /api/v1/users/{id}`
+- [x] Backend: `PATCH /api/v1/users/{id}/permissions`
+- [x] Frontend: lista użytkowników (DataTable + filtry)
+- [x] Frontend: formularz tworzenia użytkownika (email → link)
+- [x] Frontend: edycja uprawnień (per sekcja)
+- [x] Frontend: blokowanie/usuwanie użytkownika
+- [x] Lokalizacje: `ustawienia.json` w `locales/pl/`
 
 ## Etap 6 — Sekcja: Terminale
 

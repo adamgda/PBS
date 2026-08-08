@@ -22,6 +22,8 @@ import { CommonModule } from '@angular/common';
       stroke-linejoin="round"
       [attr.aria-hidden]="true"
       focusable="false"
+      [style.width]="iconSize"
+      [style.height]="iconSize"
     >
       @switch (name) {
         @case ('dashboard') {
@@ -61,9 +63,9 @@ import { CommonModule } from '@angular/common';
           <path d="M13 3v4h4" />
           <path d="M9 13h6M9 16.5h6" />
         }
-        @case ('ustawienia') {
+        @case ('settings') {
+          <path d="M19.4 13c.04-.33.06-.66.06-1s-.02-.67-.06-1l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.03 7.03 0 0 0-1.73-1l-.38-2.65A.5.5 0 0 0 14.46 2h-4a.5.5 0 0 0-.49.42l-.38 2.65c-.63.26-1.2.6-1.73 1l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64L4.6 11c-.04.33-.06.66-.06 1s.02.67.06 1l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1c.53.4 1.1.74 1.73 1l.38 2.65c.05.24.26.42.49.42h4c.24 0 .45-.18.49-.42l.38-2.65c.63-.26 1.2-.6 1.73-1l2.49 1c.22.09.48 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64L19.4 13Z" />
           <circle cx="12" cy="12" r="3" />
-          <path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" />
         }
         @case ('awaria') {
           <path d="M12 3.5l9 16H3z" />
@@ -110,6 +112,12 @@ import { CommonModule } from '@angular/common';
         @case ('spinner') {
           <path d="M12 3a9 9 0 1 0 9 9" />
         }
+        @case ('plus') {
+          <path d="M12 5v14M5 12h14" />
+        }
+        @case ('chevron-down') {
+          <path d="M6 9l6 6 6-6" />
+        }
         @default {
           <circle cx="12" cy="12" r="9" />
         }
@@ -122,13 +130,15 @@ import { CommonModule } from '@angular/common';
         display: inline-flex;
         line-height: 0;
       }
-      svg {
-        width: 1.5rem;
-        height: 1.5rem;
-      }
     `,
   ],
 })
 export class SvgIconComponent {
   @Input({ required: true }) name = '';
+  /** Rozmiar ikony: sm (1rem), md (1.5rem — domyślny), lg (2rem). */
+  @Input() size: 'sm' | 'md' | 'lg' = 'md';
+
+  get iconSize(): string {
+    return this.size === 'sm' ? '1rem' : this.size === 'lg' ? '2rem' : '1.5rem';
+  }
 }

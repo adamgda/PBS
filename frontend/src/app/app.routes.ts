@@ -80,11 +80,11 @@ export const routes: Routes = [
       import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
   },
   {
-    path: 'ustawienia',
+    path: 'settings',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'ustawienia' },
     loadComponent: () =>
-      import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
+      import('./pages/settings/settings.component').then((m) => m.SettingsComponent),
   },
   {
     path: '',

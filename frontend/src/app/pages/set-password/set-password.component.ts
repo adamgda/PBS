@@ -9,6 +9,7 @@ import { TranslateService } from '../../services/translate.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
 import { FormInputComponent } from '../../components/form-input/form-input.component';
+import { ButtonComponent } from '../../components/button/button.component';
 
 /**
  * Strona ustawiania nowego hasła — publiczna (bez AuthGuard).
@@ -28,7 +29,7 @@ import { FormInputComponent } from '../../components/form-input/form-input.compo
 @Component({
   selector: 'app-set-password',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, SvgIconComponent, FormInputComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, SvgIconComponent, FormInputComponent, ButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './set-password.component.html',
 })

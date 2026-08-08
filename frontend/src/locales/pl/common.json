@@ -40,7 +40,8 @@
     "per_page": "Na stronę",
     "total": "Łącznie",
     "sort": "Sortuj",
-    "columns": "Kolumny"
+    "columns": "Kolumny",
+    "actions": "Akcje"
   },
   "validation": {
     "required": "To pole jest wymagane",
@@ -74,7 +75,7 @@
     }
   },
   "auth": {
-    "login": "Zaloguj",
+    "login": "Zalogowany",
     "logout": "Wyloguj",
     "email": "E-mail",
     "password": "Hasło",

@@ -6,16 +6,50 @@
   },
   "users": {
     "title": "Zarządzanie użytkownikami",
+    "subtitle": "Tworzenie kont, edycja uprawnień i blokowanie dostępu",
     "email": "E-mail",
     "role": "Rola",
     "permissions": "Uprawnienia",
     "is_active": "Aktywny",
+    "status": "Status",
+    "actions": "Akcje",
     "add": "Dodaj użytkownika",
+    "edit": "Edytuj",
     "send_invite": "Wyślij zaproszenie (e-mail z linkiem)",
     "block": "Zablokuj",
     "unblock": "Odblokuj",
+    "delete": "Usuń",
     "permissions_title": "Edycja uprawnień",
-    "sections": "Sekcje aplikacji"
+    "permissions_subtitle": "Wybierz sekcje dostępne dla użytkownika",
+    "sections": "Sekcje aplikacji",
+    "search_placeholder": "Szukaj po e-mailu",
+    "filter_role": "Rola",
+    "filter_status": "Status",
+    "filter_all": "Wszystkie",
+    "status_active": "Aktywny",
+    "status_blocked": "Zablokowany",
+    "status_invited": "Zaproszony",
+    "all_users": "Wszyscy użytkownicy",
+    "invite_info": "Nowy użytkownik otrzyma e-mail z linkiem do ustawienia hasła. Konto pozostaje w statusie „zaproszony” do pierwszego logowania."
+  },
+  "roles": {
+    "super_admin": "Super Administrator",
+    "admin": "Administrator",
+    "user": "Użytkownik"
+  },
+  "messages": {
+    "user_created": "Utworzono użytkownika — wysłano e-mail z linkiem do ustawienia hasła",
+    "user_blocked": "Zablokowano użytkownika",
+    "user_unblocked": "Odblokowano użytkownika",
+    "permissions_updated": "Zaktualizowano uprawnienia",
+    "user_updated": "Zaktualizowano dane użytkownika",
+    "user_deleted": "Usunięto użytkownika",
+    "delete_confirm_title": "Usuwanie użytkownika",
+    "delete_confirm_message": "Czy na pewno chcesz usunąć użytkownika {{email}}? Operacja jest nieodwracalna (anonimizacja danych).",
+    "block_confirm_message": "Czy na pewno chcesz zablokować użytkownika {{email}}?",
+    "load_error": "Nie udało się pobrać listy użytkowników",
+    "email_required": "E-mail jest wymagany",
+    "email_invalid": "Nieprawidłowy adres e-mail"
   },
   "alerts": {
     "title": "Konfiguracja alertów",
@@ -28,15 +62,5 @@
     "send_time": "Czas wysyłki",
     "is_active": "Aktywny",
     "add": "Dodaj konfigurację alertu"
-  },
-  "roles": {
-    "super_admin": "Super Administrator",
-    "admin": "Administrator",
-    "user": "Użytkownik"
-  },
-  "messages": {
-    "user_created": "Utworzono użytkownika — wysłano e-mail z linkiem do ustawienia hasła",
-    "user_blocked": "Zablokowano użytkownika",
-    "permissions_updated": "Zaktualizowano uprawnienia"
   }
 }

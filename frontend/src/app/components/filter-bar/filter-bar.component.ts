@@ -2,7 +2,8 @@ import { Component, Input, Output, EventEmitter, signal, ChangeDetectionStrategy
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { TranslatePipe } from '../../pipes/translate.pipe';
+import { ButtonComponent } from '../button/button.component';
+import { SelectComponent } from '../select/select.component';
 
 export interface FilterConfig {
   key: string;
@@ -19,7 +20,7 @@ export interface FilterConfig {
 @Component({
   selector: 'app-filter-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, ButtonComponent, SelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-white p-4 rounded-lg shadow mb-4">
@@ -34,27 +35,23 @@ export interface FilterConfig {
                   type="text"
                   class="px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent"
                   [placeholder]="filter.placeholder || ''"
-                  [ngModel]="values()[filter.key] || ''"
+                  [ngModel]="filterValues()[filter.key] || ''"
                   (ngModelChange)="onFilterChange(filter.key, $event)"
                 />
               }
               @case ('select') {
-                <select
-                  class="px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent"
-                  [ngModel]="values()[filter.key] || ''"
+                <app-select
+                  [options]="filter.options || []"
+                  placeholder="—"
+                  [ngModel]="filterValues()[filter.key] || ''"
                   (ngModelChange)="onFilterChange(filter.key, $event)"
-                >
-                  <option value="">—</option>
-                  @for (opt of filter.options; track opt.value) {
-                    <option [value]="opt.value">{{ opt.label }}</option>
-                  }
-                </select>
+                />
               }
               @case ('date') {
                 <input
                   type="date"
                   class="px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent"
-                  [ngModel]="values()[filter.key] || ''"
+                  [ngModel]="filterValues()[filter.key] || ''"
                   (ngModelChange)="onFilterChange(filter.key, $event)"
                 />
               }
@@ -63,30 +60,18 @@ export interface FilterConfig {
         }
 
         <div class="flex gap-2 ml-auto">
-          <button
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-            (click)="onClear()"
-          >
-            {{ 'common.buttons.clear' | translate }}
-          </button>
-          <button
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-white bg-pbs-primary rounded-md hover:bg-blue-700 transition-colors"
-            (click)="onApply()"
-          >
-            {{ 'common.buttons.filter' | translate }}
-          </button>
+          <app-button [label]="'common.buttons.clear'" variant="secondary" (clicked)="onClear()" />
+          <app-button [label]="'common.buttons.filter'" variant="primary" (clicked)="onApply()" />
         </div>
       </div>
     </div>
   `,
 })
 export class FilterBarComponent {
-  @Input({ required: true }) set filters(value: FilterConfig[]) {
+  @Input({ required: true, alias: 'filters' }) set filtersInput(value: FilterConfig[]) {
     this._filters.set(value);
   }
-  @Input() set values(value: Record<string, string>) {
+  @Input({ alias: 'values' }) set valuesInput(value: Record<string, string>) {
     this._values.set(value);
   }
 
@@ -98,7 +83,7 @@ export class FilterBarComponent {
   private readonly _values = signal<Record<string, string>>({});
 
   readonly filters = this._filters.asReadonly();
-  readonly values = this._values.asReadonly();
+  readonly filterValues = this._values.asReadonly();
 
   onFilterChange(key: string, value: string): void {
     const current = this._values();
