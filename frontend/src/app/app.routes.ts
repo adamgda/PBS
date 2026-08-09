@@ -35,7 +35,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'pracownicy' },
     loadComponent: () =>
-      import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
+      import('./pages/employees/employees.component').then((m) => m.EmployeesComponent),
   },
   {
     path: 'sprzet',
@@ -49,7 +49,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'terminale' },
     loadComponent: () =>
-      import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
+      import('./pages/terminals/terminals.component').then((m) => m.TerminalsComponent),
   },
   {
     path: 'harmonogram',

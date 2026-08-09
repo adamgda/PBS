@@ -863,7 +863,7 @@ incidents ──┬── incident_comments
 - **Minimalizacja**: tylko niezbędne dane pracowników przechowywane
 - **Ekspozycja przez API**: odpowiednie mapowanie DTO, bez przesyłania niepotrzebnych pól (np. `password_hash` nigdy nie wychodzi z API)
 - **Pseudonimizacja** tam gdzie możliwe (np. identyfikatory zamiast imion w logach)
-- **Prawo do bycia zapomnianym**: endpoint `DELETE /api/v1/employees/{id}` realizuje anonymizację (nadpisanie danych osobowych wartościami `[deleted]`) zamiast fizycznego usunięcia, gdy wymagane przez RODO
+- **Prawo do bycia zapomnianym**: endpoint `DELETE /api/v1/employees/{id}` realizuje **fizyczne usunięcie** pracownika z bazy. Powiązania historyczne (np. `order_employees`) zostają zachowane dzięki FK `ON DELETE SET NULL` (kolumna `employee_id` NULLABLE) — frontend wyświetla dla nich etykietę „Pracownik usunięty". Dokumenty pracownika (`employee_documents`) usuwają się kaskadowo (`ON DELETE CASCADE`), a bieżące przypisanie sprzętu (`equipment.current_employee_id`) zostaje wyczyszczone (`ON DELETE SET NULL`).
 - **Retencja danych**: dane pracowników nieaktywnych archiwizowane po 2 latach, usuwane po 5 latach (konfigurowalne w ustawieniach)
 - **Dostęp do danych osobowych**: logowany w audit log (kto, kiedy, jakie dane obejrzał)
 - **Zgoda**: aplikacja przetwarza dane na podstawie zgody/wiążącego polecenia — dokumentacja prawna prowadzona osobno

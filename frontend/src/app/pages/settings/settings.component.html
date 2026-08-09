@@ -53,10 +53,15 @@
       [sortKey]="sortKey()"
       [sortDirection]="sortDirection()"
       [actionsTemplate]="actionsTpl"
+      [cellTemplates]="{ is_active: statusCellTpl }"
       (sortChange)="onSort($event)"
       (pageChange)="onPageChange($event)"
       (perPageChange)="onPerPageChange($event)"
     />
+
+    <ng-template #statusCellTpl let-user>
+      <app-status-badge [status]="userStatus(user)" [label]="statusLabel(user)" />
+    </ng-template>
 
     <ng-template #actionsTpl let-user>
       <div class="flex justify-end gap-1">
@@ -75,7 +80,7 @@
           (clicked)="toggleBlock(user)"
         />
         <app-icon-button
-          icon="close"
+          icon="trash"
           tone="danger"
           [ariaLabel]="'ustawienia.users.delete' | translate"
           [disabled]="!canManage(user)"

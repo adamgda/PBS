@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Config;
 
 use App\Controllers\AuthController;
+use App\Controllers\EmployeeController;
 use App\Controllers\HealthController;
+use App\Controllers\TerminalController;
 use App\Controllers\UserController;
 use App\Http\Request;
 use App\Http\Response;
@@ -15,14 +17,21 @@ use App\Middleware\MiddlewarePipeline;
 use App\Middleware\PermissionMiddleware;
 use App\Middleware\RateLimiterMiddleware;
 use App\Repository\AuditLogRepository;
+use App\Repository\EmployeeDocumentRepository;
+use App\Repository\EmployeeRepository;
 use App\Repository\PasswordResetRepository;
 use App\Repository\RefreshTokenRepository;
+use App\Repository\TerminalRepository;
 use App\Repository\UserRepository;
 use App\Router\Router;
 use App\Services\AuthService;
+use App\Services\ClamAvScanner;
+use App\Services\EmployeeService;
+use App\Services\FileUploadService;
 use App\Services\JwtService;
 use App\Services\MailService;
 use App\Services\PasswordPolicyService;
+use App\Services\TerminalService;
 use App\Services\UserService;
 
 /**
@@ -46,6 +55,9 @@ final class App
         $refreshTokenRepository = new RefreshTokenRepository($pdo);
         $passwordResetRepository = new PasswordResetRepository($pdo);
         $auditLogRepository = new AuditLogRepository($pdo);
+        $terminalRepository = new TerminalRepository($pdo);
+        $employeeRepository = new EmployeeRepository($pdo);
+        $employeeDocumentRepository = new EmployeeDocumentRepository($pdo);
 
         // === Serwisy ===
         $jwtSecret = $config->get('JWT_SECRET', 'dev-secret-key-change-in-production') ?? 'dev-secret-key-change-in-production';
@@ -81,11 +93,53 @@ final class App
             $appDebug,
         );
         $userController = new UserController($userService);
+        $terminalService = new TerminalService($terminalRepository, $auditLogRepository);
+        $terminalController = new TerminalController($terminalService);
+
+        // === Serwis uploadu plików + skaner antywirusowy (Etap 7) ===
+        $storageDir = __DIR__ . '/../../storage/private/employee_documents';
+        $fileUploadService = new FileUploadService(
+            storageDir: $storageDir,
+            baseUrl: $frontendBaseUrl,
+            hmacSecret: $jwtSecret,
+            scanner: new ClamAvScanner(),
+        );
+        $employeeService = new EmployeeService(
+            $employeeRepository,
+            $employeeDocumentRepository,
+            $auditLogRepository,
+            $fileUploadService,
+        );
+        $employeeController = new EmployeeController($employeeService);
 
         // === Guard uprawnień per-route ===
         // Opakowuje handler kontrolera sprawdzaniem PermissionMiddleware dla wskazanych sekcji.
         $ustawieniaGuard = static function (callable $handler): callable {
             $permissionMiddleware = new PermissionMiddleware(['ustawienia']);
+
+            return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
+                return $permissionMiddleware->process(
+                    $request,
+                    static fn (Request $req): Response => $handler($req, $routeParams),
+                );
+            };
+        };
+
+        // Guard uprawnień sekcji „terminale" (Etap 6).
+        $terminaleGuard = static function (callable $handler): callable {
+            $permissionMiddleware = new PermissionMiddleware(['terminale']);
+
+            return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
+                return $permissionMiddleware->process(
+                    $request,
+                    static fn (Request $req): Response => $handler($req, $routeParams),
+                );
+            };
+        };
+
+        // Guard uprawnień sekcji „pracownicy" (Etap 7).
+        $pracownicyGuard = static function (callable $handler): callable {
+            $permissionMiddleware = new PermissionMiddleware(['pracownicy']);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -111,6 +165,25 @@ final class App
             ['method' => 'PUT', 'path' => '/api/v1/users/{id}', 'handler' => $ustawieniaGuard([$userController, 'update'])],
             ['method' => 'PATCH', 'path' => '/api/v1/users/{id}/permissions', 'handler' => $ustawieniaGuard([$userController, 'permissions'])],
             ['method' => 'DELETE', 'path' => '/api/v1/users/{id}', 'handler' => $ustawieniaGuard([$userController, 'destroy'])],
+
+            // Sekcja Terminale (Etap 6) — wymagane uprawnienie `terminale`
+            ['method' => 'GET', 'path' => '/api/v1/terminals', 'handler' => $terminaleGuard([$terminalController, 'index'])],
+            ['method' => 'POST', 'path' => '/api/v1/terminals', 'handler' => $terminaleGuard([$terminalController, 'store'])],
+            ['method' => 'GET', 'path' => '/api/v1/terminals/{id}', 'handler' => $terminaleGuard([$terminalController, 'show'])],
+            ['method' => 'PUT', 'path' => '/api/v1/terminals/{id}', 'handler' => $terminaleGuard([$terminalController, 'update'])],
+            ['method' => 'DELETE', 'path' => '/api/v1/terminals/{id}', 'handler' => $terminaleGuard([$terminalController, 'destroy'])],
+
+            // Sekcja Pracownicy (Etap 7) — wymagane uprawnienie `pracownicy`
+            ['method' => 'GET', 'path' => '/api/v1/employees', 'handler' => $pracownicyGuard([$employeeController, 'index'])],
+            ['method' => 'POST', 'path' => '/api/v1/employees', 'handler' => $pracownicyGuard([$employeeController, 'store'])],
+            ['method' => 'GET', 'path' => '/api/v1/employees/{id}', 'handler' => $pracownicyGuard([$employeeController, 'show'])],
+            ['method' => 'PUT', 'path' => '/api/v1/employees/{id}', 'handler' => $pracownicyGuard([$employeeController, 'update'])],
+            ['method' => 'DELETE', 'path' => '/api/v1/employees/{id}', 'handler' => $pracownicyGuard([$employeeController, 'destroy'])],
+            ['method' => 'PATCH', 'path' => '/api/v1/employees/{id}/assignment', 'handler' => $pracownicyGuard([$employeeController, 'assign'])],
+            ['method' => 'GET', 'path' => '/api/v1/employees/{id}/documents', 'handler' => $pracownicyGuard([$employeeController, 'listDocuments'])],
+            ['method' => 'POST', 'path' => '/api/v1/employees/{id}/documents', 'handler' => $pracownicyGuard([$employeeController, 'createDocument'])],
+            ['method' => 'PUT', 'path' => '/api/v1/documents/{id}', 'handler' => $pracownicyGuard([$employeeController, 'updateDocument'])],
+            ['method' => 'DELETE', 'path' => '/api/v1/documents/{id}', 'handler' => $pracownicyGuard([$employeeController, 'deleteDocument'])],
         ];
 
         $this->router = new Router($routes);

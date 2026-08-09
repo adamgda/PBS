@@ -1,0 +1,346 @@
+<!-- Nagłówek sekcji -->
+<div>
+  <h1 class="text-2xl font-bold text-gray-900">{{ 'pracownicy.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600">{{ 'pracownicy.subtitle' | translate }}</p>
+</div>
+
+<!-- Lista pracowników -->
+<div class="mt-5">
+  <div class="mb-4 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.list.all_employees' | translate }}</h2>
+    <app-add-button [label]="'pracownicy.buttons.add'" (add)="openCreate()" />
+  </div>
+
+  <app-filter-bar
+    [filters]="filterConfigs()"
+    [values]="{}"
+    (filterApply)="onFilterApply($event)"
+    (filterClear)="onFilterClear()"
+  />
+
+  <app-data-table
+    [columns]="columns()"
+    [data]="employees()"
+    [total]="total()"
+    [page]="page()"
+    [perPage]="perPage()"
+    [loading]="loading()"
+    [sortKey]="sortKey()"
+    [sortDirection]="sortDirection()"
+    [actionsTemplate]="actionsTpl"
+    [cellTemplates]="{ is_active: statusCellTpl, telefon: phoneCellTpl, email: emailCellTpl, terminal_nazwa: terminalCellTpl, sprzet_nazwa: sprzetCellTpl }"
+    (sortChange)="onSort($event)"
+    (pageChange)="onPageChange($event)"
+    (perPageChange)="onPerPageChange($event)"
+  />
+
+  <ng-template #statusCellTpl let-employee>
+    <app-status-badge
+      [status]="employee.is_active ? 'active' : 'inactive'"
+      [labelKey]="employee.is_active ? 'pracownicy.status.active' : 'pracownicy.status.inactive'"
+    />
+  </ng-template>
+
+  <ng-template #phoneCellTpl let-employee>
+    <app-phone-link [value]="employee.telefon" />
+  </ng-template>
+
+  <ng-template #emailCellTpl let-employee>
+    <app-email-link [value]="employee.email" />
+  </ng-template>
+
+  <ng-template #terminalCellTpl let-employee>
+    @if (employee.terminal_nazwa) {
+      <span>{{ employee.terminal_nazwa }}</span>
+    } @else {
+      <span class="text-gray-400">{{ 'pracownicy.list.unassigned' | translate }}</span>
+    }
+  </ng-template>
+
+  <ng-template #sprzetCellTpl let-employee>
+    @if (employee.sprzet_nazwa) {
+      <span>{{ employee.sprzet_nazwa }}</span>
+    } @else {
+      <span class="text-gray-400">{{ 'pracownicy.list.unassigned' | translate }}</span>
+    }
+  </ng-template>
+
+  <ng-template #actionsTpl let-employee>
+    <div class="flex justify-end gap-1">
+      <app-icon-button
+        icon="exchange"
+        tone="primary"
+        [ariaLabel]="'pracownicy.buttons.assign' | translate"
+        (clicked)="openAssign(employee)"
+      />
+      <app-icon-button
+        icon="document"
+        tone="primary"
+        [ariaLabel]="'pracownicy.buttons.documents' | translate"
+        (clicked)="openDocuments(employee)"
+      />
+      <app-icon-button
+        icon="settings"
+        tone="primary"
+        [ariaLabel]="'pracownicy.buttons.edit' | translate"
+        (clicked)="openEdit(employee)"
+      />
+      <app-icon-button
+        icon="trash"
+        tone="danger"
+        [ariaLabel]="'pracownicy.buttons.delete' | translate"
+        (clicked)="deleteEmployee(employee)"
+      />
+    </div>
+  </ng-template>
+</div>
+
+<!-- ===== Modal: dodawanie / edycja pracownika ===== -->
+@if (modalMode() === 'create' || modalMode() === 'edit') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ modalMode() === 'edit' ? ('pracownicy.form.edit_title' | translate) : ('pracownicy.form.add_title' | translate) }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
+      </div>
+
+      <app-form-input
+        type="text"
+        name="imie"
+        labelKey="pracownicy.form.first_name"
+        placeholderKey="pracownicy.form.first_name_placeholder"
+        [ngModel]="modalImie()"
+        (ngModelChange)="modalImie.set($event)"
+      />
+
+      <app-form-input
+        type="text"
+        name="nazwisko"
+        labelKey="pracownicy.form.last_name"
+        placeholderKey="pracownicy.form.last_name_placeholder"
+        [ngModel]="modalNazwisko()"
+        (ngModelChange)="modalNazwisko.set($event)"
+      />
+
+      <app-form-input
+        type="tel"
+        name="telefon"
+        labelKey="pracownicy.form.phone"
+        placeholderKey="pracownicy.form.phone_placeholder"
+        [ngModel]="modalTelefon()"
+        (ngModelChange)="modalTelefon.set($event)"
+      />
+
+      <app-form-input
+        type="email"
+        name="email"
+        labelKey="pracownicy.form.email"
+        placeholderKey="pracownicy.form.email_placeholder"
+        [ngModel]="modalEmail()"
+        (ngModelChange)="modalEmail.set($event)"
+      />
+
+      <div class="mb-3">
+        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.form.assign_terminal' | translate }}</label>
+        <app-autocomplete-select
+          [options]="terminalOptions()"
+          [selectedValue]="modalTerminalId()"
+          [placeholder]="'pracownicy.form.unassigned' | translate"
+          (selectionChange)="onTerminalSelect($event)"
+        />
+      </div>
+
+      <div class="mb-3">
+        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.form.assign_equipment' | translate }}</label>
+        <app-autocomplete-select
+          [options]="sprzetOptions()"
+          [selectedValue]="modalSprzetId()"
+          [placeholder]="'pracownicy.form.unassigned' | translate"
+          (selectionChange)="onSprzetSelect($event)"
+        />
+      </div>
+
+      <div class="mb-4 flex items-center gap-2">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded accent-pbs-primary"
+            [checked]="modalIsActive()"
+            (change)="modalIsActive.set(!modalIsActive())"
+          />
+          {{ 'pracownicy.form.is_active' | translate }}
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeModal()" />
+        <app-button variant="primary" [label]="'pracownicy.buttons.save'" [disabled]="modalSaving()" (clicked)="saveModal()" />
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Modal: szybkie przypisanie terminala/sprzętu ===== -->
+@if (assignMode()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.assignment.title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAssign()" />
+      </div>
+
+      @if (assignEmployee(); as emp) {
+        <p class="mb-4 text-sm text-gray-600">{{ fullName(emp) }}</p>
+      }
+
+      <div class="mb-3">
+        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.assignment.terminal' | translate }}</label>
+        <app-autocomplete-select
+          [options]="terminalOptions()"
+          [selectedValue]="assignTerminalId()"
+          [placeholder]="'pracownicy.form.unassigned' | translate"
+          (selectionChange)="onAssignTerminalSelect($event)"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.assignment.equipment' | translate }}</label>
+        <app-autocomplete-select
+          [options]="sprzetOptions()"
+          [selectedValue]="assignSprzetId()"
+          [placeholder]="'pracownicy.form.unassigned' | translate"
+          (selectionChange)="onAssignSprzetSelect($event)"
+        />
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeAssign()" />
+        <app-button variant="primary" [label]="'pracownicy.assignment.save'" [disabled]="assignSaving()" (clicked)="saveAssign()" />
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Panel: certyfikaty i uprawnienia ===== -->
+@if (docsEmployee(); as emp) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.certificates.title' | translate }}</h3>
+          <p class="text-sm text-gray-600">{{ fullName(emp) }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <app-button variant="primary" [label]="'pracownicy.certificates.add'" (clicked)="openAddDoc()" />
+          <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeDocuments()" />
+        </div>
+      </div>
+
+      @if (docsLoading()) {
+        <p class="py-8 text-center text-gray-500">{{ 'common.table.loading' | translate }}</p>
+      } @else if (documents().length === 0) {
+        <p class="py-8 text-center text-gray-500">{{ 'pracownicy.certificates.no_documents' | translate }}</p>
+      } @else {
+        <ul class="divide-y divide-gray-100">
+          @for (doc of documents(); track doc.id) {
+            <li class="py-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium text-gray-900">{{ doc.nazwa }}</span>
+                    <app-status-badge
+                      status="active"
+                      [tone]="docStatusTone(doc)"
+                      [label]="docStatusLabel(doc)"
+                    />
+                  </div>
+                  @if (doc.numer_dokumentu) {
+                    <p class="mt-0.5 text-sm text-gray-600">{{ 'pracownicy.certificates.number' | translate }}: {{ doc.numer_dokumentu }}</p>
+                  }
+                  <p class="mt-0.5 text-xs text-gray-500">
+                    {{ 'pracownicy.certificates.issue_date' | translate }}: {{ doc.data_wydania || '—' }}
+                    · {{ 'pracownicy.certificates.expiry_date' | translate }}: {{ doc.data_waznosci || '—' }}
+                  </p>
+                  @if (doc.plik) {
+                    <p class="mt-0.5 text-xs text-gray-500">{{ 'pracownicy.certificates.file' | translate }}: {{ doc.plik }}</p>
+                  }
+                </div>
+                <div class="flex shrink-0 gap-1">
+                  <app-icon-button icon="settings" tone="primary" [ariaLabel]="'common.buttons.edit' | translate" (clicked)="openEditDoc(doc)" />
+                  <app-icon-button icon="trash" tone="danger" [ariaLabel]="'pracownicy.certificates.delete' | translate" (clicked)="deleteDoc(doc)" />
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+}
+
+<!-- ===== Modal: dodawanie / edycja dokumentu ===== -->
+@if (docModalMode() === 'create' || docModalMode() === 'edit') {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ docModalMode() === 'edit' ? ('pracownicy.certificates.edit_title' | translate) : ('pracownicy.certificates.add_title' | translate) }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeDocModal()" />
+      </div>
+
+      <app-form-input
+        type="text"
+        name="doc_nazwa"
+        labelKey="pracownicy.certificates.name"
+        [ngModel]="docNazwa()"
+        (ngModelChange)="docNazwa.set($event)"
+      />
+
+      <app-form-input
+        type="text"
+        name="doc_numer"
+        labelKey="pracownicy.certificates.number"
+        [ngModel]="docNumer()"
+        (ngModelChange)="docNumer.set($event)"
+      />
+
+      <app-datepicker
+        name="doc_issue"
+        labelKey="pracownicy.certificates.issue_date"
+        [ngModel]="docIssue()"
+        (ngModelChange)="docIssue.set($event)"
+      />
+
+      <app-datepicker
+        name="doc_expiry"
+        labelKey="pracownicy.certificates.expiry_date"
+        [ngModel]="docExpiry()"
+        (ngModelChange)="docExpiry.set($event)"
+      />
+
+      @if (docModalMode() === 'create') {
+        <div class="mb-4">
+          <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.certificates.file' | translate }}</label>
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-pbs-primary file:px-4 file:py-2 file:text-white"
+            (change)="onDocFileSelected($event)"
+          />
+          <p class="mt-1 text-xs text-gray-500">{{ 'pracownicy.certificates.upload_hint' | translate }}</p>
+          @if (docFileName()) {
+            <p class="mt-1 text-xs text-gray-700">{{ docFileName() }}</p>
+          }
+        </div>
+      }
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeDocModal()" />
+        <app-button variant="primary" [label]="'pracownicy.certificates.save'" [disabled]="docSaving()" (clicked)="saveDocModal()" />
+      </div>
+    </div>
+  </div>
+}

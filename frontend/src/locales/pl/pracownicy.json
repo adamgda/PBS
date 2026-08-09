@@ -1,7 +1,9 @@
 {
   "title": "Pracownicy",
+  "subtitle": "Zarządzanie pracownikami portowymi — dane, przypisania, certyfikaty i uprawnienia",
   "list": {
     "title": "Lista pracowników",
+    "all_employees": "Wszyscy pracownicy",
     "first_name": "Imię",
     "last_name": "Nazwisko",
     "phone": "Telefon",
@@ -11,19 +13,38 @@
     "status": "Status",
     "hourly_rate": "Stawka godzinowa",
     "hours_worked": "Przepracowane godziny",
-    "wage": "Wynagrodzenie"
+    "wage": "Wynagrodzenie",
+    "unassigned": "—"
+  },
+  "filters": {
+    "first_name": "Imię",
+    "last_name": "Nazwisko",
+    "terminal": "Terminal",
+    "equipment": "Sprzęt",
+    "status": "Status",
+    "status_active": "Aktywni",
+    "status_inactive": "Nieaktywni",
+    "search_name_placeholder": "Szukaj po imieniu",
+    "search_last_name_placeholder": "Szukaj po nazwisku",
+    "all_terminals": "Wszystkie terminale",
+    "all_equipment": "Cały sprzęt"
   },
   "form": {
     "add_title": "Dodaj pracownika",
     "edit_title": "Edytuj pracownika",
     "first_name": "Imię",
+    "first_name_placeholder": "np. Jan",
     "last_name": "Nazwisko",
+    "last_name_placeholder": "np. Kowalski",
     "phone": "Telefon",
+    "phone_placeholder": "np. 601 111 222",
     "email": "E-mail",
+    "email_placeholder": "np. jan.kowalski@pbs.local",
     "hourly_rate": "Stawka godzinowa (PLN/h)",
     "is_active": "Aktywny",
     "assign_terminal": "Przypisz terminal",
-    "assign_equipment": "Przypisz sprzęt"
+    "assign_equipment": "Przypisz sprzęt",
+    "unassigned": "Brak przypisania"
   },
   "tabs": {
     "basic": "Dane podstawowe",
@@ -31,17 +52,32 @@
     "leave": "Urlopy",
     "rates": "Stawki i rozliczenia"
   },
+  "assignment": {
+    "title": "Szybkie przypisanie",
+    "terminal": "Terminal",
+    "equipment": "Sprzęt",
+    "save": "Zapisz przypisanie",
+    "cleared": "Wyczyszczono przypisanie"
+  },
   "certificates": {
     "title": "Certyfikaty i uprawnienia",
     "name": "Nazwa dokumentu",
     "number": "Numer dokumentu",
     "issue_date": "Data wydania",
     "expiry_date": "Data ważności",
+    "file": "Plik",
     "status_valid": "Ważny",
     "status_expiring": "Wygasa wkrótce",
     "status_expired": "Wygasł",
     "add": "Dodaj dokument",
-    "no_documents": "Brak dokumentów"
+    "add_title": "Dodaj dokument / certyfikat",
+    "edit_title": "Edytuj dokument",
+    "upload_hint": "PDF, JPG, PNG — max 5 MB",
+    "choose_file": "Wybierz plik",
+    "no_file": "Brak pliku",
+    "no_documents": "Brak dokumentów. Dodaj pierwszy certyfikat lub uprawnienie.",
+    "save": "Zapisz dokument",
+    "delete": "Usuń dokument"
   },
   "leave": {
     "title": "Urlopy pracownika",
@@ -66,12 +102,51 @@
     "hatch": "Lukowy",
     "crane_operator": "Operator żurawia"
   },
+  "buttons": {
+    "add": "Dodaj pracownika",
+    "save": "Zapisz pracownika",
+    "edit": "Edytuj pracownika",
+    "delete": "Usuń pracownika",
+    "assign": "Przypisz terminal/sprzęt",
+    "documents": "Certyfikaty i uprawnienia"
+  },
+  "status": {
+    "active": "Aktywny",
+    "inactive": "Nieaktywny",
+    "deleted_label": "Pracownik usunięty"
+  },
   "messages": {
     "deleted": {
       "success": "Usunięto pracownika {{name}}"
     },
     "saved": {
       "success": "Zapisano dane pracownika {{name}}"
-    }
+    },
+    "created": {
+      "success": "Utworzono pracownika {{name}}"
+    },
+    "updated": {
+      "success": "Zaktualizowano pracownika {{name}}"
+    },
+    "assigned": {
+      "success": "Zaktualizowano przypisanie pracownika {{name}}"
+    },
+    "document_created": {
+      "success": "Dodano dokument {{name}}"
+    },
+    "document_updated": {
+      "success": "Zaktualizowano dokument {{name}}"
+    },
+    "document_deleted": {
+      "success": "Usunięto dokument {{name}}"
+    },
+    "delete_confirm_title": "Usuwanie pracownika",
+    "delete_confirm_message": "Czy na pewno chcesz usunąć pracownika {{name}}? Pracownik zostanie trwale usunięty z bazy. Powiązania historyczne (np. zlecenia) zostaną zachowane i wyświetlane jako «Pracownik usunięty». Dokumenty pracownika zostaną usunięte. Operacja jest nieodwracalna.",
+    "delete_document_confirm_title": "Usuwanie dokumentu",
+    "delete_document_confirm_message": "Czy na pewno chcesz usunąć dokument {{name}}?",
+    "load_error": "Nie udało się pobrać listy pracowników",
+    "first_name_required": "Imię jest wymagane",
+    "last_name_required": "Nazwisko jest wymagane",
+    "document_name_required": "Nazwa dokumentu jest wymagana"
   }
 }

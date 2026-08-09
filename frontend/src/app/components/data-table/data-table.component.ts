@@ -13,6 +13,8 @@ export interface DataTableColumn<T> {
   sortable?: boolean;
   width?: string;
   formatter?: (row: T) => string;
+  /** Kolumna renderowana jako nagłówek karty w widoku mobilnym (bez etykiety, pogrubiona). */
+  isTitle?: boolean;
 }
 
 export interface DataTableSortEvent {
@@ -30,7 +32,7 @@ export interface DataTableSortEvent {
   imports: [CommonModule, FormsModule, TranslatePipe, SelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <div class="bg-white rounded-lg shadow overflow-hidden">
       @if (loading()) {
         <div class="p-8 text-center text-gray-500">
           {{ 'common.table.loading' | translate }}
@@ -40,6 +42,8 @@ export interface DataTableSortEvent {
           {{ 'common.table.no_data' | translate }}
         </div>
       } @else {
+        <!-- Desktop: tabela (przewijana tylko przy zbyt dużej szerokości) -->
+        <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50 text-gray-700 text-sm">
             <tr>
@@ -76,7 +80,14 @@ export interface DataTableSortEvent {
               <tr class="hover:bg-gray-50 transition-colors">
                 @for (col of columns(); track col.key) {
                   <td class="px-4 py-3">
-                    {{ col.formatter ? col.formatter(row) : getCellValue(row, col.key) }}
+                    @if (cellTemplates[col.key]; as tpl) {
+                      <ng-container
+                        [ngTemplateOutlet]="tpl"
+                        [ngTemplateOutletContext]="{ $implicit: row, value: getCellValue(row, col.key) }"
+                      ></ng-container>
+                    } @else {
+                      {{ col.formatter ? col.formatter(row) : getCellValue(row, col.key) }}
+                    }
                   </td>
                 }
                 @if (actionsTemplate) {
@@ -88,6 +99,93 @@ export interface DataTableSortEvent {
             }
           </tbody>
         </table>
+        </div>
+
+        <!-- Mobile: karty (brak przewijania poziomego) -->
+        <div class="block md:hidden divide-y divide-gray-100">
+          @for (row of data(); track row) {
+            <div class="p-4">
+              @if (hasTitleColumn()) {
+                <!-- Nagłówek karty: tytuł + akcje (akcje jednoznacznie powiązane z rekordem) -->
+                <div class="mb-2 flex items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    @for (col of columns(); track col.key) {
+                      @if (col.isTitle) {
+                        <div class="break-words text-base font-semibold text-gray-900">
+                          @if (cellTemplates[col.key]; as tpl) {
+                            <ng-container
+                              [ngTemplateOutlet]="tpl"
+                              [ngTemplateOutletContext]="{ $implicit: row, value: getCellValue(row, col.key) }"
+                            ></ng-container>
+                          } @else {
+                            {{ col.formatter ? col.formatter(row) : getCellValue(row, col.key) }}
+                          }
+                        </div>
+                      }
+                    }
+                  </div>
+                  @if (actionsTemplate) {
+                    <div class="flex shrink-0 gap-1">
+                      <ng-container
+                        [ngTemplateOutlet]="actionsTemplate"
+                        [ngTemplateOutletContext]="{ $implicit: row }"
+                      ></ng-container>
+                    </div>
+                  }
+                </div>
+                <!-- Pozostałe kolumny jako pary klucz-wartość -->
+                @for (col of columns(); track col.key) {
+                  @if (!col.isTitle) {
+                    <div class="flex justify-between gap-3 py-1 text-sm">
+                      <span class="shrink-0 font-medium text-gray-500">{{ col.label }}</span>
+                      <span class="break-words text-right text-gray-800">
+                        @if (cellTemplates[col.key]; as tpl) {
+                          <ng-container
+                            [ngTemplateOutlet]="tpl"
+                            [ngTemplateOutletContext]="{ $implicit: row, value: getCellValue(row, col.key) }"
+                          ></ng-container>
+                        } @else {
+                          {{ col.formatter ? col.formatter(row) : getCellValue(row, col.key) }}
+                        }
+                      </span>
+                    </div>
+                  }
+                }
+              } @else {
+                <!-- Brak kolumny tytułowej: wszystkie kolumny jako pary klucz-wartość -->
+                @for (col of columns(); track col.key) {
+                  <div class="flex justify-between gap-3 py-1 text-sm">
+                    <span class="shrink-0 font-medium text-gray-500">{{ col.label }}</span>
+                    <span class="break-words text-right text-gray-800">
+                      @if (cellTemplates[col.key]; as tpl) {
+                        <ng-container
+                          [ngTemplateOutlet]="tpl"
+                          [ngTemplateOutletContext]="{ $implicit: row, value: getCellValue(row, col.key) }"
+                        ></ng-container>
+                      } @else {
+                        {{ col.formatter ? col.formatter(row) : getCellValue(row, col.key) }}
+                      }
+                    </span>
+                  </div>
+                }
+                @if (actionsTemplate) {
+                  <!-- Jawna etykieta „Akcje" — klarowne powiązanie z rekordem -->
+                  <div class="mt-3 flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+                    <span class="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      {{ 'common.table.actions' | translate }}
+                    </span>
+                    <div class="flex gap-1">
+                      <ng-container
+                        [ngTemplateOutlet]="actionsTemplate"
+                        [ngTemplateOutletContext]="{ $implicit: row }"
+                      ></ng-container>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
 
         <!-- Paginacja -->
         @if (total() > 0) {
@@ -153,6 +251,9 @@ export class DataTableComponent<T extends object> {
     this._sortDirection.set(value);
   }
   @Input() actionsTemplate: TemplateRef<{ $implicit: T }> | null = null;
+  /** Opcjonalne szablony komórek per kolumna (klucz = column.key). Umożliwiają render
+   *  komponentów (np. StatusBadgeComponent) wewnątrz komórki zamiast tekstu/formattera. */
+  @Input() cellTemplates: Record<string, TemplateRef<{ $implicit: T; value: unknown }>> = {};
 
   @Output() sortChange = new EventEmitter<DataTableSortEvent>();
   @Output() pageChange = new EventEmitter<number>();
@@ -185,6 +286,9 @@ export class DataTableComponent<T extends object> {
   readonly sortDirection = this._sortDirection.asReadonly();
 
   readonly totalPages = computed(() => Math.ceil(this._total() / this._perPage()) || 1);
+
+  /** Czy któraś kolumna jest oznaczona jako tytuł karty mobilnej (isTitle). */
+  readonly hasTitleColumn = computed(() => this._columns().some((c) => c.isTitle === true));
 
   onSort(key: string): void {
     let direction: SortDirection = 'asc';

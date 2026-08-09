@@ -124,29 +124,29 @@ Legenda statusów:
 
 ## Etap 6 — Sekcja: Terminale
 
-- [ ] Backend: `GET/POST /api/v1/terminals`
-- [ ] Backend: `GET/PUT/DELETE /api/v1/terminals/{id}`
-- [ ] Frontend: lista terminali (filtrowanie)
-- [ ] Frontend: formularz dodawania/edycji terminala
-- [ ] Frontend: usuwanie terminala (confirm dialog)
-- [ ] Lokalizacje: `terminale.json` w `locales/pl/`
+- [x] Backend: `GET/POST /api/v1/terminals`
+- [x] Backend: `GET/PUT/DELETE /api/v1/terminals/{id}`
+- [x] Frontend: lista terminali (filtrowanie)
+- [x] Frontend: formularz dodawania/edycji terminala
+- [x] Frontend: usuwanie terminala (confirm dialog)
+- [x] Lokalizacje: `terminale.json` w `locales/pl/`
 
 ## Etap 7 — Sekcja: Pracownicy
 
-- [ ] Backend: `GET/POST /api/v1/employees`
-- [ ] Backend: `GET/PUT/DELETE /api/v1/employees/{id}`
-- [ ] Backend: `PATCH /api/v1/employees/{id}/assignment` (terminal/sprzęt)
-- [ ] Backend: `GET/POST /api/v1/employees/{id}/documents`
-- [ ] Backend: `PUT/DELETE /api/v1/documents/{id}`
-- [ ] Backend: upload plików — walidacja MIME (`finfo_file`), whitelist (`.pdf`, `.jpg`, `.png`), limit 5 MB
-- [ ] Backend: upload plików — skanowanie ClamAV, nazwa UUID, przechowywanie poza document root
-- [ ] Backend: upload plików — dostęp przez signed URL z krótkim TTL
-- [ ] Frontend: lista pracowników (DataTable + filtry: imię, nazwisko, terminal, sprzęt)
-- [ ] Frontend: formularz dodawania/edycji pracownika
-- [ ] Frontend: zakładka "Certyfikaty i uprawnienia" (dokumenty + detekcja wygaśnięcia)
-- [ ] Frontend: szybkie przypisanie terminala/sprzętu
-- [ ] Frontend: anonimizacja danych przy usunięciu (RODO — prawo do bycia zapomnianym)
-- [ ] Lokalizacje: `pracownicy.json` w `locales/pl/`
+- [x] Backend: `GET/POST /api/v1/employees`
+- [x] Backend: `GET/PUT/DELETE /api/v1/employees/{id}`
+- [x] Backend: `PATCH /api/v1/employees/{id}/assignment` (terminal/sprzęt)
+- [x] Backend: `GET/POST /api/v1/employees/{id}/documents`
+- [x] Backend: `PUT/DELETE /api/v1/documents/{id}`
+- [x] Backend: upload plików — walidacja MIME (`finfo_file`), whitelist (`.pdf`, `.jpg`, `.png`), limit 5 MB
+- [x] Backend: upload plików — skanowanie ClamAV, nazwa UUID, przechowywanie poza document root
+- [x] Backend: upload plików — dostęp przez signed URL z krótkim TTL
+- [x] Frontend: lista pracowników (DataTable + filtry: imię, nazwisko, terminal, sprzęt)
+- [x] Frontend: formularz dodawania/edycji pracownika
+- [x] Frontend: zakładka "Certyfikaty i uprawnienia" (dokumenty + detekcja wygaśnięcia)
+- [x] Frontend: szybkie przypisanie terminala/sprzętu
+- [x] Frontend: anonimizacja danych przy usunięciu (RODO — prawo do bycia zapomnianym)
+- [x] Lokalizacje: `pracownicy.json` w `locales/pl/`
 
 ## Etap 8 — Sekcja: Sprzęt
 

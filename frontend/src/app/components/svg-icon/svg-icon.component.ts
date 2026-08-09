@@ -77,6 +77,12 @@ import { CommonModule } from '@angular/common';
         @case ('close') {
           <path d="M6 6l12 12M18 6L6 18" />
         }
+        @case ('trash') {
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <line x1="10" y1="11" x2="10" y2="17" />
+          <line x1="14" y1="11" x2="14" y2="17" />
+        }
         @case ('logout') {
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
           <path d="M16 17l5-5-5-5" />
@@ -85,6 +91,9 @@ import { CommonModule } from '@angular/common';
         @case ('mail') {
           <rect x="3" y="5" width="18" height="14" rx="2" />
           <path d="m3 7 9 6 9-6" />
+        }
+        @case ('phone') {
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
         }
         @case ('lock') {
           <rect x="5" y="11" width="14" height="9" rx="2" />
@@ -115,8 +124,25 @@ import { CommonModule } from '@angular/common';
         @case ('plus') {
           <path d="M12 5v14M5 12h14" />
         }
+        @case ('filter') {
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        }
         @case ('chevron-down') {
           <path d="M6 9l6 6 6-6" />
+        }
+        @case ('document') {
+          <path d="M7 3h6l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+          <path d="M13 3v4h4" />
+        }
+        @case ('exchange') {
+          <path d="M7 10l-4 4 4 4" />
+          <path d="M3 14h14" />
+          <path d="M17 6l4 4-4 4" />
+          <path d="M21 10H7" />
+        }
+        @case ('calendar') {
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M3 9.5h18M8 3v4M16 3v4" />
         }
         @default {
           <circle cx="12" cy="12" r="9" />

@@ -1,0 +1,290 @@
+Node.js version v21.7.1 detected.
+Odd numbered Node.js versions will not enter LTS status and should not be used for production. For more information, please see https://nodejs.org/en/about/previous-releases/.
+Node.js version v21.7.1 detected.
+Odd numbered Node.js versions will not enter LTS status and should not be used for production. For more information, please see https://nodejs.org/en/about/previous-releases/.
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "options" in class body[0m [duplicate-class-member]
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:67:4:
+[37m      67 │     [32moptions[37m = this._options.asReadonly();
+         ╵     [32m~~~~~~~[0m
+
+  The original member "options" is here:
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:49:8:
+[37m      49 │     set [32moptions[37m(value) {
+         ╵         [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "selectedValue" in class body[0m [duplicate-class-member]
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:68:4:
+[37m      68 │     [32mselectedValue[37m = this._selectedValue.asReadonly();
+         ╵     [32m~~~~~~~~~~~~~[0m
+
+  The original member "selectedValue" is here:
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:52:8:
+[37m      52 │     set [32mselectedValue[37m(value) {
+         ╵         [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "placeholder" in class body[0m [duplicate-class-member]
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:69:4:
+[37m      69 │     [32mplaceholder[37m = this._placeholder.asReadonly();
+         ╵     [32m~~~~~~~~~~~[0m
+
+  The original member "placeholder" is here:
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:56:8:
+[37m      56 │     set [32mplaceholder[37m(value) {
+         ╵         [32m~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "options" in class body[0m [duplicate-class-member]
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:67:4:
+[37m      67 │     [32moptions[37m = this._options.asReadonly();
+         ╵     [32m~~~~~~~[0m
+
+  The original member "options" is here:
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:49:8:
+[37m      49 │     set [32moptions[37m(value) {
+         ╵         [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "selectedValue" in class body[0m [duplicate-class-member]
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:68:4:
+[37m      68 │     [32mselectedValue[37m = this._selectedValue.asReadonly();
+         ╵     [32m~~~~~~~~~~~~~[0m
+
+  The original member "selectedValue" is here:
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:52:8:
+[37m      52 │     set [32mselectedValue[37m(value) {
+         ╵         [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "placeholder" in class body[0m [duplicate-class-member]
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:69:4:
+[37m      69 │     [32mplaceholder[37m = this._placeholder.asReadonly();
+         ╵     [32m~~~~~~~~~~~[0m
+
+  The original member "placeholder" is here:
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:56:8:
+[37m      56 │     set [32mplaceholder[37m(value) {
+         ╵         [32m~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG9: This expression is not callable.
+  Type 'String' has no call signatures.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:27:23:
+[37m      27 │         [placeholder]="[32mplaceholder[37m()"
+         ╵                        [32m~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG1: Cannot invoke an object which is possibly 'null'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:48:48:
+[37m      48 │               [class.bg-blue-50]="opt.value === [32mselectedValue[37m()"
+         ╵                                                 [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG9: This expression is not callable.
+  No constituent of type 'string | number' is callable.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:48:48:
+[37m      48 │               [class.bg-blue-50]="opt.value === [32mselectedValue[37m()"
+         ╵                                                 [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'options'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:84:11:
+[37m      84 │   readonly [32moptions[37m = this._options.asReadonly();
+         ╵            [32m~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2687: All declarations of 'options' must have identical modifiers.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:84:11:
+[37m      84 │   readonly [32moptions[37m = this._options.asReadonly();
+         ╵            [32m~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2717: Subsequent property declarations must have the same type.  Property 'options' must be of type 'AutocompleteOption[]', but here has type 'Signal<AutocompleteOption[]>'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:84:11:
+[37m      84 │   readonly [32moptions[37m = this._options.asReadonly();
+         ╵            [32m~~~~~~~[0m
+
+  'options' was also declared here.
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:63:33:
+[37m      63 │ ...put({ required: true }) set [32moptions[37m(value: AutocompleteOption[]) {
+         ╵                                [32m~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'selectedValue'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:85:11:
+[37m      85 │   readonly [32mselectedValue[37m = this._selectedValue.asReadonly();
+         ╵            [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2687: All declarations of 'selectedValue' must have identical modifiers.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:85:11:
+[37m      85 │   readonly [32mselectedValue[37m = this._selectedValue.asReadonly();
+         ╵            [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2717: Subsequent property declarations must have the same type.  Property 'selectedValue' must be of type 'string | number | null', but here has type 'Signal<string | number | null>'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:85:11:
+[37m      85 │   readonly [32mselectedValue[37m = this._selectedValue.asReadonly();
+         ╵            [32m~~~~~~~~~~~~~[0m
+
+  'selectedValue' was also declared here.
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:66:15:
+[37m      66 │ [1m[31m[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG9: This expression is not callable.
+  Type 'String' has no call signatures.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:27:23:
+[37m      27 │         [placeholder]="[32mplaceholder[37m()"
+         ╵                        [32m~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG1: Cannot invoke an object which is possibly 'null'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:48:48:
+[37m      48 │               [class.bg-blue-50]="opt.value === [32mselectedValue[37m()"
+         ╵                                                 [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG9: This expression is not callable.
+  No constituent of type 'string | number' is callable.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:48:48:
+[37m      48 │               [class.bg-blue-50]="opt.value === [32mselectedValue[37m()"
+         ╵                                                 [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'options'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:84:11:
+[37m      84 │   readonly [32moptions[37m = this._options.asReadonly();
+         ╵            [32m~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2687: All declarations of 'options' must have identical modifiers.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:84:11:
+[37m      84 │   readonly [32moptions[37m = this._options.asReadonly();
+         ╵            [32m~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2717: Subsequent property declarations must have the same type.  Property 'options' must be of type 'AutocompleteOption[]', but here has type 'Signal<AutocompleteOption[]>'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:84:11:
+[37m      84 │   readonly [32moptions[37m = this._options.asReadonly();
+         ╵            [32m~~~~~~~[0m
+
+  'options' was also declared here.
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:63:33:
+[37m      63 │ ...put({ required: true }) set [32moptions[37m(value: AutocompleteOption[]) {
+         ╵                                [32m~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'selectedValue'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:85:11:
+[37m      85 │   readonly [32mselectedValue[37m = this._selectedValue.asReadonly();
+         ╵            [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2687: All declarations of 'selectedValue' must have identical modifiers.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:85:11:
+[37m      85 │   readonly [32mselectedValue[37m = this._selectedValue.asReadonly();
+         ╵            [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2717: Subsequent property declarations must have the same type.  Property 'selectedValue' must be of type 'string | number | null', but here has type 'Signal<string | number | null>'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:85:11:
+[37m      85 │   readonly [32mselectedValue[37m = this._selectedValue.asReadonly();
+         ╵            [32m~~~~~~~~~~~~~[0m
+
+  'selectedValue' was also declared here.
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:66:15:
+[37m      66 │   @Input() set [32mselectedValue[37m(value: string | number | null) {
+         ╵                [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'placeholder'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:86:11:
+[37m      86 │   readonly [32mplaceholder[37m = this._placeholder.asReadonly();
+         ╵            [32m~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2687: All declarations of 'placeholder' must have identical modifiers.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:86:11:
+[37m      86 │   readonly [32mplaceholder[37m = this._placeholder.asReadonly();
+         ╵            [32m~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2717: Subsequent property declarations must have the same type.  Property 'placeholder' must be of type 'string', but here has type 'Signal<string>'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:86:11:
+[37m      86 │   readonly [32mplaceholder[37m = this._placeholder.asReadonly();
+         ╵            [32m~~~~~~~~~~~[0m
+
+  'placeholder' was also declared here.
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:70:15:
+[37m      70 │   @Input() set [32mplaceholder[37m(value: string) {
+         ╵                [32m~~~~~~~~~~~[0m
+
+[39m[22m
+  @Input() set [32mselectedValue[37m(value: string | number | null) {
+         ╵                [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'placeholder'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:86:11:
+[37m      86 │   readonly [32mplaceholder[37m = this._placeholder.asReadonly();
+         ╵            [32m~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2687: All declarations of 'placeholder' must have identical modifiers.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:86:11:
+[37m      86 │   readonly [32mplaceholder[37m = this._placeholder.asReadonly();
+         ╵            [32m~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2717: Subsequent property declarations must have the same type.  Property 'placeholder' must be of type 'string', but here has type 'Signal<string>'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:86:11:
+[37m      86 │   readonly [32mplaceholder[37m = this._placeholder.asReadonly();
+         ╵            [32m~~~~~~~~~~~[0m
+
+  'placeholder' was also declared here.
+
+    src/app/components/autocomplete-select/autocomplete-select.component.ts:70:15:
+[37m      70 │   @Input() set [32mplaceholder[37m(value: string) {
+         ╵                [32m~~~~~~~~~~~[0m
+
+[39m[22m

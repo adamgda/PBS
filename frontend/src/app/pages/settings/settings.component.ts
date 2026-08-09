@@ -13,6 +13,7 @@ import { AddButtonComponent } from '../../components/add-button/add-button.compo
 import { ButtonComponent } from '../../components/button/button.component';
 import { IconButtonComponent } from '../../components/icon-button/icon-button.component';
 import { SelectComponent } from '../../components/select/select.component';
+import { StatusBadgeComponent } from '../../components/status-badge/status-badge.component';
 import { FormInputComponent } from '../../components/form-input/form-input.component';
 import { FilterBarComponent, FilterConfig } from '../../components/filter-bar/filter-bar.component';
 import { DataTableComponent, DataTableColumn, DataTableSortEvent, SortDirection } from '../../components/data-table/data-table.component';
@@ -29,7 +30,7 @@ type ModalMode = 'create' | 'permissions' | null;
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, SvgIconComponent, AddButtonComponent, ButtonComponent, IconButtonComponent, SelectComponent, FormInputComponent, FilterBarComponent, DataTableComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, SvgIconComponent, AddButtonComponent, ButtonComponent, IconButtonComponent, SelectComponent, StatusBadgeComponent, FormInputComponent, FilterBarComponent, DataTableComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings.component.html',
 })
@@ -83,9 +84,9 @@ export class SettingsComponent {
 
   readonly columns = computed<DataTableColumn<User>[]>(() => [
     { key: 'id', label: 'ID', sortable: true, width: '60px' },
-    { key: 'email', label: this.t('ustawienia.users.email'), sortable: true },
+    { key: 'email', label: this.t('ustawienia.users.email'), sortable: true, isTitle: true },
     { key: 'role', label: this.t('ustawienia.users.role'), sortable: true, formatter: (row) => this.roleLabel(row.role) },
-    { key: 'is_active', label: this.t('ustawienia.users.status'), sortable: true, formatter: (row) => this.statusLabel(row) },
+    { key: 'is_active', label: this.t('ustawienia.users.status'), sortable: true },
   ]);
 
   constructor() {
@@ -254,6 +255,13 @@ export class SettingsComponent {
     if (!user.is_active) return this.t('ustawienia.users.status_blocked');
     if (user.must_change_password) return this.t('ustawienia.users.status_invited');
     return this.t('ustawienia.users.status_active');
+  }
+
+  /** Kanoniczny status użytkownika (dla tonu badge'a): active | invited | blocked. */
+  userStatus(user: User): 'active' | 'invited' | 'blocked' {
+    if (!user.is_active) return 'blocked';
+    if (user.must_change_password) return 'invited';
+    return 'active';
   }
 
   isActive(user: User): boolean {

@@ -26,6 +26,9 @@
 # Backend vendor (Composer)
 /backend/vendor/
 
+# Backend private storage (uploadowane dokumenty pracowników — poza document root)
+/backend/storage/
+
 # Angular CLI and build artefacts
 /.angular-cli.json
 /.ng/

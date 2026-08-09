@@ -1,7 +1,9 @@
 {
   "title": "Terminale",
+  "subtitle": "Zarządzanie terminalami portowymi — adres, operator, dane kontaktowe",
   "list": {
     "title": "Lista terminali",
+    "all_terminals": "Wszystkie terminale",
     "name": "Nazwa",
     "address": "Adres",
     "operator": "Operator",
@@ -13,15 +15,38 @@
     "employees_count": "Przypisani pracownicy",
     "equipment_count": "Przypisany sprzęt"
   },
+  "filters": {
+    "name": "Nazwa",
+    "operator": "Operator",
+    "status": "Status",
+    "status_active": "Aktywne",
+    "status_inactive": "Nieaktywne",
+    "search_placeholder": "Szukaj po nazwie"
+  },
   "form": {
     "add_title": "Dodaj terminal",
     "edit_title": "Edytuj terminal",
     "name": "Nazwa",
+    "name_placeholder": "np. Terminal Gdańsk",
     "address": "Adres",
+    "address_placeholder": "ul. Portowa 1, Gdańsk",
     "operator": "Operator",
+    "operator_placeholder": "np. Baltic Operator Sp. z o.o.",
     "phone": "Telefon operatora",
+    "phone_placeholder": "np. 58 123 45 67",
     "email": "E-mail operatora",
+    "email_placeholder": "np. kontakt@operator.pl",
     "is_active": "Aktywny"
+  },
+  "buttons": {
+    "add": "Dodaj terminal",
+    "save": "Zapisz terminal",
+    "edit": "Edytuj terminal",
+    "delete": "Usuń terminal"
+  },
+  "status": {
+    "active": "Aktywny",
+    "inactive": "Nieaktywny"
   },
   "messages": {
     "deleted": {
@@ -29,6 +54,18 @@
     },
     "saved": {
       "success": "Zapisano dane terminala {{name}}"
-    }
+    },
+    "created": {
+      "success": "Utworzono terminal {{name}}"
+    },
+    "updated": {
+      "success": "Zaktualizowano terminal {{name}}"
+    },
+    "delete_confirm_title": "Usuwanie terminala",
+    "delete_confirm_message": "Czy na pewno chcesz usunąć terminal {{name}}? Operacja jest nieodwracalna.",
+    "load_error": "Nie udało się pobrać listy terminali",
+    "name_required": "Nazwa jest wymagana",
+    "address_required": "Adres jest wymagany",
+    "operator_required": "Operator jest wymagany"
   }
 }

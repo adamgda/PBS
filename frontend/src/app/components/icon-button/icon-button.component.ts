@@ -25,6 +25,7 @@ export type IconButtonSize = 'sm' | 'md';
       type="button"
       [class]="classes"
       [attr.aria-label]="ariaLabel"
+      [attr.title]="tooltip || ariaLabel"
       [disabled]="disabled"
       (click)="clicked.emit()"
     >
@@ -37,6 +38,13 @@ export class IconButtonComponent {
   @Input({ required: true }) icon = '';
   /** Tekst etykiety dostępności (ARIA) — przetłumaczony przez wywołującego (pipe w bindingu). */
   @Input() ariaLabel = '';
+  /**
+   * Tekst tooltipa (natywnego `title`) pokazywanego przy najechaniu kursorem.
+   * Gdy pusty, fallbackuje do `ariaLabel` — dzięki temu wszystkie ikony akcji
+   * w tabelach z ustawionym `ariaLabel` automatycznie otrzymują tooltip.
+   * Możliwy override przez jawny `[tooltip]`, gdy ma się różnić od `ariaLabel`.
+   */
+  @Input() tooltip = '';
   /** Ton koloru hover: default (szary), primary, warning, danger. */
   @Input() tone: IconButtonTone = 'default';
   /** Rozmiar: md (h-9 w-9, domyślny) lub sm (h-8 w-8). */

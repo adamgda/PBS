@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { SvgIconComponent } from '../svg-icon/svg-icon.component';
 
 export interface AutocompleteOption {
   value: string | number;
@@ -13,17 +14,20 @@ export interface AutocompleteOption {
 /**
  * Select z autocomplete — wymóg dokumentacji: wszystkie listy rozwijane muszą mieć autocomplete.
  * Obsługa wyszukiwania lokalnego lub przez API (emituj query do parenta).
+ *
+ * Posiada przycisk kasowania (X) pokazywany gdy wybrano wartość lub wpisano tekst —
+ * emituje `selectionChange(null)` oraz `cleared`, by parent mógł wyczyścić selekcję.
  */
 @Component({
   selector: 'app-autocomplete-select',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, SvgIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative">
       <input
         type="text"
-        class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent"
+        class="w-full px-3 py-2 pr-9 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent"
         [placeholder]="placeholder()"
         [ngModel]="searchText()"
         (ngModelChange)="onSearch($event)"
@@ -34,6 +38,18 @@ export interface AutocompleteOption {
         aria-expanded="isOpen()"
         aria-autocomplete="list"
       />
+
+      @if (canClear()) {
+        <button
+          type="button"
+          class="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          [attr.aria-label]="'common.buttons.clear' | translate"
+          [attr.title]="'common.buttons.clear' | translate"
+          (mousedown)="$event.preventDefault(); clear()"
+        >
+          <app-svg-icon name="close" size="sm" />
+        </button>
+      }
 
       @if (isOpen() && filteredOptions().length > 0) {
         <div
@@ -60,20 +76,26 @@ export interface AutocompleteOption {
   `,
 })
 export class AutocompleteSelectComponent {
-  @Input({ required: true }) set options(value: AutocompleteOption[]) {
+  @Input('options') set optionsInput(value: AutocompleteOption[]) {
     this._options.set(value);
   }
-  @Input() set selectedValue(value: string | number | null) {
+  @Input('selectedValue') set selectedValueInput(value: string | number | null) {
     this._selectedValue.set(value);
     this.updateSearchText();
   }
-  @Input() set placeholder(value: string) {
+  @Input('placeholder') set placeholderInput(value: string) {
     this._placeholder.set(value);
   }
   @Input() debounceMs = 300;
 
-  @Output() selectionChange = new EventEmitter<AutocompleteOption>();
+  /**
+   * Emitowany przy wyborze opcji (z wartością) lub przy wyczyszczeniu (z `null`).
+   * Parent powinien obsługiwać `null` jako brak selekcji.
+   */
+  @Output() selectionChange = new EventEmitter<AutocompleteOption | null>();
   @Output() searchChange = new EventEmitter<string>();
+  /** Emitowany (bez wartości) po wyczyszczeniu selekcji przyciskiem X. */
+  @Output() cleared = new EventEmitter<void>();
 
   private readonly _options = signal<AutocompleteOption[]>([]);
   private readonly _selectedValue = signal<string | number | null>(null);
@@ -86,6 +108,9 @@ export class AutocompleteSelectComponent {
   readonly placeholder = this._placeholder.asReadonly();
   readonly searchText = this._searchText.asReadonly();
   readonly isOpen = this._isOpen.asReadonly();
+
+  /** Czy pokazać przycisk kasowania — gdy wybrano wartość lub wpisano tekst. */
+  readonly canClear = computed(() => this._selectedValue() !== null || this._searchText() !== '');
 
   readonly filteredOptions = computed(() => {
     const query = this._searchText().toLowerCase();
@@ -101,6 +126,8 @@ export class AutocompleteSelectComponent {
 
   onSearch(value: string): void {
     this._searchText.set(value);
+    // Wpisywanie tekstu odznacza bieżącą selekcję (wartość nie pasuje już do etykiety).
+    this._selectedValue.set(null);
     this._isOpen.set(true);
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
@@ -122,6 +149,15 @@ export class AutocompleteSelectComponent {
     this._searchText.set(opt.label);
     this._isOpen.set(false);
     this.selectionChange.emit(opt);
+  }
+
+  clear(): void {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this._selectedValue.set(null);
+    this._searchText.set('');
+    this._isOpen.set(false);
+    this.selectionChange.emit(null);
+    this.cleared.emit();
   }
 
   private updateSearchText(): void {

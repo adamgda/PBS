@@ -1,0 +1,144 @@
+<!-- Nagłówek sekcji -->
+<div>
+  <h1 class="text-2xl font-bold text-gray-900">{{ 'terminale.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600">{{ 'terminale.subtitle' | translate }}</p>
+</div>
+
+<!-- Lista terminali -->
+<div class="mt-5">
+  <div class="mb-4 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-gray-900">{{ 'terminale.list.all_terminals' | translate }}</h2>
+    <app-add-button [label]="'terminale.buttons.add'" (add)="openCreate()" />
+  </div>
+
+  <app-filter-bar
+    [filters]="filterConfigs()"
+    [values]="{}"
+    (filterApply)="onFilterApply($event)"
+    (filterClear)="onFilterClear()"
+  />
+
+  <app-data-table
+    [columns]="columns()"
+    [data]="terminals()"
+    [total]="total()"
+    [page]="page()"
+    [perPage]="perPage()"
+    [loading]="loading()"
+    [sortKey]="sortKey()"
+    [sortDirection]="sortDirection()"
+    [actionsTemplate]="actionsTpl"
+    [cellTemplates]="{ is_active: statusCellTpl, telefon_operatora: phoneCellTpl, email_operatora: emailCellTpl }"
+    (sortChange)="onSort($event)"
+    (pageChange)="onPageChange($event)"
+    (perPageChange)="onPerPageChange($event)"
+  />
+
+  <ng-template #statusCellTpl let-terminal>
+    <app-status-badge
+      [status]="terminal.is_active ? 'active' : 'inactive'"
+      [labelKey]="terminal.is_active ? 'terminale.status.active' : 'terminale.status.inactive'"
+    />
+  </ng-template>
+
+  <ng-template #phoneCellTpl let-terminal>
+    <app-phone-link [value]="terminal.telefon_operatora" />
+  </ng-template>
+
+  <ng-template #emailCellTpl let-terminal>
+    <app-email-link [value]="terminal.email_operatora" />
+  </ng-template>
+
+  <ng-template #actionsTpl let-terminal>
+    <div class="flex justify-end gap-1">
+      <app-icon-button
+        icon="settings"
+        tone="primary"
+        [ariaLabel]="'terminale.buttons.edit' | translate"
+        (clicked)="openEdit(terminal)"
+      />
+      <app-icon-button
+        icon="trash"
+        tone="danger"
+        [ariaLabel]="'terminale.buttons.delete' | translate"
+        (clicked)="deleteTerminal(terminal)"
+      />
+    </div>
+  </ng-template>
+</div>
+
+<!-- ===== Modal: dodawanie / edycja terminala ===== -->
+@if (modalMode() === 'create' || modalMode() === 'edit') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ modalMode() === 'edit' ? ('terminale.form.edit_title' | translate) : ('terminale.form.add_title' | translate) }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
+      </div>
+
+      <app-form-input
+        type="text"
+        name="nazwa"
+        labelKey="terminale.form.name"
+        placeholderKey="terminale.form.name_placeholder"
+        [ngModel]="modalNazwa()"
+        (ngModelChange)="modalNazwa.set($event)"
+      />
+
+      <app-form-input
+        type="text"
+        name="adres"
+        labelKey="terminale.form.address"
+        placeholderKey="terminale.form.address_placeholder"
+        [ngModel]="modalAdres()"
+        (ngModelChange)="modalAdres.set($event)"
+      />
+
+      <app-form-input
+        type="text"
+        name="operator"
+        labelKey="terminale.form.operator"
+        placeholderKey="terminale.form.operator_placeholder"
+        [ngModel]="modalOperator()"
+        (ngModelChange)="modalOperator.set($event)"
+      />
+
+      <app-form-input
+        type="tel"
+        name="telefon_operatora"
+        labelKey="terminale.form.phone"
+        placeholderKey="terminale.form.phone_placeholder"
+        [ngModel]="modalPhone()"
+        (ngModelChange)="modalPhone.set($event)"
+      />
+
+      <app-form-input
+        type="email"
+        name="email_operatora"
+        labelKey="terminale.form.email"
+        placeholderKey="terminale.form.email_placeholder"
+        [ngModel]="modalEmail()"
+        (ngModelChange)="modalEmail.set($event)"
+      />
+
+      <div class="mb-4 flex items-center gap-2">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded accent-pbs-primary"
+            [checked]="modalIsActive()"
+            (change)="modalIsActive.set(!modalIsActive())"
+          />
+          {{ 'terminale.form.is_active' | translate }}
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeModal()" />
+        <app-button variant="primary" [label]="'terminale.buttons.save'" [disabled]="modalSaving()" (clicked)="saveModal()" />
+      </div>
+    </div>
+  </div>
+}
