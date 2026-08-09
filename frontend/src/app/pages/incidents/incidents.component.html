@@ -1,0 +1,238 @@
+<!-- Nagłówek sekcji -->
+<div>
+  <h1 class="text-2xl font-bold text-gray-900">{{ 'awaria.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600">{{ 'awaria.subtitle' | translate }}</p>
+</div>
+
+<!-- Lista awarii -->
+<div class="mt-5">
+  <div class="mb-4 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-gray-900">{{ 'awaria.list.title' | translate }}</h2>
+    <app-add-button [label]="'awaria.buttons.add'" (add)="openCreate()" />
+  </div>
+
+  <app-filter-bar
+    [filters]="filterConfigs()"
+    [values]="_filters()"
+    (filterApply)="onFilterApply($event)"
+    (filterClear)="onFilterClear()"
+  />
+
+  <app-data-table
+    [columns]="columns()"
+    [data]="incidents()"
+    [total]="total()"
+    [page]="page()"
+    [perPage]="perPage()"
+    [loading]="loading()"
+    [sortKey]="sortKey()"
+    [sortDirection]="sortDirection()"
+    [actionsTemplate]="actionsTpl"
+    [cellTemplates]="{ typ: typeCellTpl, status: statusCellTpl, opis: opisCellTpl }"
+    (sortChange)="onSort($event)"
+    (pageChange)="onPageChange($event)"
+    (perPageChange)="onPerPageChange($event)"
+  />
+
+  <ng-template #typeCellTpl let-inc>
+    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+      {{ typeLabel(inc) }}
+    </span>
+  </ng-template>
+
+  <ng-template #opisCellTpl let-inc>
+    <span class="line-clamp-1 max-w-xs text-gray-600">{{ inc.opis }}</span>
+  </ng-template>
+
+  <ng-template #statusCellTpl let-inc>
+    <app-status-badge [status]="statusBadgeStatus(inc.status)" [labelKey]="statusBadgeKey(inc.status)" />
+  </ng-template>
+
+  <ng-template #actionsTpl let-inc>
+    <div class="flex justify-end gap-1">
+      <app-icon-button
+        icon="document"
+        tone="primary"
+        [ariaLabel]="'awaria.buttons.details' | translate"
+        (clicked)="openDetails(inc)"
+      />
+    </div>
+  </ng-template>
+</div>
+
+<!-- ===== Modal: zgłoszenie awarii ===== -->
+@if (modalMode() === 'create') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'awaria.form.title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
+      </div>
+
+      <label class="block text-sm font-medium text-gray-700">{{ 'awaria.form.what_concerns' | translate }}</label>
+      <div class="mt-1.5 mb-3 flex gap-3">
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            type="radio"
+            name="incTyp"
+            value="sprzet"
+            [checked]="formTyp() === 'sprzet'"
+            (change)="onTypeChange('sprzet')"
+          />
+          {{ 'awaria.form.equipment' | translate }}
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            type="radio"
+            name="incTyp"
+            value="inne"
+            [checked]="formTyp() === 'inne'"
+            (change)="onTypeChange('inne')"
+          />
+          {{ 'awaria.form.other' | translate }}
+        </label>
+      </div>
+
+      @if (formTyp() === 'sprzet') {
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700">{{ 'awaria.form.select_equipment' | translate }}</label>
+          <app-autocomplete-select
+            class="mt-1.5"
+            [options]="equipmentOptions()"
+            [selectedValue]="formEquipmentId()"
+            [placeholder]="'awaria.form.select_equipment' | translate"
+            (selectionChange)="onEquipmentSelected($event)"
+          />
+        </div>
+      }
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">{{ 'awaria.form.description' | translate }}</label>
+        <textarea
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          rows="4"
+          [placeholder]="'awaria.form.description_placeholder' | translate"
+          [ngModel]="formOpis()"
+            (ngModelChange)="formOpis.set($event)"
+        ></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeModal()" />
+        <app-button variant="primary" [label]="'awaria.form.submit'" [disabled]="saving()" (clicked)="saveCreate()" />
+      </div>
+    </div>
+  </div>
+}
+<!-- ===== Modal: szczegóły awarii ===== -->
+@if (modalMode() === 'details' && detailsIncident()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'awaria.detail.title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeDetails()" />
+      </div>
+
+      <!-- Podsumowanie -->
+      <div class="mb-4 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <span class="text-gray-500">{{ 'awaria.list.type' | translate }}:</span>
+          <span class="ml-1 font-medium">{{ typeLabel(detailsIncident()!) }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500">{{ 'awaria.list.status' | translate }}:</span>
+          <span class="ml-1"><app-status-badge [status]="statusBadgeStatus(detailsIncident()!.status)" [labelKey]="statusBadgeKey(detailsIncident()!.status)" /></span>
+        </div>
+        <div>
+          <span class="text-gray-500">{{ 'awaria.detail.equipment' | translate }}:</span>
+          <span class="ml-1 font-medium">{{ detailsIncident()!.equipment_nazwa || '—' }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500">{{ 'awaria.detail.downtime' | translate }}:</span>
+          <span class="ml-1 font-medium">{{ downtime(detailsIncident()!) }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500">{{ 'awaria.detail.reported_by' | translate }}:</span>
+          <span class="ml-1 font-medium">{{ detailsIncident()!.zgloszona_przez_email || '—' }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500">{{ 'awaria.detail.reported_date' | translate }}:</span>
+          <span class="ml-1 font-medium">{{ detailsIncident()!.data_zgloszenia || '—' }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500">{{ 'awaria.detail.close_date' | translate }}:</span>
+          <span class="ml-1 font-medium">{{ detailsIncident()!.data_zakonczenia || '—' }}</span>
+        </div>
+      </div>
+
+      <p class="mb-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">{{ detailsIncident()!.opis }}</p>
+
+      <!-- Zmiana statusu -->
+      <div class="mb-4 rounded-lg border border-gray-100 p-3">
+        <label class="block text-sm font-semibold text-gray-700">{{ 'awaria.detail.status_change' | translate }}</label>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <app-select
+            size="md"
+            [options]="statusOptions"
+            [ngModel]="newStatus()"
+            (ngModelChange)="newStatus.set($event)"
+          />
+          <app-button variant="primary" [label]="'common.buttons.save'" [disabled]="statusSaving() || newStatus() === detailsIncident()!.status" (clicked)="changeStatus()" />
+        </div>
+      </div>
+
+      <!-- Komentarze -->
+      <div class="mb-4">
+        <h4 class="mb-2 text-sm font-semibold text-gray-700">{{ 'awaria.detail.comments' | translate }}</h4>
+        @if (detailsComments().length === 0) {
+          <p class="text-sm text-gray-400">{{ 'awaria.detail.no_comments' | translate }}</p>
+        } @else {
+          <ul class="mb-3 space-y-2">
+            @for (c of detailsComments(); track c.id) {
+              <li class="rounded-lg bg-gray-50 p-3 text-sm">
+                <div class="mb-1 flex items-center justify-between text-xs text-gray-500">
+                  <span>{{ c.user_email || '—' }}</span>
+                  <span>{{ c.created_at || '—' }}</span>
+                </div>
+                <p class="text-gray-800">{{ c.tresc }}</p>
+              </li>
+            }
+          </ul>
+        }
+        <div class="flex flex-col gap-2">
+          <textarea
+            class="block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+            rows="2"
+            [placeholder]="'awaria.detail.comment_placeholder' | translate"
+            [ngModel]="newComment()"
+            (ngModelChange)="newComment.set($event)"
+          ></textarea>
+          <div class="flex justify-end">
+            <app-button variant="primary" [label]="'awaria.detail.send_comment'" [disabled]="commentSaving()" (clicked)="sendComment()" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Historia statusów -->
+      <div>
+        <h4 class="mb-2 text-sm font-semibold text-gray-700">{{ 'awaria.detail.status_history' | translate }}</h4>
+        @if (detailsHistory().length === 0) {
+          <p class="text-sm text-gray-400">{{ 'awaria.detail.no_history' | translate }}</p>
+        } @else {
+          <ul class="space-y-2">
+            @for (h of detailsHistory(); track h.id) {
+              <li class="flex items-center justify-between rounded-lg border border-gray-100 p-2 text-sm">
+                <span>
+                  <app-status-badge [status]="h.status_od === 'zgloszona' ? 'reported' : (h.status_od === 'w_trakcie_naprawy' ? 'under_repair' : (h.status_od === 'naprawiona' ? 'repaired' : 'closed'))" />
+                  <span class="mx-1 text-gray-400">→</span>
+                  <app-status-badge [status]="h.status_do === 'zgloszona' ? 'reported' : (h.status_do === 'w_trakcie_naprawy' ? 'under_repair' : (h.status_do === 'naprawiona' ? 'repaired' : 'closed'))" />
+                </span>
+                <span class="text-xs text-gray-500">{{ h.zmieniony_przez_email || '—' }} · {{ h.created_at || '—' }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  </div>
+}

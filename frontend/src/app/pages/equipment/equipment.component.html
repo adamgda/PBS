@@ -1,0 +1,445 @@
+<!-- Nagłówek sekcji -->
+<div>
+  <h1 class="text-2xl font-bold text-gray-900">{{ 'sprzet.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600">{{ 'sprzet.subtitle' | translate }}</p>
+</div>
+
+<!-- Lista sprzętu -->
+<div class="mt-5">
+  <div class="mb-4 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-gray-900">{{ 'sprzet.list.all_equipment' | translate }}</h2>
+    <app-add-button [label]="'sprzet.buttons.add'" (add)="openCreate()" />
+  </div>
+
+  <app-filter-bar
+    [filters]="filterConfigs()"
+    [values]="{}"
+    (filterApply)="onFilterApply($event)"
+    (filterClear)="onFilterClear()"
+  />
+
+  <app-data-table
+    [columns]="columns()"
+    [data]="equipment()"
+    [total]="total()"
+    [page]="page()"
+    [perPage]="perPage()"
+    [loading]="loading()"
+    [sortKey]="sortKey()"
+    [sortDirection]="sortDirection()"
+    [actionsTemplate]="actionsTpl"
+    [cellTemplates]="{ is_active: statusCellTpl, kategoria: categoryCellTpl, ostatni_przebieg: mileageCellTpl, employee_name: employeeCellTpl, terminal_nazwa: terminalCellTpl }"
+    (sortChange)="onSort($event)"
+    (pageChange)="onPageChange($event)"
+    (perPageChange)="onPerPageChange($event)"
+  />
+
+  <ng-template #statusCellTpl let-eq>
+    <app-status-badge
+      [status]="eq.is_active ? 'active' : 'inactive'"
+      [labelKey]="eq.is_active ? 'sprzet.status.active' : 'sprzet.status.inactive'"
+    />
+  </ng-template>
+
+  <ng-template #categoryCellTpl let-eq>
+    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+      {{ categoryLabel(eq) }}
+    </span>
+  </ng-template>
+
+  <ng-template #mileageCellTpl let-eq>
+    @if (eq.ostatni_przebieg !== null && eq.ostatni_przebieg !== undefined) {
+      <span>{{ eq.ostatni_przebieg }}</span>
+    } @else {
+      <span class="text-gray-400">—</span>
+    }
+  </ng-template>
+
+  <ng-template #employeeCellTpl let-eq>
+    @if (eq.employee_name) {
+      <span>{{ eq.employee_name }}</span>
+    } @else {
+      <span class="text-gray-400">{{ 'sprzet.list.unassigned' | translate }}</span>
+    }
+  </ng-template>
+
+  <ng-template #terminalCellTpl let-eq>
+    @if (eq.terminal_nazwa) {
+      <span>{{ eq.terminal_nazwa }}</span>
+    } @else {
+      <span class="text-gray-400">{{ 'sprzet.list.unassigned' | translate }}</span>
+    }
+  </ng-template>
+
+  <ng-template #actionsTpl let-eq>
+    <div class="flex justify-end gap-1">
+      <app-icon-button
+        icon="exchange"
+        tone="primary"
+        [ariaLabel]="'sprzet.buttons.assign' | translate"
+        (clicked)="openAssign(eq)"
+      />
+      <app-icon-button
+        icon="document"
+        tone="primary"
+        [ariaLabel]="'sprzet.buttons.details' | translate"
+        (clicked)="openDetails(eq)"
+      />
+      <app-icon-button
+        icon="settings"
+        tone="primary"
+        [ariaLabel]="'sprzet.buttons.edit' | translate"
+        (clicked)="openEdit(eq)"
+      />
+      <app-icon-button
+        icon="trash"
+        tone="danger"
+        [ariaLabel]="'sprzet.buttons.delete' | translate"
+        (clicked)="deleteEquipment(eq)"
+      />
+    </div>
+  </ng-template>
+</div>
+<!-- ===== Modal: dodawanie / edycja sprzętu ===== -->
+@if (modalMode() === 'create' || modalMode() === 'edit') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ modalMode() === 'edit' ? ('sprzet.form.edit_title' | translate) : ('sprzet.form.add_title' | translate) }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
+      </div>
+
+      <!-- Kategoria -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.category' | translate }}</label>
+        <div class="mt-1.5 flex gap-3">
+          <label class="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="kategoria"
+              value="pojazd"
+              [checked]="modalKategoria() === 'pojazd'"
+              (change)="modalKategoria.set('pojazd')"
+            />
+            {{ 'sprzet.list.category_vehicle' | translate }}
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="kategoria"
+              value="inne"
+              [checked]="modalKategoria() === 'inne'"
+              (change)="modalKategoria.set('inne')"
+            />
+            {{ 'sprzet.list.category_other' | translate }}
+          </label>
+        </div>
+      </div>
+
+      <app-form-input
+        type="text"
+        name="nazwa"
+        labelKey="sprzet.form.name"
+        placeholderKey="sprzet.form.name_placeholder"
+        [ngModel]="modalNazwa()"
+        (ngModelChange)="modalNazwa.set($event)"
+      />
+
+      <app-form-input
+        type="text"
+        name="numer_seryjny"
+        labelKey="sprzet.form.serial_number"
+        placeholderKey="sprzet.form.serial_number_placeholder"
+        [ngModel]="modalSerial()"
+        (ngModelChange)="modalSerial.set($event)"
+      />
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.assign_employee' | translate }}</label>
+        <app-autocomplete-select
+          class="mt-1.5"
+          [options]="employeeOptions()"
+          [selectedValue]="modalEmployeeId()"
+          [placeholder]="'sprzet.list.unassigned' | translate"
+          (selectionChange)="onEmployeeSelected($event)"
+        />
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.assign_terminal' | translate }}</label>
+        <app-autocomplete-select
+          class="mt-1.5"
+          [options]="terminalOptions()"
+          [selectedValue]="modalTerminalId()"
+          [placeholder]="'sprzet.list.unassigned' | translate"
+          (selectionChange)="onTerminalSelected($event)"
+        />
+      </div>
+
+      <!-- Dane pojazdu (tylko dla kategorii „pojazd") -->
+      @if (modalKategoria() === 'pojazd') {
+        <div class="mb-4 rounded-lg bg-gray-50 p-4">
+          <h4 class="mb-3 text-sm font-semibold text-gray-700">{{ 'sprzet.form.vehicle_section' | translate }}</h4>
+
+          <app-form-input
+            type="number"
+            name="ostatni_przebieg"
+            labelKey="sprzet.vehicle.last_mileage"
+            [ngModel]="modalPrzebieg()"
+            (ngModelChange)="modalPrzebieg.set($event)"
+          />
+
+          <app-datepicker
+            name="ostatni_serwis_olejowy"
+            labelKey="sprzet.vehicle.last_oil_service"
+            [ngModel]="modalOilService()"
+            (ngModelChange)="modalOilService.set($event)"
+          />
+
+          <app-datepicker
+            name="data_ostatniej_oc"
+            labelKey="sprzet.vehicle.last_oc_date"
+            [ngModel]="modalOcDate()"
+            (ngModelChange)="modalOcDate.set($event)"
+          />
+
+          <app-form-input
+            type="text"
+            name="wynik_ostatniej_oc"
+            labelKey="sprzet.vehicle.last_oc_result"
+            [ngModel]="modalOcResult()"
+            (ngModelChange)="modalOcResult.set($event)"
+          />
+        </div>
+      }
+
+      <div class="mb-4 flex items-center gap-2">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded accent-pbs-primary"
+            [checked]="modalIsActive()"
+            (change)="modalIsActive.set(!modalIsActive())"
+          />
+          {{ 'sprzet.form.is_active' | translate }}
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeModal()" />
+        <app-button variant="primary" [label]="'sprzet.buttons.save'" [disabled]="modalSaving()" (clicked)="saveModal()" />
+      </div>
+    </div>
+  </div>
+}
+<!-- ===== Modal: szybkie przypisanie ===== -->
+@if (modalMode() === 'assign' && assignEquipment()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'sprzet.buttons.assign' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAssignModal()" />
+      </div>
+      <p class="mb-4 text-sm text-gray-600">{{ assignEquipment()?.nazwa }}</p>
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.assign_employee' | translate }}</label>
+        <app-autocomplete-select
+          class="mt-1.5"
+          [options]="employeeOptions()"
+          [selectedValue]="assignEmployeeId()"
+          [placeholder]="'sprzet.list.unassigned' | translate"
+          (selectionChange)="onAssignEmployeeSelected($event)"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.assign_terminal' | translate }}</label>
+        <app-autocomplete-select
+          class="mt-1.5"
+          [options]="terminalOptions()"
+          [selectedValue]="assignTerminalId()"
+          [placeholder]="'sprzet.list.unassigned' | translate"
+          (selectionChange)="onAssignTerminalSelected($event)"
+        />
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeAssignModal()" />
+        <app-button variant="primary" [label]="'common.buttons.save'" [disabled]="assignSaving()" (clicked)="saveAssign()" />
+      </div>
+    </div>
+  </div>
+}
+<!-- ===== Modal: szczegóły (oś czasu + plany przeglądów) ===== -->
+@if (modalMode() === 'details' && detailsEquipment()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ detailsEquipment()?.nazwa }}
+          <span class="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+            {{ categoryLabel(detailsEquipment()!) }}
+          </span>
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeDetails()" />
+      </div>
+
+      <!-- Podstawowe dane -->
+      <dl class="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div>
+          <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.list.serial_number' | translate }}</dt>
+          <dd class="text-sm text-gray-900">{{ detailsEquipment()?.numer_seryjny || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.list.employee' | translate }}</dt>
+          <dd class="text-sm text-gray-900">{{ detailsEquipment()?.employee_name || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.list.terminal' | translate }}</dt>
+          <dd class="text-sm text-gray-900">{{ detailsEquipment()?.terminal_nazwa || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.list.status' | translate }}</dt>
+          <dd class="text-sm text-gray-900">{{ statusLabel(detailsEquipment()!) }}</dd>
+        </div>
+      </dl>
+
+      <!-- Dane pojazdu -->
+      @if (detailsEquipment()?.vehicle_details; as vd) {
+        <div class="mb-5 rounded-lg bg-gray-50 p-4">
+          <h4 class="mb-2 text-sm font-semibold text-gray-700">{{ 'sprzet.form.vehicle_section' | translate }}</h4>
+          <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div>
+              <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.vehicle.last_mileage' | translate }}</dt>
+              <dd class="text-sm text-gray-900">{{ vd.ostatni_przebieg }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.vehicle.last_oil_service' | translate }}</dt>
+              <dd class="text-sm text-gray-900">{{ vd.ostatni_serwis_olejowy || '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.vehicle.last_oc_date' | translate }}</dt>
+              <dd class="text-sm text-gray-900">{{ vd.data_ostatniej_oc || '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.vehicle.last_oc_result' | translate }}</dt>
+              <dd class="text-sm text-gray-900">{{ vd.wynik_ostatniej_oc || '—' }}</dd>
+            </div>
+          </dl>
+        </div>
+      }
+      <!-- Plany przeglądów -->
+      <div class="mb-5">
+        <div class="mb-3 flex items-center justify-between">
+          <h4 class="text-sm font-semibold text-gray-700">{{ 'sprzet.service_plans.title' | translate }}</h4>
+          <app-add-button [label]="'sprzet.buttons.add_plan'" (add)="openPlanCreate()" />
+        </div>
+
+        @if (detailsPlans().length === 0) {
+          <p class="text-sm text-gray-400">{{ 'sprzet.service_plans.empty' | translate }}</p>
+        } @else {
+          <ul class="space-y-2">
+            @for (plan of detailsPlans(); track plan.id) {
+              <li class="flex items-start justify-between rounded-md border border-gray-100 p-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-900">{{ plan.typ_przegladu }}</span>
+                    @if (plan.needs_service) {
+                      <app-status-badge status="reported" tone="warning" [label]="'sprzet.service_plans.needs_service' | translate" />
+                    }
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">
+                    {{ 'sprzet.service_plans.interval_km' | translate }}: {{ plan.interwal_km ?? '—' }}
+                    · {{ 'sprzet.service_plans.interval_days' | translate }}: {{ plan.interwal_dni ?? '—' }}
+                    · {{ 'sprzet.service_plans.last_done' | translate }}: {{ plan.data_ostatniego_wykonania || '—' }}
+                    · {{ 'sprzet.service_plans.next_planned' | translate }}: {{ plan.data_nastepnego_planowanego || '—' }}
+                  </p>
+                </div>
+                <div class="flex shrink-0 gap-1">
+                  <app-icon-button icon="settings" tone="primary" [ariaLabel]="'common.buttons.edit' | translate" (clicked)="openPlanEdit(plan)" />
+                  <app-icon-button icon="trash" tone="danger" [ariaLabel]="'common.buttons.delete' | translate" (clicked)="deletePlan(plan)" />
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <!-- Oś czasu -->
+      <app-timeline [title]="'sprzet.timeline.title'" [events]="detailsTimeline()" />
+    </div>
+  </div>
+}
+<!-- ===== Modal: dodawanie / edycja planu przeglądu ===== -->
+@if (planModalMode() === 'create' || planModalMode() === 'edit') {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ planModalMode() === 'edit' ? ('sprzet.service_plans.edit' | translate) : ('sprzet.service_plans.add' | translate) }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closePlanModal()" />
+      </div>
+
+      <app-form-input
+        type="text"
+        name="plan_typ"
+        labelKey="sprzet.service_plans.inspection_type"
+        [placeholder]="'sprzet.service_plans.inspection_type_placeholder'"
+        [ngModel]="planTyp()"
+        (ngModelChange)="planTyp.set($event)"
+      />
+
+      <div class="mb-3 grid grid-cols-2 gap-3">
+        <app-form-input
+          type="number"
+          name="plan_interwal_km"
+          labelKey="sprzet.service_plans.interval_km"
+          [ngModel]="planInterwalKm()"
+          (ngModelChange)="planInterwalKm.set($event)"
+        />
+        <app-form-input
+          type="number"
+          name="plan_interwal_dni"
+          labelKey="sprzet.service_plans.interval_days"
+          [ngModel]="planInterwalDni()"
+          (ngModelChange)="planInterwalDni.set($event)"
+        />
+      </div>
+
+      <app-datepicker
+        name="plan_last_done"
+        labelKey="sprzet.service_plans.last_done"
+        [ngModel]="planLastDone()"
+        (ngModelChange)="planLastDone.set($event)"
+      />
+
+      <app-datepicker
+        name="plan_next_planned"
+        labelKey="sprzet.service_plans.next_planned"
+        [ngModel]="planNextPlanned()"
+        (ngModelChange)="planNextPlanned.set($event)"
+      />
+
+      <div class="mb-4 flex items-center gap-2">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded accent-pbs-primary"
+            [checked]="planIsActive()"
+            (change)="planIsActive.set(!planIsActive())"
+          />
+          {{ 'sprzet.form.is_active' | translate }}
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closePlanModal()" />
+        <app-button variant="primary" [label]="'sprzet.service_plans.save'" [disabled]="planSaving()" (clicked)="savePlan()" />
+      </div>
+    </div>
+  </div>
+}

@@ -1,5 +1,6 @@
 {
-  "title": "Awaria!",
+  "title": "Awaria",
+  "subtitle": "Zgłaszanie i obsługa awarii sprzętowych oraz innych zdarzeń — komentarze, historia statusów, czas przestoju",
   "list": {
     "title": "Lista awarii",
     "type": "Typ",
@@ -10,30 +11,62 @@
     "reported_date": "Data zgłoszenia",
     "closed_date": "Data zakończenia",
     "downtime": "Czas przestoju",
-    "reported_by": "Zgłoszona przez"
+    "reported_by": "Zgłoszona przez",
+    "description": "Opis",
+    "actions": "Akcje"
+  },
+  "filters": {
+    "type": "Typ",
+    "status": "Status",
+    "type_equipment": "Sprzęt",
+    "type_other": "Inne"
   },
   "form": {
     "title": "Zgłoś awarię",
     "what_concerns": "Czego dotyczy zdarzenie",
     "select_equipment": "Wybierz sprzęt",
+    "equipment": "Sprzęt",
+    "other": "Inne",
     "description": "Opis sytuacji",
+    "description_placeholder": "Opisz co się stało, kiedy i jakie są objawy",
     "submit": "Zgłoś"
   },
   "detail": {
     "title": "Szczegóły awarii",
     "status_change": "Zmiana statusu",
+    "select_status": "Wybierz status",
     "close_date": "Data zakończenia naprawy",
     "comments": "Komentarze",
     "add_comment": "Dodaj komentarz",
+    "comment_placeholder": "Wpisz komentarz...",
+    "send_comment": "Wyślij",
     "status_history": "Historia zmian statusu",
     "changed_by": "Zmieniony przez",
-    "change_date": "Data zmiany"
+    "change_date": "Data zmiany",
+    "from": "Z",
+    "to": "Na",
+    "reported_by": "Zgłoszona przez",
+    "reported_date": "Data zgłoszenia",
+    "equipment": "Sprzęt",
+    "downtime": "Czas przestoju",
+    "no_comments": "Brak komentarzy",
+    "no_history": "Brak historii zmian"
   },
   "lifecycle": {
     "reported": "Zgłoszona",
     "under_repair": "W trakcie naprawy",
     "repaired": "Naprawiona",
     "closed": "Zamknięta"
+  },
+  "status": {
+    "zgloszona": "Zgłoszona",
+    "w_trakcie_naprawy": "W trakcie naprawy",
+    "naprawiona": "Naprawiona",
+    "zamknieta": "Zamknięta"
+  },
+  "buttons": {
+    "add": "Zgłoś awarię",
+    "details": "Szczegóły"
   },
   "messages": {
     "created": {
@@ -44,6 +77,11 @@
     },
     "comment_added": {
       "success": "Dodano komentarz"
-    }
+    },
+    "type_required": "Typ zdarzenia jest wymagany",
+    "description_required": "Opis jest wymagany",
+    "equipment_required": "Dla typu „Sprzęt” wybierz sprzęt",
+    "comment_required": "Komentarz nie może być pusty",
+    "load_error": "Nie udało się pobrać listy awarii"
   }
 }

@@ -42,7 +42,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'sprzet' },
     loadComponent: () =>
-      import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
+      import('./pages/equipment/equipment.component').then((m) => m.EquipmentComponent),
   },
   {
     path: 'terminale',
@@ -56,7 +56,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'harmonogram' },
     loadComponent: () =>
-      import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
+      import('./pages/orders/orders.component').then((m) => m.OrdersComponent),
   },
   {
     path: 'analityka',
@@ -77,7 +77,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'awaria' },
     loadComponent: () =>
-      import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
+      import('./pages/incidents/incidents.component').then((m) => m.IncidentsComponent),
   },
   {
     path: 'settings',

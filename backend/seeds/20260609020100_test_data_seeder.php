@@ -115,6 +115,59 @@ final class TestDataSeeder implements SeederInterface
         $stmtUpdateEquipment->execute([$terminalIds[0], $employeeIds[0], $otherEquipmentIds[0]]);
         $stmtUpdateEquipment->execute([$terminalIds[1], $employeeIds[2], $otherEquipmentIds[1]]);
         $stmtUpdateEquipment->execute([$terminalIds[2], $employeeIds[4], $otherEquipmentIds[2]]);
+
+        // --- Zlecenia (Etap 9) ---
+        $adminId = (int) $pdo->query('SELECT `id` FROM `users` WHERE `email` = \'admin@pbs.local\' LIMIT 1')->fetchColumn();
+        $weekStart = date('Y-m-d', strtotime('monday this week'));
+
+        $orders = [
+            ['ZL-2026-001', 'Baltic Operator Sp. z o.o.', $terminalIds[0], "{$weekStart} 08:00:00", "{$weekStart} 16:00:00", 'Rozładunek kontenerów', 5000, 'nowe'],
+            ['ZL-2026-002', 'Port Operations Sp. z o.o.', $terminalIds[1], date('Y-m-d H:i:s', strtotime("{$weekStart} 08:00:00 +1 day")), date('Y-m-d H:i:s', strtotime("{$weekStart} 16:00:00 +1 day")), 'Przeładunek stali', 7500, 'w_realizacji'],
+            ['ZL-2026-003', 'Westport Sp. z o.o.', $terminalIds[2], date('Y-m-d H:i:s', strtotime("{$weekStart} 08:00:00 +2 days")), date('Y-m-d H:i:s', strtotime("{$weekStart} 17:00:00 +2 days")), 'Konserwacja nabrzeża', 3200, 'zakonczone'],
+        ];
+
+        $stmtOrder = $pdo->prepare(
+            'INSERT INTO `orders` (`numer_zlecenia`, `klient_nazwa`, `terminal_id`, `data_rozpoczecia`, `data_zakonczenia`, `zakres_prac`, `wartosc_pln`, `status`)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        );
+        $stmtOrderEmp = $pdo->prepare('INSERT INTO `order_employees` (`order_id`, `employee_id`) VALUES (?, ?)');
+        $stmtOrderEq = $pdo->prepare('INSERT INTO `order_equipment` (`order_id`, `equipment_id`) VALUES (?, ?)');
+
+        foreach ($orders as $o) {
+            $stmtOrder->execute($o);
+            $orderId = (int) $pdo->lastInsertId();
+            $empIdx = array_search($o[2], $terminalIds, true);
+            if ($empIdx !== false && isset($employeeIds[$empIdx])) {
+                $stmtOrderEmp->execute([$orderId, $employeeIds[$empIdx]]);
+            }
+            if (isset($vehicleEquipmentIds[$empIdx !== false ? $empIdx : 0])) {
+                $stmtOrderEq->execute([$orderId, $vehicleEquipmentIds[$empIdx !== false ? $empIdx : 0]]);
+            }
+        }
+
+        // --- Awaria (Etap 10) ---
+        $incidents = [
+            ['sprzet', $vehicleEquipmentIds[0], 'Nieszczelny układ hydrauliczny wózka widłowego', 'w_trakcie_naprawy'],
+            ['inne', null, 'Awaria oświetlenia nabrzeża — brak światła na stanowisku 3', 'zgloszona'],
+            ['sprzet', $vehicleEquipmentIds[1], ' Kontrolki ostrzegawcze — wymaga diagnostyki', 'naprawiona'],
+        ];
+
+        $stmtIncident = $pdo->prepare(
+            'INSERT INTO `incidents` (`typ`, `equipment_id`, `opis`, `status`, `zgloszona_przez`)
+             VALUES (?, ?, ?, ?, ?)',
+        );
+        $stmtComment = $pdo->prepare(
+            'INSERT INTO `incident_comments` (`incident_id`, `tresc`, `user_id`) VALUES (?, ?, ?)',
+        );
+
+        foreach ($incidents as $inc) {
+            $stmtIncident->execute([$inc[0], $inc[1], $inc[2], $inc[3], $adminId]);
+            $incidentId = (int) $pdo->lastInsertId();
+            $stmtComment->execute([$incidentId, 'Zgłoszenie przyjęte do realizacji.', $adminId]);
+            if ($inc[3] === 'naprawiona') {
+                $pdo->prepare('UPDATE `incidents` SET `data_zakonczenia` = NOW() WHERE `id` = ?')->execute([$incidentId]);
+            }
+        }
     }
 
     public function name(): string

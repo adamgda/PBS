@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Plan wdrożenia
 
-> **Wersja:** 1.1  
-> **Data:** 2026-08-07  
+> **Wersja:** 1.2  
+> **Data:** 2026-08-09  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -148,45 +148,73 @@ Legenda statusów:
 - [x] Frontend: anonimizacja danych przy usunięciu (RODO — prawo do bycia zapomnianym)
 - [x] Lokalizacje: `pracownicy.json` w `locales/pl/`
 
+### Etap 7a — Pracownicy: rozliczenia, stawki, role, urlopy, faktury
+
+> Rozszerzenie sekcji Pracownicy wg `docs/technical-documentation.md` (10.2) i mockupu `other/mockup5/pracownicy.html`. Wszystkie pozycje poniżej są nowe (`- [ ]`).
+
+- [ ] Migracja: `employee_rates` (historia stawek godzinowych: `employee_id`, `stawka_godzinowa`, `data_od`, `data_do` NULLABLE) — `ON DELETE CASCADE`
+- [ ] Migracja: rozszerzenie `order_employees` o `rola` ENUM('operator','brygadzista','sztauer','lukowy','operator_zurawia') NULLABLE oraz `godziny` DECIMAL(5,2) NULLABLE
+- [ ] Migracja: `employee_vacations` (`employee_id`, `data_od`, `data_do`, `typ`, `status`) — `ON DELETE CASCADE`
+- [ ] Migracja: `invoices` (`order_id` NULLABLE, `numer_faktury` UNIQUE, `klient_nazwa`, `kwota_pln`, `data_wystawienia`, `termin_platnosci`, `status`, `typ_wystawienia` ENUM('po_zleceniu','po_tygodniu','koniec_miesiaca'))
+- [ ] Indeksy DB: `employee_rates(employee_id, data_od)`, `employee_vacations(employee_id, status)`, `invoices(order_id, status, typ_wystawienia, data_wystawienia, klient_nazwa)`, `order_employees(rola, employee_id, rola)`
+- [ ] Backend: `GET /api/v1/employees/{id}/rates` + `POST .../rates` (nowa stawka z `data_od` — zamyka poprzedni rekord `data_do`)
+- [ ] Backend: `GET/POST /api/v1/employees/{id}/vacations` + `PATCH /api/v1/vacations/{id}/status` + `DELETE /api/v1/vacations/{id}`
+- [ ] Backend: `PATCH /api/v1/orders/{id}/assign-employee` — zapis `rola` i `godziny` w `order_employees`
+- [ ] Backend: `GET /api/v1/employees/settlement?month=&period=all|1-15|15-23` (rozliczenie per pracownik: godziny × stawka z historii po dacie zlecenia)
+- [ ] Backend: `GET /api/v1/employees/settlement/by-port?month=&period=` (suma godzin i wynagrodzeń per port/terminal + wiersz „Razem wszystkie porty")
+- [ ] Backend: `GET /api/v1/employees/summary?month=` (suma godzin mc, suma wynagrodzeń z podziałem 1–15 / 15–23, licznik na urlopie)
+- [ ] Backend: `GET/POST/PUT/DELETE /api/v1/invoices` + `PATCH /api/v1/invoices/{id}/status` + `GET /api/v1/invoices/missing` (zlecenia zakończone bez faktury)
+- [ ] Frontend: kolumny w tabeli pracowników — Stawka/h, Godz. (mc), Wynagrodz. (godziny × stawka), Rola (dziś)
+- [ ] Frontend: okno „Zmień stawkę" (ikona monety) — nowa stawka + data wejścia w życie + podgląd historii zmian
+- [ ] Frontend: wybór roli dnia przy przypisywaniu pracownika do zlecenia (operator, brygadzista, sztauer, lukowy, operator żurawia)
+- [ ] Frontend: sekcja „Rozliczenie godzin per port" (tabela Port · Pracownicy · Suma godzin · Suma wynagrodzeń + wiersz „Razem") z przełącznikiem okresu (1–15 / 15–23 / cały mc)
+- [ ] Frontend: pasek podsumowania KPI — suma godzin (mc, wszystkie porty), suma wynagrodzeń z podziałem 1–15 i 15–23, liczba na urlopie
+- [ ] Frontend: okno „Urlopy" per pracownik + globalny przycisk „Urlopy" (rejestr od/do, typ, status; wykluczenie z dostępnych w harmonogramie; chip „Na urlopie")
+- [ ] Frontend: osobna sekcja/ikona „Faktury" (lista z terminem wystawienia: po zleceniu / po tygodniu / koniec miesiąca, status, filtrowanie, alerty o pominiętych/przeterminowanych)
+- [ ] Frontend: widok mobilny (karty) ze stawką, godzinami, wynagrodzeniem i rolą dnia (wg mockupu `pracownicy.html`)
+- [ ] Lokalizacje: rozszerzenie `pracownicy.json` (stawka, godziny, wynagrodzenie, role, urlopy, faktury, rozliczenie per port, podział 1–15/15–23)
+- [ ] Testy: backend — historia stawek (rozliczenie po dacie), rozliczenie per port i podział okresów, CRUD urlopów, CRUD faktur, `invoices/missing`
+- [ ] Testy: frontend — okno stawki, wybór roli, rozliczenie per port, pasek KPI, sekcja faktur, urlopy
+
 ## Etap 8 — Sekcja: Sprzęt
 
-- [ ] Backend: `GET/POST /api/v1/equipment`
-- [ ] Backend: `GET/PUT/DELETE /api/v1/equipment/{id}`
-- [ ] Backend: `PATCH /api/v1/equipment/{id}/assignment`
-- [ ] Backend: `GET /api/v1/equipment/{id}/timeline`
-- [ ] Backend: `GET/POST /api/v1/equipment/{id}/service-plans`
-- [ ] Backend: `PUT/DELETE /api/v1/service-plans/{id}`
-- [ ] Frontend: lista sprzętu (kategorie pojazdy/inne, filtrowanie)
-- [ ] Frontend: formularz dodawania/edycji sprzętu + szczegóły pojazdu (przebieg, serwis, OC)
-- [ ] Frontend: komponent `TimelineComponent` (historia sprzętu)
-- [ ] Frontend: planowanie przeglądów (interwały km/dni, auto-oznaczanie serwisu)
-- [ ] Frontend: szybkie przypisanie pracownika/terminala
-- [ ] Lokalizacje: `sprzet.json` w `locales/pl/`
+- [x] Backend: `GET/POST /api/v1/equipment`
+- [x] Backend: `GET/PUT/DELETE /api/v1/equipment/{id}`
+- [x] Backend: `PATCH /api/v1/equipment/{id}/assignment`
+- [x] Backend: `GET /api/v1/equipment/{id}/timeline`
+- [x] Backend: `GET/POST /api/v1/equipment/{id}/service-plans`
+- [x] Backend: `PUT/DELETE /api/v1/service-plans/{id}`
+- [x] Frontend: lista sprzętu (kategorie pojazdy/inne, filtrowanie)
+- [x] Frontend: formularz dodawania/edycji sprzętu + szczegóły pojazdu (przebieg, serwis, OC)
+- [x] Frontend: komponent `TimelineComponent` (historia sprzętu)
+- [x] Frontend: planowanie przeglądów (interwały km/dni, auto-oznaczanie serwisu)
+- [x] Frontend: szybkie przypisanie pracownika/terminala
+- [x] Lokalizacje: `sprzet.json` w `locales/pl/`
 
 ## Etap 9 — Sekcja: Harmonogram / Zlecenia
 
-- [ ] Backend: `GET/POST /api/v1/orders`
-- [ ] Backend: `GET/PUT/DELETE /api/v1/orders/{id}`
-- [ ] Backend: `POST /api/v1/orders/{id}/copy-week`
-- [ ] Backend: `POST/DELETE /api/v1/orders/{id}/assign-employee`
-- [ ] Backend: `POST/DELETE /api/v1/orders/{id}/assign-equipment`
-- [ ] Frontend: widok kalendarza (tydzień/miesiąc/dzień)
-- [ ] Frontend: formularz zlecenia (numer, klient, terminal, datetime, zakres, wartość, status)
-- [ ] Frontend: przypisywanie pracowników i sprzętu do zlecenia
-- [ ] Frontend: kopiowanie tygodnia jako szablon
-- [ ] Lokalizacje: `harmonogram.json` w `locales/pl/`
+- [x] Backend: `GET/POST /api/v1/orders`
+- [x] Backend: `GET/PUT/DELETE /api/v1/orders/{id}`
+- [x] Backend: `POST /api/v1/orders/{id}/copy-week`
+- [x] Backend: `POST/DELETE /api/v1/orders/{id}/assign-employee`
+- [x] Backend: `POST/DELETE /api/v1/orders/{id}/assign-equipment`
+- [x] Frontend: widok kalendarza (tydzień/miesiąc/dzień)
+- [x] Frontend: formularz zlecenia (numer, klient, terminal, datetime, zakres, wartość, status)
+- [x] Frontend: przypisywanie pracowników i sprzętu do zlecenia
+- [x] Frontend: kopiowanie tygodnia jako szablon
+- [x] Lokalizacje: `harmonogram.json` w `locales/pl/`
 
 ## Etap 10 — Sekcja: Awaria
 
-- [ ] Backend: `GET/POST /api/v1/incidents`
-- [ ] Backend: `GET /api/v1/incidents/{id}` (komentarze + historia statusów)
-- [ ] Backend: `PATCH /api/v1/incidents/{id}/status`
-- [ ] Backend: `POST /api/v1/incidents/{id}/comments`
-- [ ] Frontend: uproszczony formularz zgłoszenia awarii
-- [ ] Frontend: lista awarii (filtrowanie po statusie/typie)
-- [ ] Frontend: widok szczegółowy awarii (komentarze, historia statusów, czas zakończenia)
-- [ ] Frontend: zmiana statusu (zgłoszona → w trakcie naprawy → naprawiona / zamknięta)
-- [ ] Lokalizacje: `awaria.json` w `locales/pl/`
+- [x] Backend: `GET/POST /api/v1/incidents`
+- [x] Backend: `GET /api/v1/incidents/{id}` (komentarze + historia statusów)
+- [x] Backend: `PATCH /api/v1/incidents/{id}/status`
+- [x] Backend: `POST /api/v1/incidents/{id}/comments`
+- [x] Frontend: uproszczony formularz zgłoszenia awarii
+- [x] Frontend: lista awarii (filtrowanie po statusie/typie)
+- [x] Frontend: widok szczegółowy awarii (komentarze, historia statusów, czas zakończenia)
+- [x] Frontend: zmiana statusu (zgłoszona → w trakcie naprawy → naprawiona / zamknięta)
+- [x] Lokalizacje: `awaria.json` w `locales/pl/`
 
 ## Etap 11 — Sekcja: Raportowanie
 
@@ -353,6 +381,32 @@ Legenda statusów:
 - [ ] Lokalizacje: `notatki.json` w `locales/pl/` (etykiety, przyciski, komunikaty, placeholder, potwierdzenia)
 - [ ] Testy: backend — CRUD notatek, IDOR (próba dostępu do notatki innego użytkownika → 403/404), walidacja `tresc`
 - [ ] Testy: frontend — `QuickNotesWidgetComponent` (dodawanie, odznaczanie, usuwanie, czyszczenie, stan offline)
+
+## Etap 20 — Kody QR dla maszyn (zgłaszanie awarii / raportowanie obsługi)
+
+> Generator kodów QR dla maszyn z grupy pojazdów (i opcjonalnie `inne`), prowadzących do publicznej podstrony zgłaszania awarii danej maszyny albo raportowania jej obsługi codziennej (OC). Kod drukowany jako naklejka i przyklejony w maszynie — operator skanuje telefonem i zgłasza bez logowania. Szczegóły w `docs/technical-documentation.md` (10.3 „Kody QR dla maszyn" oraz 11.17).
+
+- [ ] Migracja: rozszerzenie `equipment` o `qr_token` CHAR(64) UNIQUE NULLABLE (publiczny token maszyny, generowany losowo — nie `id`)
+- [ ] Migracja: rozszerzenie `incidents` o `zrodlo` ENUM('panel','qr') DEFAULT 'panel' oraz dopuszczenie `zgloszona_przez` NULLABLE (zgłoszenia anonimowe z QR)
+- [ ] Migracja: rozszerzenie `daily_vehicle_reports` o `zrodlo` ENUM('panel','qr') DEFAULT 'panel' oraz `utworzony_przez` NULLABLE
+- [ ] Indeksy DB: `equipment UNIQUE(qr_token)`, `incidents INDEX(zrodlo)`, `daily_vehicle_reports INDEX(zrodlo)`
+- [ ] Backend (autoryzowane): `POST /api/v1/equipment/{id}/qr-token` — (re)generacja tokena QR (`random_bytes(32)`, hex), unieważnienie starego
+- [ ] Backend (autoryzowane): `GET /api/v1/equipment/{id}/qr` — kod QR (PNG/SVG) + publiczny URL + dane do wydruku naklejki (nazwa, numer, instrukcja)
+- [ ] Backend (publiczne, bez `AuthMiddleware`): `GET /api/v1/qr/{token}` — info o maszynie (nazwa, numer, kategoria) bez danych osobowych; 404 dla nieistniejącego tokena
+- [ ] Backend (publiczne): `POST /api/v1/qr/{token}/incident` — tworzy `incidents` (`typ='sprzet'`, `equipment_id` z tokena, `zrodlo='qr'`, `zgloszona_przez=NULL`) z opisem i opcjonalnym typem
+- [ ] Backend (publiczne): `POST /api/v1/qr/{token}/daily-report` — tworzy `daily_vehicle_reports` (przebieg, opis OC, uwagi, `zrodlo='qr'`, `utworzony_przez=NULL`)
+- [ ] Backend: osobny rate limiting dla publicznych endpointów QR (np. 10 req/min na IP) — ochrona przed spamem
+- [ ] Backend: walidacja wejścia dla zgłoszeń QR (długość opisu, opcjonalne pole kontaktu), sanityzacja, oznaczanie zgłoszeń do weryfikacji w panelu
+- [ ] Frontend (autoryzowane): przycisk „Kod QR" w szczegółach/wierszu sprzętu (grupa pojazdy) → podgląd QR + URL + „Drukuj naklejkę"
+- [ ] Frontend (autoryzowane): widok wydruku naklejki (kod QR + nazwa/numer maszyny + krótka instrukcja „Zeskanuj, aby zgłosić awarię lub raport OC"), zoptymalizowany pod druk (A6/etykieta)
+- [ ] Frontend (publiczne): standalone route `/qr/{token}` (bez `AuthGuard`) — strona wyboru akcji (Zgłoś awarię / Raport obsługi codziennej) + uproszczone formularze mobilne
+- [ ] Frontend (publiczne): formularz zgłoszenia awarii z QR (opis, opcjonalnie telefon) + potwierdzenie z numerem zgłoszenia
+- [ ] Frontend (publiczne): formularz raportu OC z QR (przebieg, opis obsługi, uwagi) + potwierdzenie
+- [ ] Frontend (panel awarii/raportów): oznaczanie zgłoszeń ze źródła `qr` (badge „Z QR") i filtrowanie po `zrodlo`; możliwość weryfikacji/przypisania autora
+- [ ] Lokalizacje: nowy plik `locales/pl/qr.json` (etykiety publicznej strony, instrukcje, potwierdzenia) + rozszerzenie `sprzet.json` (przycisk QR, wydruk)
+- [ ] Testy: backend — (re)generacja tokena, unieważnienie starego, publiczne endpointy (200/404), tworzenie incident/OC z `zrodlo='qr'`, rate limiting, walidacja
+- [ ] Testy: backend — IDOR n/a (publiczne), ale weryfikacja że publiczny endpoint nie zwraca danych osobowych
+- [ ] Testy: frontend — strona `/qr/{token}` (wybór akcji, formularze, potwierdzenia, błąd 404 dla złego tokena), widok wydruku naklejki
 
 ---
 

@@ -1,0 +1,246 @@
+<!-- Nagłówek sekcji -->
+<div class="flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">{{ 'harmonogram.title' | translate }}</h1>
+    <p class="mt-1 text-gray-600">{{ 'harmonogram.subtitle' | translate }}</p>
+  </div>
+  <div class="flex gap-2">
+    <app-button variant="outline" [label]="'harmonogram.buttons.copy_week'" (clicked)="openCopyWeek()" />
+    <app-add-button [label]="'harmonogram.buttons.add'" (add)="openCreate()" />
+  </div>
+</div>
+
+<!-- Kalendarz -->
+<div class="mt-5">
+  @if (loading()) {
+    <div class="p-8 text-center text-gray-500">{{ 'common.table.loading' | translate }}</div>
+  }
+  <app-calendar [events]="calendarEvents()" (eventClick)="onCalendarEventClick($event)" />
+</div>
+<!-- ===== Modal: formularz zlecenia (create/edit) ===== -->
+@if (modalMode() === 'create' || modalMode() === 'edit') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ modalMode() === 'edit' ? ('harmonogram.form.edit_title' | translate) : ('harmonogram.form.add_title' | translate) }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
+      </div>
+
+      <app-form-input
+        type="text"
+        name="numer"
+        labelKey="harmonogram.form.number"
+        placeholderKey="harmonogram.form.number_placeholder"
+        [ngModel]="formNumer()"
+        (ngModelChange)="formNumer.set($event)"
+      />
+
+      <app-form-input
+        type="text"
+        name="klient"
+        labelKey="harmonogram.form.client_name"
+        placeholderKey="harmonogram.form.client_placeholder"
+        [ngModel]="formKlient()"
+        (ngModelChange)="formKlient.set($event)"
+      />
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.terminal' | translate }}</label>
+        <app-autocomplete-select
+          class="mt-1.5"
+          [options]="terminalOptions()"
+          [selectedValue]="formTerminalId()"
+          [placeholder]="'harmonogram.form.terminal_placeholder' | translate"
+          (selectionChange)="onTerminalSelected($event)"
+        />
+      </div>
+
+      <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.start_datetime' | translate }}</label>
+          <input
+            type="datetime-local"
+            class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+            [ngModel]="formStart()"
+            (ngModelChange)="formStart.set($event)"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.end_datetime' | translate }}</label>
+          <input
+            type="datetime-local"
+            class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+            [ngModel]="formEnd()"
+            (ngModelChange)="formEnd.set($event)"
+          />
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.scope' | translate }}</label>
+        <textarea
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          rows="3"
+          [placeholder]="'harmonogram.form.scope_placeholder' | translate"
+          [ngModel]="formZakres()"
+          (ngModelChange)="formZakres.set($event)"
+        ></textarea>
+      </div>
+
+      <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <app-form-input
+          type="number"
+          name="wartosc"
+          labelKey="harmonogram.form.value"
+          [ngModel]="formWartosc()"
+          (ngModelChange)="formWartosc.set($event)"
+        />
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.status' | translate }}</label>
+          <app-select
+            class="mt-1.5"
+            size="lg"
+            [options]="statusSelectOptions"
+            [ngModel]="formStatus()"
+            (ngModelChange)="formStatus.set($event)"
+          />
+        </div>
+      </div>
+      <!-- Przypisania (tylko w trybie edycji) -->
+      @if (modalMode() === 'edit' && detailsOrder()) {
+        <div class="mb-4 rounded-lg bg-gray-50 p-4">
+          <div class="mb-2 flex items-center justify-between">
+            <h4 class="text-sm font-semibold text-gray-700">{{ 'harmonogram.order.assigned_employees' | translate }}</h4>
+            <app-button variant="secondary" [label]="'harmonogram.buttons.assign_employee'" (clicked)="openAssignEmployee()" />
+          </div>
+          @if (detailsOrder()!.employees?.length) {
+            <ul class="space-y-1">
+              @for (e of detailsOrder()!.employees; track e.id) {
+                <li class="flex items-center justify-between rounded bg-white px-2 py-1 text-sm">
+                  <span>{{ e.employee_name ?? ('harmonogram.order.deleted_employee' | translate) }}</span>
+                  @if (e.employee_id !== null) {
+                    <app-icon-button icon="trash" tone="danger" size="sm" [ariaLabel]="'harmonogram.actions.remove_assignment' | translate" (clicked)="removeEmployee(e)" />
+                  }
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="text-xs text-gray-400">{{ 'harmonogram.order.no_employees' | translate }}</p>
+          }
+
+          <div class="mt-3 mb-2 flex items-center justify-between">
+            <h4 class="text-sm font-semibold text-gray-700">{{ 'harmonogram.order.assigned_equipment' | translate }}</h4>
+            <app-button variant="secondary" [label]="'harmonogram.buttons.assign_equipment'" (clicked)="openAssignEquipment()" />
+          </div>
+          @if (detailsOrder()!.equipment?.length) {
+            <ul class="space-y-1">
+              @for (eq of detailsOrder()!.equipment; track eq.id) {
+                <li class="flex items-center justify-between rounded bg-white px-2 py-1 text-sm">
+                  <span>{{ eq.equipment_nazwa || '—' }}</span>
+                  <app-icon-button icon="trash" tone="danger" size="sm" [ariaLabel]="'harmonogram.actions.remove_assignment' | translate" (clicked)="removeEquipment(eq)" />
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="text-xs text-gray-400">{{ 'harmonogram.order.no_equipment' | translate }}</p>
+          }
+        </div>
+      }
+
+      <div class="flex justify-end gap-3">
+        @if (modalMode() === 'edit') {
+          <app-button variant="danger" [label]="'harmonogram.buttons.delete'" (clicked)="deleteOrder()" />
+        }
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeModal()" />
+        <app-button variant="primary" [label]="'harmonogram.buttons.save'" [disabled]="modalSaving()" (clicked)="saveModal()" />
+      </div>
+    </div>
+  </div>
+}
+<!-- ===== Modal: przypisz pracownika ===== -->
+@if (modalMode() === 'assignEmployee' && assignOrder()) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'harmonogram.assign.employee_title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAssign()" />
+      </div>
+      <p class="mb-4 text-sm text-gray-600">{{ assignOrder()?.numer_zlecenia }}</p>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.assign.select_employee' | translate }}</label>
+        <app-autocomplete-select
+          class="mt-1.5"
+          [options]="employeeOptions()"
+          [selectedValue]="assignEmployeeId()"
+          [placeholder]="'harmonogram.assign.select_employee' | translate"
+          (selectionChange)="onAssignEmployeeSelected($event)"
+        />
+      </div>
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeAssign()" />
+        <app-button variant="primary" [label]="'harmonogram.assign.add'" [disabled]="assignEmployeeId() === null" (clicked)="saveAssignEmployee()" />
+      </div>
+    </div>
+  </div>
+}
+<!-- ===== Modal: przypisz sprzęt ===== -->
+@if (modalMode() === 'assignEquipment' && assignOrder()) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'harmonogram.assign.equipment_title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAssign()" />
+      </div>
+      <p class="mb-4 text-sm text-gray-600">{{ assignOrder()?.numer_zlecenia }}</p>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.assign.select_equipment' | translate }}</label>
+        <app-autocomplete-select
+          class="mt-1.5"
+          [options]="equipmentOptions()"
+          [selectedValue]="assignEquipmentId()"
+          [placeholder]="'harmonogram.assign.select_equipment' | translate"
+          (selectionChange)="onAssignEquipmentSelected($event)"
+        />
+      </div>
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeAssign()" />
+        <app-button variant="primary" [label]="'harmonogram.assign.add'" [disabled]="assignEquipmentId() === null" (clicked)="saveAssignEquipment()" />
+      </div>
+    </div>
+  </div>
+}
+<!-- ===== Modal: kopiuj tydzień ===== -->
+@if (modalMode() === 'copyWeek') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'harmonogram.copy_week.title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeCopyWeek()" />
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.copy_week.source_week_start' | translate }}</label>
+        <input
+          type="date"
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          [ngModel]="copyWeekSource()"
+          (ngModelChange)="copyWeekSource.set($event)"
+        />
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.copy_week.target_week_start' | translate }}</label>
+        <input
+          type="date"
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          [ngModel]="copyWeekTarget()"
+          (ngModelChange)="copyWeekTarget.set($event)"
+        />
+      </div>
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeCopyWeek()" />
+        <app-button variant="primary" [label]="'harmonogram.copy_week.submit'" [disabled]="copyWeekSaving()" (clicked)="doCopyWeek()" />
+      </div>
+    </div>
+  </div>
+}

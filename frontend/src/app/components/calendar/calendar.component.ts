@@ -123,9 +123,6 @@ export class CalendarComponent {
   @Input({ required: true }) set events(value: CalendarEvent[]) {
     this._events.set(value);
   }
-  @Input() set view(value: CalendarView) {
-    this._view.set(value);
-  }
 
   @Output() eventClick = new EventEmitter<CalendarEvent>();
   @Output() dateChange = new EventEmitter<Date>();
@@ -135,7 +132,6 @@ export class CalendarComponent {
   private readonly _view = signal<CalendarView>('month');
   private readonly _currentDate = signal<Date>(new Date());
 
-  readonly events = this._events.asReadonly();
   readonly view = this._view.asReadonly();
 
   readonly views: CalendarView[] = ['day', 'week', 'month'];

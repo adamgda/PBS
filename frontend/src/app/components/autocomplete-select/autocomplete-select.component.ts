@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, ChangeDetectionStrategy, inject, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -17,6 +17,11 @@ export interface AutocompleteOption {
  *
  * Posiada przycisk kasowania (X) pokazywany gdy wybrano wartość lub wpisano tekst —
  * emituje `selectionChange(null)` oraz `cleared`, by parent mógł wyczyścić selekcję.
+ *
+ * Panel rozwijany jest renderowany z `position: fixed` i współrzędnymi wyliczanymi
+ * z `getBoundingClientRect()` pola wejściowego (pętla rAF w trakcie otwarcia), dzięki
+ * czemu unika obcinania przez `overflow` przodków (np. modale z `overflow-y-auto`).
+ * Brak transformed-ancestora w layoutzie PBS → `fixed` pozycjonuje względem viewportu.
  */
 @Component({
   selector: 'app-autocomplete-select',
@@ -26,6 +31,7 @@ export interface AutocompleteOption {
   template: `
     <div class="relative">
       <input
+        #inputEl
         type="text"
         class="w-full px-3 py-2 pr-9 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent"
         [placeholder]="placeholder()"
@@ -35,7 +41,7 @@ export interface AutocompleteOption {
         (blur)="onBlur()"
         autocomplete="off"
         role="combobox"
-        aria-expanded="isOpen()"
+        [attr.aria-expanded]="isOpen()"
         aria-autocomplete="list"
       />
 
@@ -53,7 +59,11 @@ export interface AutocompleteOption {
 
       @if (isOpen() && filteredOptions().length > 0) {
         <div
-          class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
+          class="fixed z-[70] mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-auto"
+          [style.top.px]="panelTop()"
+          [style.left.px]="panelLeft()"
+          [style.width.px]="panelWidth()"
+          [style.maxHeight.px]="panelMaxHeight()"
           role="listbox"
         >
           @for (opt of filteredOptions(); track opt.value) {
@@ -75,7 +85,7 @@ export interface AutocompleteOption {
     </div>
   `,
 })
-export class AutocompleteSelectComponent {
+export class AutocompleteSelectComponent implements OnDestroy {
   @Input('options') set optionsInput(value: AutocompleteOption[]) {
     this._options.set(value);
   }
@@ -124,11 +134,33 @@ export class AutocompleteSelectComponent {
 
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** Referencja do pola wejściowego — źródło współrzędnych panelu. */
+  @ViewChild('inputEl') inputEl?: ElementRef<HTMLInputElement>;
+
+  /** Współrzędne panelu (px) wyliczane z pola wejściowego. */
+  private readonly _panelTop = signal<number>(0);
+  private readonly _panelLeft = signal<number>(0);
+  private readonly _panelWidth = signal<number>(0);
+  private readonly _panelMaxHeight = signal<number>(240);
+  readonly panelTop = this._panelTop.asReadonly();
+  readonly panelLeft = this._panelLeft.asReadonly();
+  readonly panelWidth = this._panelWidth.asReadonly();
+  readonly panelMaxHeight = this._panelMaxHeight.asReadonly();
+
+  /** Identyfikator pętli rAF śledzącej pozycję pola (scroll/resize/modal-scroll). */
+  private rafId: number | null = null;
+
+  ngOnDestroy(): void {
+    this.stopTracking();
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+  }
+
   onSearch(value: string): void {
     this._searchText.set(value);
     // Wpisywanie tekstu odznacza bieżącą selekcję (wartość nie pasuje już do etykiety).
     this._selectedValue.set(null);
     this._isOpen.set(true);
+    this.startTracking();
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       this.searchChange.emit(value);
@@ -137,17 +169,22 @@ export class AutocompleteSelectComponent {
 
   onFocus(): void {
     this._isOpen.set(true);
+    this.startTracking();
   }
 
   onBlur(): void {
     // Opóźnienie, aby kliknięcie opcji zostało zarejestrowane
-    setTimeout(() => this._isOpen.set(false), 200);
+    setTimeout(() => {
+      this._isOpen.set(false);
+      this.stopTracking();
+    }, 200);
   }
 
   selectOption(opt: AutocompleteOption): void {
     this._selectedValue.set(opt.value);
     this._searchText.set(opt.label);
     this._isOpen.set(false);
+    this.stopTracking();
     this.selectionChange.emit(opt);
   }
 
@@ -156,8 +193,49 @@ export class AutocompleteSelectComponent {
     this._selectedValue.set(null);
     this._searchText.set('');
     this._isOpen.set(false);
+    this.stopTracking();
     this.selectionChange.emit(null);
     this.cleared.emit();
+  }
+
+  /** Uruchamia pętlę rAF odświeżającą współrzędne panelu dopóki jest otwarty. */
+  private startTracking(): void {
+    if (this.rafId !== null) return;
+    const tick = (): void => {
+      this.updatePanelPosition();
+      this.rafId = requestAnimationFrame(tick);
+    };
+    this.rafId = requestAnimationFrame(tick);
+  }
+
+  private stopTracking(): void {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+  }
+
+  /**
+   * Wylicza pozycję panelu względem viewportu z `getBoundingClientRect()` pola.
+   * Jeśli poniżej pola brakuje miejsca, panel jest otwierany nad polem.
+   */
+  private updatePanelPosition(): void {
+    const el = this.inputEl?.nativeElement;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const gap = 4;
+    const maxPanel = 240;
+    const spaceBelow = window.innerHeight - rect.bottom - gap;
+    const showAbove = spaceBelow < 100 && rect.top > 100;
+    this._panelLeft.set(Math.max(8, rect.left));
+    this._panelWidth.set(rect.width);
+    if (showAbove) {
+      this._panelTop.set(Math.max(8, rect.top - gap - Math.min(maxPanel, rect.top - gap)));
+      this._panelMaxHeight.set(Math.min(maxPanel, rect.top - gap));
+    } else {
+      this._panelTop.set(rect.bottom + gap);
+      this._panelMaxHeight.set(Math.min(maxPanel, Math.max(80, spaceBelow)));
+    }
   }
 
   private updateSearchText(): void {

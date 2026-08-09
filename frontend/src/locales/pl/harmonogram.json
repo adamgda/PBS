@@ -1,9 +1,31 @@
 {
   "title": "Harmonogram",
+  "subtitle": "Zarządzanie zleceniami — kalendarz tygodniowy/miesięczny/dzienny, przypisywanie pracowników i sprzętu, kopiowanie tygodnia",
   "view": {
     "week": "Tydzień",
     "month": "Miesiąc",
     "day": "Dzień"
+  },
+  "list": {
+    "title": "Lista zleceń",
+    "all_orders": "Wszystkie zlecenia",
+    "number": "Numer zlecenia",
+    "client": "Klient",
+    "terminal": "Terminal",
+    "start_date": "Data rozpoczęcia",
+    "end_date": "Data zakończenia",
+    "value": "Wartość (PLN)",
+    "status": "Status",
+    "actions": "Akcje"
+  },
+  "filters": {
+    "number": "Numer",
+    "client": "Klient",
+    "terminal": "Terminal",
+    "status": "Status",
+    "date_from": "Od",
+    "date_to": "Do",
+    "search_placeholder": "Szukaj po numerze"
   },
   "order": {
     "title": "Zlecenie",
@@ -17,25 +39,62 @@
     "status": "Status",
     "assigned_employees": "Przypisani pracownicy",
     "assigned_equipment": "Przypisany sprzęt",
-    "role": "Stanowisko"
+    "no_employees": "Brak przypisanych pracowników",
+    "no_equipment": "Brak przypisanego sprzętu",
+    "deleted_employee": "Pracownik usunięty"
   },
   "form": {
     "add_title": "Dodaj zlecenie",
     "edit_title": "Edytuj zlecenie",
     "number": "Numer zlecenia",
+    "number_placeholder": "np. ZL-2026-001",
     "client_name": "Nazwa klienta",
+    "client_placeholder": "np. Baltic Operator Sp. z o.o.",
     "terminal": "Terminal",
+    "terminal_placeholder": "Wybierz terminal",
     "start_datetime": "Data i godzina rozpoczęcia",
     "end_datetime": "Data i godzina zakończenia",
     "scope": "Zakres prac",
+    "scope_placeholder": "Opis zakresu prac",
     "value": "Wartość (PLN)",
     "status": "Status"
+  },
+  "status": {
+    "nowe": "Nowe",
+    "w_realizacji": "W realizacji",
+    "zakonczone": "Zakończone"
   },
   "actions": {
     "copy_week": "Kopiuj tydzień jako szablon",
     "assign_employee": "Przypisz pracownika",
     "assign_equipment": "Przypisz sprzęt",
     "remove_assignment": "Usuń przypisanie"
+  },
+  "assign": {
+    "employee_title": "Przypisz pracownika do zlecenia",
+    "equipment_title": "Przypisz sprzęt do zlecenia",
+    "select_employee": "Wybierz pracownika",
+    "select_equipment": "Wybierz sprzęt",
+    "add": "Przypisz",
+    "added_success": "Przypisano",
+    "removed_success": "Usunięto przypisanie"
+  },
+  "copy_week": {
+    "title": "Kopiuj tydzień jako szablon",
+    "source_week_start": "Tydzień źródłowy (poniedziałek)",
+    "target_week_start": "Tydzień docelowy (poniedziałek)",
+    "submit": "Kopiuj",
+    "copied": "Skopiowano zleceń: {{count}}"
+  },
+  "buttons": {
+    "add": "Dodaj zlecenie",
+    "save": "Zapisz zlecenie",
+    "edit": "Edytuj zlecenie",
+    "delete": "Usuń zlecenie",
+    "assign_employee": "Pracownicy",
+    "assign_equipment": "Sprzęt",
+    "details": "Szczegóły",
+    "copy_week": "Kopiuj tydzień"
   },
   "messages": {
     "deleted": {
@@ -44,8 +103,22 @@
     "saved": {
       "success": "Zapisano zlecenie {{number}}"
     },
+    "created": {
+      "success": "Utworzono zlecenie {{number}}"
+    },
+    "updated": {
+      "success": "Zaktualizowano zlecenie {{number}}"
+    },
     "copied": {
-      "success": "Skopiowano tydzień jako szablon"
-    }
+      "success": "Skopiowano tydzień jako szablon ({{count}})"
+    },
+    "delete_confirm_title": "Usuwanie zlecenia",
+    "delete_confirm_message": "Czy na pewno chcesz usunąć zlecenie {{number}}? Operacja jest nieodwracalna.",
+    "number_required": "Numer zlecenia jest wymagany",
+    "client_required": "Nazwa klienta jest wymagana",
+    "terminal_required": "Terminal jest wymagany",
+    "dates_required": "Daty rozpoczęcia i zakończenia są wymagane",
+    "date_order": "Data zakończenia musi być po dacie rozpoczęcia",
+    "load_error": "Nie udało się pobrać listy zleceń"
   }
 }

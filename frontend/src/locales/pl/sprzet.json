@@ -1,25 +1,42 @@
 {
   "title": "Sprzęt",
+  "subtitle": "Zarządzanie sprzętem portowym — pojazdy i inne, przypisania, przeglądy, oś czasu",
   "list": {
     "title": "Lista sprzętu",
+    "all_equipment": "Cały sprzęt",
     "category": "Kategoria",
     "name": "Nazwa",
     "serial_number": "Numer seryjny",
     "employee": "Pracownik",
     "terminal": "Terminal",
+    "mileage": "Przebieg (km)",
     "status": "Status",
-    "category_vehicle": "Pojazdy",
-    "category_other": "Inne"
+    "category_vehicle": "Pojazd",
+    "category_other": "Inne",
+    "unassigned": "Brak przypisania"
+  },
+  "filters": {
+    "name": "Nazwa",
+    "category": "Kategoria",
+    "employee": "Pracownik",
+    "terminal": "Terminal",
+    "status": "Status",
+    "status_active": "Aktywne",
+    "status_inactive": "Nieaktywne",
+    "search_placeholder": "Szukaj po nazwie"
   },
   "form": {
     "add_title": "Dodaj sprzęt",
     "edit_title": "Edytuj sprzęt",
     "category": "Kategoria",
     "name": "Nazwa",
+    "name_placeholder": "np. Ford Transit",
     "serial_number": "Numer seryjny",
+    "serial_number_placeholder": "np. FT-2024-001",
     "is_active": "Aktywny",
     "assign_employee": "Przypisz pracownika",
-    "assign_terminal": "Przypisz terminal"
+    "assign_terminal": "Przypisz terminal",
+    "vehicle_section": "Dane pojazdu"
   },
   "vehicle": {
     "last_mileage": "Ostatni przebieg (km)",
@@ -39,22 +56,29 @@
   "service_plans": {
     "title": "Planowanie przeglądów",
     "inspection_type": "Typ przeglądu",
+    "inspection_type_placeholder": "np. Serwis olejowy",
     "interval_km": "Interwał (km)",
     "interval_days": "Interwał (dni)",
     "last_done": "Ostatnie wykonanie",
     "next_planned": "Następny planowany",
     "needs_service": "Wymaga serwisu",
-    "add": "Dodaj plan przeglądu"
+    "add": "Dodaj plan przeglądu",
+    "edit": "Edytuj plan",
+    "save": "Zapisz plan",
+    "empty": "Brak planów przeglądów"
   },
-  "handover": {
-    "title": "Protokół przekazania zmiany",
-    "handover_date": "Data/czas przekazania",
-    "handing_operator": "Operator zdający",
-    "receiving_operator": "Operator przyjmujący",
-    "meter_state": "Stan licznika",
-    "notes": "Uwagi o uszkodzeniach",
-    "oc_result": "Wynik OC",
-    "report_incident": "Zgłoś awarię z protokołu"
+  "buttons": {
+    "add": "Dodaj sprzęt",
+    "save": "Zapisz sprzęt",
+    "edit": "Edytuj sprzęt",
+    "delete": "Usuń sprzęt",
+    "assign": "Szybkie przypisanie",
+    "details": "Szczegóły",
+    "add_plan": "Dodaj plan"
+  },
+  "status": {
+    "active": "Aktywny",
+    "inactive": "Nieaktywny"
   },
   "messages": {
     "deleted": {
@@ -62,6 +86,32 @@
     },
     "saved": {
       "success": "Zapisano dane sprzętu {{name}}"
-    }
+    },
+    "created": {
+      "success": "Utworzono sprzęt {{name}}"
+    },
+    "updated": {
+      "success": "Zaktualizowano sprzęt {{name}}"
+    },
+    "assigned": {
+      "success": "Zaktualizowano przypisanie sprzętu {{name}}"
+    },
+    "plan_created": {
+      "success": "Dodano plan przeglądu: {{type}}"
+    },
+    "plan_updated": {
+      "success": "Zaktualizowano plan przeglądu: {{type}}"
+    },
+    "plan_deleted": {
+      "success": "Usunięto plan przeglądu"
+    },
+    "delete_confirm_title": "Usuwanie sprzętu",
+    "delete_confirm_message": "Czy na pewno chcesz usunąć sprzęt {{name}}? Operacja jest nieodwracalna.",
+    "delete_plan_confirm_title": "Usuwanie planu przeglądu",
+    "delete_plan_confirm_message": "Czy na pewno chcesz usunąć ten plan przeglądu?",
+    "load_error": "Nie udało się pobrać listy sprzętu",
+    "name_required": "Nazwa jest wymagana",
+    "category_required": "Kategoria jest wymagana",
+    "inspection_type_required": "Typ przeglądu jest wymagany"
   }
 }

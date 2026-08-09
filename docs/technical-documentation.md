@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Dokumentacja Techniczna
 
-> **Wersja dokumentu:** 1.3  
-> **Data:** 2026-08-07  
+> **Wersja dokumentu:** 1.4  
+> **Data:** 2026-08-09  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -626,6 +626,7 @@ Request → CORS Middleware → Auth Middleware → Permission Middleware
 | kategoria | ENUM('pojazd', 'inne') | |
 | nazwa | VARCHAR(255) | |
 | numer_seryjny | VARCHAR(100) | NULLABLE |
+| qr_token | CHAR(64) UNIQUE | NULLABLE — publiczny token maszyny dla kodu QR (podstrona `/qr/{token}`) |
 | current_employee_id | INT UNSIGNED FK → employees.id | NULLABLE |
 | current_terminal_id | INT UNSIGNED FK → terminals.id | NULLABLE |
 | is_active | BOOLEAN | |
@@ -703,7 +704,9 @@ Request → CORS Middleware → Auth Middleware → Permission Middleware
 |---|---|---|
 | id | INT UNSIGNED AUTO_INCREMENT PK | |
 | order_id | INT UNSIGNED FK → orders.id | |
-| employee_id | INT UNSIGNED FK → employees.id | |
+| employee_id | INT UNSIGNED FK → employees.id | NULLABLE (ON DELETE SET NULL — zachowanie historii) |
+| rola | ENUM('operator','brygadzista','sztauer','lukowy','operator_zurawia') | NULLABLE — stanowisko pełnione w tym zleceniu (rola dnia) |
+| godziny | DECIMAL(5,2) | NULLABLE — przepracowane godziny w tym zleceniu (do rozliczenia × stawka) |
 
 #### 8.1.11 Przypisania sprzętu do zlecenia (`order_equipment`)
 
@@ -804,6 +807,51 @@ Zasady:
 - Notatki są prywatne i przypisane wyłącznie do konta (`user_id`) — brak współdzielenia między użytkownikami
 - IDOR protection obowiązkowe: każda operacja musi weryfikować, że `user_notes.user_id` odpowiada ID zalogowanego użytkownika (z JWT)
 - Usunięcie użytkownika (`DELETE /api/v1/users/{id}`) kaskadowo usuwa jego notatki (lub anonimizuje — zależnie od polityki retencji)
+
+#### 8.1.19 Stawki godzinowe pracownika (`employee_rates`)
+
+Historia zmian stawki godzinowej per pracownik. Aktualna stawka = rekord z `data_do IS NULL` (lub najnowszy). Pozwala rozliczać godziny po stawce obowiązującej w dacie zlecenia.
+
+| Kolumna | Typ | Opis |
+|---|---|---|
+| id | INT UNSIGNED AUTO_INCREMENT PK | |
+| employee_id | INT UNSIGNED FK → employees.id | ON DELETE CASCADE |
+| stawka_godzinowa | DECIMAL(10,2) | Stawka PLN/h |
+| data_od | DATE | Data wejścia w życie stawki |
+| data_do | DATE | NULLABLE — data zakończenia obowiązywania (NULL = aktualna) |
+| created_at | DATETIME | |
+| updated_at | DATETIME | |
+
+#### 8.1.20 Urlopy pracowników (`employee_vacations`)
+
+| Kolumna | Typ | Opis |
+|---|---|---|
+| id | INT UNSIGNED AUTO_INCREMENT PK | |
+| employee_id | INT UNSIGNED FK → employees.id | ON DELETE CASCADE |
+| data_od | DATE | Pierwszy dzień urlopu |
+| data_do | DATE | Ostatni dzień urlopu |
+| typ | ENUM('wypoczynkowy','na_zadanie','L4') | Typ urlopu |
+| status | ENUM('oczekujacy','zatwierdzony','odrzucony','zrealizowany') | Status wniosku |
+| created_at | DATETIME | |
+| updated_at | DATETIME | |
+
+#### 8.1.21 Faktury wystawione (`invoices`)
+
+Faktury powiązane ze zleceniami, z kategoryzacją terminu wystawienia (po zleceniu / po tygodniu / koniec miesiąca) — pozwala zweryfikować, czy żadna faktura nie została pominięta.
+
+| Kolumna | Typ | Opis |
+|---|---|---|
+| id | INT UNSIGNED AUTO_INCREMENT PK | |
+| order_id | INT UNSIGNED FK → orders.id | NULLABLE (ON DELETE SET NULL) — powiązane zlecenie |
+| numer_faktury | VARCHAR(50) UNIQUE | Numer faktury |
+| klient_nazwa | VARCHAR(255) | Nazwa klienta |
+| kwota_pln | DECIMAL(12,2) | Kwota brutto |
+| data_wystawienia | DATE | Data wystawienia |
+| termin_platnosci | DATE | NULLABLE — termin płatności |
+| status | ENUM('wystawiona','zaplacona','przeterminowana') | Status płatności |
+| typ_wystawienia | ENUM('po_zleceniu','po_tygodniu','koniec_miesiaca') | Termin wystawienia (wg którego cyklu) |
+| created_at | DATETIME | |
+| updated_at | DATETIME | |
 
 ### 8.2 Diagram relacji (uproszczony)
 
@@ -968,10 +1016,56 @@ Frontend (Angular) dodatkowo:
 
 ### 10.2 Pracownicy
 
-- Widok: tabela z filtrowaniem (imię, nazwisko, terminal, sprzęt)
-- Akcje: dodaj, edytuj, usuń, szybkie przypisanie terminala/sprzętu
+- Widok: tabela z filtrowaniem (imię, nazwisko, terminal, sprzęt, rola dnia, status urlopu) + wersja mobilna jako karty
+- Akcje: dodaj, edytuj, usuń, szybkie przypisanie terminala/sprzętu, zmiana stawki, zarządzanie urlopami
 - Podstrona edycji: dane podstawowe + zakładka "Certyfikaty i uprawnienia"
 - Certyfikaty: lista dokumentów z detekcją wygaśnięcia (30 dni przed = alert)
+
+**Stawka godzinowa (per pracownik, z możliwością zmiany):**
+
+- Każdy pracownik posiada aktualną stawkę godzinową (PLN/h) edytowalną w formularzu pracownika oraz dedykowanym oknie „Zmień stawkę" (ikona monety).
+- Zmiana stawki wymaga podania **daty wejścia w życie** — system przechowuje pełną historię zmian w tabeli `employee_rates`. Godziny przepracowane przed tą datą rozliczane są po starej stawce, po dacie — po nowej (historyczność rozliczeń).
+- W tabeli i kartach wyświetlana jest aktualna stawka, suma godzin w miesiącu oraz wyliczone wynagrodzenie (godziny × stawka).
+
+**Rola dnia (przypisanie stanowiska na dany dzień):**
+
+- Do każdego pracownika można przypisać stanowisko pełnione danego dnia (kolumna „Rola (dziś)"):
+  - `operator`
+  - `brygadzista`
+  - `sztauer`
+  - `lukowy`
+  - `operator żurawia`
+- Przypisanie roli realizowane jest na poziomie zlecenia (`order_employees.rola`) — pracownik może pełnić różne role w różnych zleceniach/portach.
+- W widoku listy rola „dziś" jest agregowana z bieżących/najświeższych przypisań zleceniowych.
+
+**Rozliczenie godzin i wynagrodzeń:**
+
+- **Per pracownik:** suma godzin przepracowanych w miesiącu (z `order_employees.godziny`) × aktualna stawka = wynagrodzenie. Wynagrodzenie uwzględnia historyczne stawki (rozliczenie po dacie wejścia w życie).
+- **Per port (terminal):** osobna sekcja „Rozliczenie godzin per port" sumuje godziny i wynagrodzenia pracowników zgrupowane wg terminala (port = `orders.terminal_id`). Tabela: Port · Liczba pracowników · Suma godzin · Suma wynagrodzeń, z wierszem „Razem (wszystkie porty)".
+- **Suma wszystkich przepracowanych godzin we wszystkich portach** — prezentowana w pasku podsumowania (KPI) oraz jako wiersz totalny w rozliczeniu per port.
+- Pasek podsumowania (KPI): suma godzin (mc, wszystkie porty), suma wynagrodzeń (mc) z podziałem na okresy **1–15** i **15–23**, liczba pracowników na urlopie.
+
+**Urlopy pracowników:**
+
+- Dedykowane okno „Urlopy" (ikona zegara) per pracownik oraz globalny przycisk „Urlopy" w toolbarze.
+- Rejestr urlopów: data od/do, typ (`wypoczynkowy`, `na żądanie`, `L4`), status (`oczekujacy`, `zatwierdzony`, `odrzucony`, `zrealizowany`) — tabela `employee_vacations`.
+- Pracownik na urlopie jest automatycznie wykluczony z listy dostępnych do przypisania w harmonogramie/zleceniach oraz oznaczony w liście pracowników (pill „Urlop").
+- Licznik pracowników na urlopie w filtrach (chip „Na urlopie") i w pasku podsumowania.
+
+**Wynagrodzenia miesięczne (z podziałem 1–15 i 15–23):**
+
+- Miesięczne zestawienie wynagrodzeń wszystkich pracowników z podziałem na dwa okresy rozliczeniowe: **1–15** oraz **15–23** dnia miesiąca (zgodnie z wymogami wypłat).
+- Każdy okres sumuje godziny × stawka dla wszystkich pracowników; wartości wyświetlane w pasku podsumowania i w dedykowanym widoku rozliczenia per port (z przełącznikiem okresu).
+- Dane bazują na datach zleceń (`orders.data_rozpoczecia`) — godziny pracownika ze zleceń przypadających w danym okresie.
+
+**Faktury wystawione (osobna sekcja / ikona):**
+
+- Osobna sekcja „Faktury" (ikona dokumentu/faktury) prezentująca wystawione faktury powiązane ze zleceniami (`invoices`), z odróżnieniem terminu wystawienia:
+  - `po_zleceniu` — wystawiona zaraz po zakończonym zleceniu
+  - `po_tygodniu` — wystawiana po zakończonym tygodniu
+  - `koniec_miesiaca` — wystawiana na koniec miesiąca
+- Status faktury: `wystawiona`, `zaplacona`, `przeterminowana`. Kolumna „termin wystawienia" pozwala zweryfikować, czy żadna faktura nie została pominięta (zleconia zakończone bez wystawionej faktury = oznaczone do obsługi).
+- Filtrowanie po statusie, terminie wystawienia, kliencie i dacie; alerty o przeterminowanych/niewystawionych fakturach.
 
 ### 10.3 Sprzęt
 
@@ -980,6 +1074,16 @@ Frontend (Angular) dodatkowo:
 - Akcje: dodaj, edytuj, usuń, szybkie przypisanie
 - Timeline: oś czasu dla każdego sprzętu
 - Planowanie przeglądów: konfiguracja interwałów, automatyczne oznaczanie wymagających serwisu
+
+**Kody QR dla maszyn z grupy pojazdów (generator QR):**
+
+- Dla każdego sprzętu z kategorii `pojazd` (oraz opcjonalnie `inne`) dostępny jest **generator kodu QR** prowadzącego do publicznej podstrony zgłaszania awarii danej maszyny albo raportowania jej obsługi codziennej.
+- Kod QR koduje publiczny URL z unikalnym tokenem maszyny (np. `https://app.pbs.example.com/qr/{qr_token}`), gdzie `qr_token` to kolumna `equipment.qr_token` (CHAR(64), `UNIQUE`, generowany losowo — nie jest to `id`, aby nie ujawniać identyfikatorów wewnętrznych).
+- Podstrona `/qr/{token}` jest **publiczna** (bez logowania) i pozwala wykonać jedną z dwóch akcji dla danej maszyny:
+  1. **Zgłoszenie awarii** — tworzy rekord `incidents` (`typ='sprzet'`, `equipment_id` z tokena) z opisem podanym przez zgłaszającego.
+  2. **Raport obsługi codziennej (OC)** — tworzy rekord `daily_vehicle_reports` (przebieg, opis obsługi, uwagi) powiązany z maszyną.
+- Generator udostępnia **wersję do wydruku** (kod QR + nazwa/numer maszyny + krótka instrukcja) — naklejana w maszynie, aby operator mógł zeskanować telefonem i zgłosić awarię lub raport bez logowania do aplikacji.
+- Publiczny endpoint zgłoszeniowy jest objęty **rate limitingiem** (ochrona przed spamem) oraz walidacją tokena (404 dla nieistniejącego/wygasłego). Zgłoszenia z QR tworzą `incidents`/`daily_vehicle_reports` z oznaczeniem źródła `qr` i `zgloszona_przez = NULL` (anonimowe) — do weryfikacji w panelu awarii/raportów.
 
 ### 10.4 Terminale
 
@@ -1060,12 +1164,18 @@ Frontend (Angular) dodatkowo:
 
 | Metoda | Endpoint | Opis |
 |---|---|---|
-| GET | `/api/v1/employees` | Lista pracowników (z filtrami) |
+| GET | `/api/v1/employees` | Lista pracowników (z filtrami: imię, nazwisko, terminal, sprzęt, rola, status urlopu) |
 | POST | `/api/v1/employees` | Dodanie pracownika |
-| GET | `/api/v1/employees/{id}` | Szczegóły pracownika (z dokumentami) |
+| GET | `/api/v1/employees/{id}` | Szczegóły pracownika (z dokumentami, aktualną stawką, urlopami) |
 | PUT | `/api/v1/employees/{id}` | Edycja pracownika |
 | DELETE | `/api/v1/employees/{id}` | Usunięcie pracownika |
 | PATCH | `/api/v1/employees/{id}/assignment` | Szybkie przypisanie terminala/sprzętu |
+| GET | `/api/v1/employees/{id}/rates` | Historia stawek godzinowych (chronologicznie) |
+| POST | `/api/v1/employees/{id}/rates` | Nowa stawka godzinowa (z `data_od` — wejście w życie, zamyka poprzednią) |
+| GET | `/api/v1/employees/{id}/vacations` | Lista urlopów pracownika |
+| POST | `/api/v1/employees/{id}/vacations` | Dodanie urlopu (od/do, typ, status) |
+| PATCH | `/api/v1/vacations/{id}/status` | Zmiana statusu urlopu (zatwierdź/odrzuć) |
+| DELETE | `/api/v1/vacations/{id}` | Usunięcie urlopu |
 
 ### 11.4 Dokumenty pracownika
 
@@ -1087,6 +1197,8 @@ Frontend (Angular) dodatkowo:
 | DELETE | `/api/v1/equipment/{id}` | Usunięcie sprzętu |
 | PATCH | `/api/v1/equipment/{id}/assignment` | Szybkie przypisanie |
 | GET | `/api/v1/equipment/{id}/timeline` | Oś czasu sprzętu |
+| POST | `/api/v1/equipment/{id}/qr-token` | (Re)generacja publicznego tokena QR maszyny |
+| GET | `/api/v1/equipment/{id}/qr` | Kod QR maszyny (PNG/SVG + URL do wydruku naklejki) |
 
 ### 11.6 Pojazdy — przeglądy
 
@@ -1184,6 +1296,40 @@ Endpointy prywatne — każda operacja ograniczona do notatek właściciela (`us
 | DELETE | `/api/v1/notes/{id}` | Usunięcie pojedynczej notatki |
 | DELETE | `/api/v1/notes` | Wyczyszczenie całej listy notatek (z filtrem `?is_done=1` — tylko wykonane, lub bez filtra — wszystkie) |
 
+### 11.15 Rozliczenia pracowników (godziny i wynagrodzenia)
+
+Zestawienia rozliczeniowe bazujące na `order_employees.godziny` × stawka z `employee_rates` (po dacie zlecenia). Parametr `?period=` przyjmuje `all`, `1-15`, `15-23`.
+
+| Metoda | Endpoint | Opis |
+|---|---|---|
+| GET | `/api/v1/employees/settlement?month=YYYY-MM&period=` | Rozliczenie per pracownik (godziny, stawka, wynagrodzenie) za miesiąc/okres |
+| GET | `/api/v1/employees/settlement/by-port?month=YYYY-MM&period=` | Rozliczenie per port (terminal): pracownicy, suma godzin, suma wynagrodzeń |
+| GET | `/api/v1/employees/summary?month=YYYY-MM` | Pasek podsumowania: suma godzin (wszystkie porty), suma wynagrodzeń z podziałem 1–15 / 15–23, liczba na urlopie |
+
+### 11.16 Faktury wystawione
+
+Faktury powiązane ze zleceniami (`invoices`), z kategoryzacją terminu wystawienia (`po_zleceniu`, `po_tygodniu`, `koniec_miesiaca`).
+
+| Metoda | Endpoint | Opis |
+|---|---|---|
+| GET | `/api/v1/invoices` | Lista faktur (filtry: status, typ_wystawienia, klient, data) |
+| POST | `/api/v1/invoices` | Wystawienie faktury (powiązanie z `order_id` opcjonalne) |
+| GET | `/api/v1/invoices/{id}` | Szczegóły faktury |
+| PUT | `/api/v1/invoices/{id}` | Edycja faktury |
+| DELETE | `/api/v1/invoices/{id}` | Usunięcie faktury |
+| PATCH | `/api/v1/invoices/{id}/status` | Zmiana statusu (`zaplacona`/`przeterminowana`) |
+| GET | `/api/v1/invoices/missing` | Zlecenia zakończone bez wystawionej faktury (kontrola pominięć) |
+
+### 11.17 Publiczne kody QR (maszyny)
+
+Endpointy **publiczne** (bez `AuthMiddleware`) — obsługa zgłoszeń z naklejki QR naklejonej w maszynie. Objęte osobnym rate limitingiem (ochrona przed spamem) oraz walidacją `qr_token` (404 dla nieistniejącego).
+
+| Metoda | Endpoint | Opis |
+|---|---|---|
+| GET | `/api/v1/qr/{token}` | Publiczne info o maszynie (nazwa, numer, kategoria) — bez danych osobowych |
+| POST | `/api/v1/qr/{token}/incident` | Zgłoszenie awarii maszyny z QR (`incidents`, źródło `qr`, anonimowe) |
+| POST | `/api/v1/qr/{token}/daily-report` | Raport obsługi codziennej (OC) z QR (`daily_vehicle_reports`, źródło `qr`) |
+
 ---
 
 ## 12. Modele danych
@@ -1211,6 +1357,32 @@ export interface Employee {
   current_sprzet?: Equipment;
   is_active: boolean;
   documents?: EmployeeDocument[];
+  current_rate?: number;        // aktualna stawka godzinowa (PLN/h) z employee_rates
+  hours_month?: number;         // suma godzin w bieżącym miesiącu (wszystkie porty)
+  wage_month?: number;          // wynagrodzenie w bieżącym miesiącu (godziny × stawka)
+  today_role?: EmployeeRole;    // rola dnia (agregowana z bieżących zleceń)
+  on_vacation?: boolean;        // czy pracownik jest obecnie na urlopie
+  rates?: EmployeeRate[];
+  vacations?: EmployeeVacation[];
+}
+
+export type EmployeeRole = 'operator' | 'brygadzista' | 'sztauer' | 'lukowy' | 'operator_zurawia';
+
+export interface EmployeeRate {
+  id: number;
+  employee_id: number;
+  stawka_godzinowa: number;
+  data_od: string;
+  data_do?: string;   // NULL = aktualna stawka
+}
+
+export interface EmployeeVacation {
+  id: number;
+  employee_id: number;
+  data_od: string;
+  data_do: string;
+  typ: 'wypoczynkowy' | 'na_zadanie' | 'L4';
+  status: 'oczekujacy' | 'zatwierdzony' | 'odrzucony' | 'zrealizowany';
 }
 
 export interface EmployeeDocument {
@@ -1229,6 +1401,7 @@ export interface Equipment {
   kategoria: 'pojazd' | 'inne';
   nazwa: string;
   numer_seryjny?: string;
+  qr_token?: string;            // publiczny token dla kodu QR (podstrona /qr/{token})
   current_employee?: Employee;
   current_terminal?: Terminal;
   vehicle_details?: VehicleDetails;
@@ -1265,7 +1438,30 @@ export interface Order {
   wartosc_pln: number;
   status: 'nowe' | 'w_realizacji' | 'zakonczone';
   employees?: Employee[];
+  order_employees?: OrderEmployee[];
   equipment?: Equipment[];
+  invoice?: Invoice;            // wystawiona faktura (jeśli istnieje)
+}
+
+export interface OrderEmployee {
+  id: number;
+  order_id: number;
+  employee_id: number;
+  employee?: Employee;
+  rola?: EmployeeRole;          // stanowisko pełnione w tym zleceniu (rola dnia)
+  godziny?: number;             // przepracowane godziny (do rozliczenia × stawka)
+}
+
+export interface Invoice {
+  id: number;
+  order_id?: number;
+  numer_faktury: string;
+  klient_nazwa: string;
+  kwota_pln: number;
+  data_wystawienia: string;
+  termin_platnosci?: string;
+  status: 'wystawiona' | 'zaplacona' | 'przeterminowana';
+  typ_wystawienia: 'po_zleceniu' | 'po_tygodniu' | 'koniec_miesiaca';
 }
 
 export interface Incident {
@@ -1310,6 +1506,31 @@ export interface UserNote {
   created_at: string;
   updated_at: string;
 }
+
+// Rozliczenia pracowników (godziny i wynagrodzenia)
+export interface SettlementRow {
+  employee: Employee;
+  hours: number;                // suma godzin w okresie
+  rate: number;                 // stawka zastosowana (z uwzględnieniem historii)
+  wage: number;                 // hours × rate (z podziałem wg dat stawek)
+  port_breakdown?: PortSettlement[];  // opcjonalnie: rozbitie per port dla pracownika
+}
+
+export interface PortSettlement {
+  terminal: Terminal;
+  employees_count: number;
+  hours: number;                // suma godzin w porcie
+  wage: number;                 // suma wynagrodzeń w porcie
+}
+
+export interface EmployeeSummary {
+  month: string;                // YYYY-MM
+  total_hours: number;          // wszystkie porty
+  total_wage: number;
+  wage_period_1_15: number;     // wynagrodzenia za okres 1–15
+  wage_period_15_23: number;    // wynagrodzenia za okres 15–23
+  on_vacation_count: number;
+}
 ```
 
 ### 12.2 Backend (DTO / Value Objects)
@@ -1334,6 +1555,15 @@ final readonly class EmployeeDTO
         public bool $isActive,
         /** @var EmployeeDocumentDTO[] */
         public array $documents = [],
+        public ?float $currentRate = null,        // aktualna stawka godzinowa (PLN/h)
+        public ?float $hoursMonth = null,         // suma godzin w bieżącym miesiącu
+        public ?float $wageMonth = null,          // wynagrodzenie w bieżącym miesiącu
+        public ?string $todayRole = null,         // rola dnia: operator|brygadzista|sztauer|lukowy|operator_zurawia
+        public bool $onVacation = false,
+        /** @var EmployeeRateDTO[] */
+        public array $rates = [],
+        /** @var EmployeeVacationDTO[] */
+        public array $vacations = [],
     ) {}
 }
 ```
@@ -1384,16 +1614,19 @@ Każda tabela musi posiadać indeksy na kolumnach używanych w klauzulach `WHERE
 |---|---|
 | `users` | `UNIQUE(email)`, `INDEX(is_active)` |
 | `employees` | `INDEX(is_active)`, `INDEX(current_terminal_id)`, `INDEX(current_sprzet_id)`, `INDEX(nazwisko, imie)` |
-| `equipment` | `INDEX(is_active)`, `INDEX(kategoria)`, `INDEX(current_employee_id)`, `INDEX(current_terminal_id)` |
+| `equipment` | `INDEX(is_active)`, `INDEX(kategoria)`, `INDEX(current_employee_id)`, `INDEX(current_terminal_id)`, `UNIQUE(qr_token)` |
 | `orders` | `INDEX(terminal_id)`, `INDEX(status)`, `INDEX(data_rozpoczecia)`, `INDEX(data_zakonczenia)`, `INDEX(numer_zlecenia UNIQUE)` |
 | `incidents` | `INDEX(status)`, `INDEX(equipment_id)`, `INDEX(data_zgloszenia)`, `INDEX(zgloszona_przez)` |
 | `equipment_history` | `INDEX(equipment_id, data)` |
 | `daily_terminal_reports` | `INDEX(terminal_id, data_raportu)` |
 | `daily_vehicle_reports` | `INDEX(equipment_id, data_raportu)` |
 | `audit_log` | `INDEX(user_id, created_at)`, `INDEX(action)`, `INDEX(resource_type, resource_id)` |
-| `order_employees` | `INDEX(order_id)`, `INDEX(employee_id)` |
+| `order_employees` | `INDEX(order_id)`, `INDEX(employee_id)`, `INDEX(rola)`, `INDEX(employee_id, rola)` |
 | `order_equipment` | `INDEX(order_id)`, `INDEX(equipment_id)` |
 | `user_notes` | `INDEX(user_id)`, `INDEX(user_id, is_done)`, `INDEX(user_id, kolejnosc)` |
+| `employee_rates` | `INDEX(employee_id)`, `INDEX(employee_id, data_od)`, `INDEX(data_do)` |
+| `employee_vacations` | `INDEX(employee_id)`, `INDEX(employee_id, status)`, `INDEX(data_od, data_do)` |
+| `invoices` | `UNIQUE(numer_faktury)`, `INDEX(order_id)`, `INDEX(status)`, `INDEX(typ_wystawienia)`, `INDEX(data_wystawienia)`, `INDEX(klient_nazwa)` |
 
 Zasady:
 - Klucze obce **muszą** mieć indeks (`FOREIGN KEY` automatycznie tworzy w MySQL)
