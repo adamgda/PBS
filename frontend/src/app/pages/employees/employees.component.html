@@ -4,6 +4,101 @@
   <p class="mt-1 text-gray-600">{{ 'pracownicy.subtitle' | translate }}</p>
 </div>
 
+<!-- Nawigacja zakładek (Etap 7a) -->
+<div class="mt-4 flex gap-2 border-b border-gray-200">
+  <button
+    type="button"
+    class="border-b-2 px-4 py-2 text-sm font-medium"
+    [class.border-pbs-primary]="activeTab() === 'list'"
+    [class.text-pbs-primary]="activeTab() === 'list'"
+    [class.border-transparent]="activeTab() !== 'list'"
+    [class.text-gray-500]="activeTab() !== 'list'"
+    (click)="setTab('list')"
+  >
+    {{ 'pracownicy.tabs_main.list' | translate }}
+  </button>
+  <button
+    type="button"
+    class="border-b-2 px-4 py-2 text-sm font-medium"
+    [class.border-pbs-primary]="activeTab() === 'settlement'"
+    [class.text-pbs-primary]="activeTab() === 'settlement'"
+    [class.border-transparent]="activeTab() !== 'settlement'"
+    [class.text-gray-500]="activeTab() !== 'settlement'"
+    (click)="setTab('settlement')"
+  >
+    {{ 'pracownicy.tabs_main.settlement' | translate }}
+  </button>
+  <button
+    type="button"
+    class="border-b-2 px-4 py-2 text-sm font-medium"
+    [class.border-pbs-primary]="activeTab() === 'invoices'"
+    [class.text-pbs-primary]="activeTab() === 'invoices'"
+    [class.border-transparent]="activeTab() !== 'invoices'"
+    [class.text-gray-500]="activeTab() !== 'invoices'"
+    (click)="setTab('invoices')"
+  >
+    {{ 'pracownicy.tabs_main.invoices' | translate }}
+  </button>
+</div>
+
+<!-- ===== Zakładka: Lista pracowników ===== -->
+@if (activeTab() === 'list') {
+<!-- Pasek KPI (Etap 7a) -->
+@if (summary()) {
+  <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div class="rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200">
+      <p class="text-xs text-gray-500">{{ 'pracownicy.kpi.hours_total' | translate }}</p>
+      <p class="mt-1 text-xl font-semibold text-gray-900">{{ summary()!.godziny_total }} h</p>
+    </div>
+    <div class="rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200">
+      <p class="text-xs text-gray-500">{{ 'pracownicy.kpi.wages_total' | translate }}</p>
+      <p class="mt-1 text-xl font-semibold text-gray-900">{{ summary()!.wynagrodzenie_total | number }} PLN</p>
+    </div>
+    <div class="rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200">
+      <p class="text-xs text-gray-500">{{ 'pracownicy.kpi.split_1_15' | translate }}</p>
+      <p class="mt-1 text-sm font-semibold text-gray-900">{{ summary()!.godziny_1_15 }} h · {{ summary()!.wynagrodzenie_1_15 | number }} PLN</p>
+      <p class="text-xs text-gray-500">{{ 'pracownicy.kpi.split_15_23' | translate }}</p>
+      <p class="text-sm font-semibold text-gray-900">{{ summary()!.godziny_15_23 }} h · {{ summary()!.wynagrodzenie_15_23 | number }} PLN</p>
+    </div>
+    <div class="rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200">
+      <p class="text-xs text-gray-500">{{ 'pracownicy.kpi.on_leave' | translate }}</p>
+      <p class="mt-1 text-xl font-semibold text-gray-900">{{ summary()!.na_urlopie }}</p>
+    </div>
+  </div>
+}
+
+<!-- Chipsy szybkich filtrów (mock: Wszyscy / W terenie / Dostępni / Uprawnienia expirują / Na urlopie) -->
+<div class="mt-4 flex flex-wrap gap-2 text-xs">
+  <button
+    type="button"
+    (click)="setQuickFilter('all')"
+    class="rounded-full px-3 py-1.5 font-medium transition-colors"
+    [class.bg-pbs-primary]="quickFilter() === null"
+    [class.text-white]="quickFilter() === null"
+    [class.bg-white]="quickFilter() !== null"
+    [class.border]="quickFilter() !== null"
+    [class.border-gray-200]="quickFilter() !== null"
+    [class.text-gray-600]="quickFilter() !== null"
+  >
+    {{ 'pracownicy.quick_filters.all' | translate }} ({{ quickFilterCounts().all }})
+  </button>
+  @for (chip of quickFilterChips; track chip.key) {
+    <button
+      type="button"
+      (click)="setQuickFilter(chip.key)"
+      class="rounded-full px-3 py-1.5 font-medium transition-colors"
+      [class.bg-pbs-primary]="quickFilter() === chip.key"
+      [class.text-white]="quickFilter() === chip.key"
+      [class.bg-white]="quickFilter() !== chip.key"
+      [class.border]="quickFilter() !== chip.key"
+      [class.border-gray-200]="quickFilter() !== chip.key"
+      [class.text-gray-600]="quickFilter() !== chip.key"
+    >
+      {{ chip.label | translate }} ({{ quickFilterCounts()[chip.key] }})
+    </button>
+  }
+</div>
+
 <!-- Lista pracowników -->
 <div class="mt-5">
   <div class="mb-4 flex items-center justify-between">
@@ -20,15 +115,15 @@
 
   <app-data-table
     [columns]="columns()"
-    [data]="employees()"
-    [total]="total()"
+    [data]="filteredEmployees()"
+    [total]="quickFilter() ? filteredEmployees().length : total()"
     [page]="page()"
     [perPage]="perPage()"
     [loading]="loading()"
     [sortKey]="sortKey()"
     [sortDirection]="sortDirection()"
     [actionsTemplate]="actionsTpl"
-    [cellTemplates]="{ is_active: statusCellTpl, telefon: phoneCellTpl, email: emailCellTpl, terminal_nazwa: terminalCellTpl, sprzet_nazwa: sprzetCellTpl }"
+    [cellTemplates]="{ is_active: statusCellTpl, telefon: phoneCellTpl, email: emailCellTpl, terminal_nazwa: terminalCellTpl, sprzet_nazwa: sprzetCellTpl, stawka_godzinowa: rateCellTpl, godziny_mc: hoursCellTpl, wynagrodzenie: wageCellTpl, rola_dzis: roleCellTpl }"
     (sortChange)="onSort($event)"
     (pageChange)="onPageChange($event)"
     (perPageChange)="onPerPageChange($event)"
@@ -65,35 +160,100 @@
     }
   </ng-template>
 
+  <ng-template #rateCellTpl let-employee>
+    <span class="font-medium text-gray-900">{{ employee.stawka_godzinowa | number }} PLN/h</span>
+  </ng-template>
+
+  <ng-template #hoursCellTpl let-employee>
+    <span>{{ employee.godziny_mc }} h</span>
+  </ng-template>
+
+  <ng-template #wageCellTpl let-employee>
+    <span class="font-medium text-gray-900">{{ employee.wynagrodzenie | number }} PLN</span>
+  </ng-template>
+
+  <ng-template #roleCellTpl let-employee>
+    @if (employee.on_leave) {
+      <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+        {{ 'pracownicy.leave.on_leave_label' | translate }}
+      </span>
+    } @else if (employee.rola_dzis) {
+      <span>{{ roleLabel(employee.rola_dzis) }}</span>
+    } @else {
+      <span class="text-gray-400">{{ 'pracownicy.list.unassigned' | translate }}</span>
+    }
+  </ng-template>
+
   <ng-template #actionsTpl let-employee>
-    <div class="flex justify-end gap-1">
-      <app-icon-button
-        icon="exchange"
-        tone="primary"
-        [ariaLabel]="'pracownicy.buttons.assign' | translate"
-        (clicked)="openAssign(employee)"
-      />
-      <app-icon-button
-        icon="document"
-        tone="primary"
-        [ariaLabel]="'pracownicy.buttons.documents' | translate"
-        (clicked)="openDocuments(employee)"
-      />
-      <app-icon-button
-        icon="settings"
-        tone="primary"
-        [ariaLabel]="'pracownicy.buttons.edit' | translate"
-        (clicked)="openEdit(employee)"
-      />
-      <app-icon-button
-        icon="trash"
-        tone="danger"
-        [ariaLabel]="'pracownicy.buttons.delete' | translate"
-        (clicked)="deleteEmployee(employee)"
-      />
+    <div class="relative flex justify-end">
+      <button
+        type="button"
+        class="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+        [attr.aria-label]="'pracownicy.buttons.actions' | translate"
+        (click)="toggleActions(employee.id)"
+      >
+        <app-svg-icon name="dots-vertical" size="sm" />
+      </button>
+
+      @if (openActionsId() === employee.id) {
+        <!-- Tło zamykające po kliknięciu poza menu -->
+        <div class="fixed inset-0 z-10" (click)="closeActions()"></div>
+        <div class="absolute right-0 top-9 z-20 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            (click)="openChangeRate(employee); closeActions()"
+          >
+            <app-svg-icon name="money" size="sm" class="shrink-0 text-amber-500" />
+            {{ 'pracownicy.buttons.change_rate' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            (click)="openVacations(employee); closeActions()"
+          >
+            <app-svg-icon name="calendar" size="sm" class="shrink-0 text-cyan-600" />
+            {{ 'pracownicy.buttons.vacations' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            (click)="openAssign(employee); closeActions()"
+          >
+            <app-svg-icon name="exchange" size="sm" class="shrink-0 text-indigo-500" />
+            {{ 'pracownicy.buttons.assign' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            (click)="openDocuments(employee); closeActions()"
+          >
+            <app-svg-icon name="document" size="sm" class="shrink-0 text-emerald-600" />
+            {{ 'pracownicy.buttons.documents' | translate }}
+          </button>
+          <div class="my-1 border-t border-gray-100"></div>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            (click)="openEdit(employee); closeActions()"
+          >
+            <app-svg-icon name="settings" size="sm" class="shrink-0 text-gray-500" />
+            {{ 'pracownicy.buttons.edit' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50"
+            (click)="closeActions(); deleteEmployee(employee)"
+          >
+            <app-svg-icon name="trash" size="sm" class="shrink-0" />
+            {{ 'pracownicy.buttons.delete' | translate }}
+          </button>
+        </div>
+      }
     </div>
   </ng-template>
 </div>
+}
 
 <!-- ===== Modal: dodawanie / edycja pracownika ===== -->
 @if (modalMode() === 'create' || modalMode() === 'edit') {
@@ -243,38 +403,39 @@
       } @else if (documents().length === 0) {
         <p class="py-8 text-center text-gray-500">{{ 'pracownicy.certificates.no_documents' | translate }}</p>
       } @else {
-        <ul class="divide-y divide-gray-100">
-          @for (doc of documents(); track doc.id) {
-            <li class="py-3">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-medium text-gray-900">{{ doc.nazwa }}</span>
-                    <app-status-badge
-                      status="active"
-                      [tone]="docStatusTone(doc)"
-                      [label]="docStatusLabel(doc)"
-                    />
-                  </div>
-                  @if (doc.numer_dokumentu) {
-                    <p class="mt-0.5 text-sm text-gray-600">{{ 'pracownicy.certificates.number' | translate }}: {{ doc.numer_dokumentu }}</p>
-                  }
-                  <p class="mt-0.5 text-xs text-gray-500">
-                    {{ 'pracownicy.certificates.issue_date' | translate }}: {{ doc.data_wydania || '—' }}
-                    · {{ 'pracownicy.certificates.expiry_date' | translate }}: {{ doc.data_waznosci || '—' }}
-                  </p>
-                  @if (doc.plik) {
-                    <p class="mt-0.5 text-xs text-gray-500">{{ 'pracownicy.certificates.file' | translate }}: {{ doc.plik }}</p>
-                  }
-                </div>
-                <div class="flex shrink-0 gap-1">
-                  <app-icon-button icon="settings" tone="primary" [ariaLabel]="'common.buttons.edit' | translate" (clicked)="openEditDoc(doc)" />
-                  <app-icon-button icon="trash" tone="danger" [ariaLabel]="'pracownicy.certificates.delete' | translate" (clicked)="deleteDoc(doc)" />
-                </div>
-              </div>
-            </li>
-          }
-        </ul>
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+          <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+              <tr>
+                <th class="px-3 py-2 font-medium">{{ 'pracownicy.certificates.name' | translate }}</th>
+                <th class="px-3 py-2 font-medium">{{ 'pracownicy.certificates.number' | translate }}</th>
+                <th class="px-3 py-2 font-medium">{{ 'pracownicy.certificates.issue_date' | translate }}</th>
+                <th class="px-3 py-2 font-medium">{{ 'pracownicy.certificates.expiry_date' | translate }}</th>
+                <th class="px-3 py-2 font-medium">{{ 'pracownicy.certificates.status' | translate }}</th>
+                <th class="px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (doc of documents(); track doc.id) {
+                <tr>
+                  <td class="px-3 py-2 font-medium text-gray-900">{{ doc.nazwa }}</td>
+                  <td class="px-3 py-2 text-gray-600">{{ doc.numer_dokumentu || '—' }}</td>
+                  <td class="px-3 py-2 text-gray-600">{{ doc.data_wydania || '—' }}</td>
+                  <td class="px-3 py-2 text-gray-600">{{ doc.data_waznosci || '—' }}</td>
+                  <td class="px-3 py-2">
+                    <app-status-badge status="active" [tone]="docStatusTone(doc)" [label]="docStatusLabel(doc)" />
+                  </td>
+                  <td class="px-3 py-2">
+                    <div class="flex justify-end gap-1">
+                      <app-icon-button icon="settings" tone="primary" [ariaLabel]="'common.buttons.edit' | translate" (clicked)="openEditDoc(doc)" />
+                      <app-icon-button icon="trash" tone="danger" [ariaLabel]="'pracownicy.certificates.delete' | translate" (clicked)="deleteDoc(doc)" />
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       }
     </div>
   </div>
@@ -340,6 +501,252 @@
       <div class="flex justify-end gap-3">
         <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeDocModal()" />
         <app-button variant="primary" [label]="'pracownicy.certificates.save'" [disabled]="docSaving()" (clicked)="saveDocModal()" />
+      </div>
+    </div>
+  </div>
+}
+<!-- ===== Etap 7a: Modal „Zmień stawkę" ===== -->
+@if (rateEmployee()) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.rate_modal.title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeRateModal()" />
+      </div>
+      <p class="mb-4 text-sm text-gray-600">{{ fullName(rateEmployee()!) }}</p>
+
+      <app-form-input
+        type="number"
+        name="rate_value"
+        labelKey="pracownicy.rate_modal.new_rate"
+        [ngModel]="rateValue()"
+        (ngModelChange)="rateValue.set($event)"
+      />
+
+      <app-datepicker
+        name="rate_data_od"
+        labelKey="pracownicy.rate_modal.effective_date"
+        [ngModel]="rateDataOd()"
+        (ngModelChange)="rateDataOd.set($event)"
+      />
+
+      @if (rateHistory().length > 0) {
+        <div class="mb-4">
+          <p class="mb-1 text-sm font-medium text-gray-700">{{ 'pracownicy.rate_modal.history' | translate }}</p>
+          <ul class="divide-y divide-gray-100 rounded-md border border-gray-200">
+            @for (r of rateHistory(); track r.id) {
+              <li class="flex items-center justify-between px-3 py-2 text-sm">
+                <span>{{ r.stawka_godzinowa | number }} PLN/h</span>
+                <span class="text-gray-500">{{ r.data_od }} — {{ r.data_do ?? '…' }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeRateModal()" />
+        <app-button variant="primary" [label]="'pracownicy.rate_modal.save'" [disabled]="rateSaving()" (clicked)="saveRate()" />
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Etap 7a: Panel urlopów pracownika ===== -->
+@if (vacationsEmployee()) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.leave.title' | translate }}</h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeVacations()" />
+      </div>
+      <p class="mb-4 text-sm text-gray-600">{{ fullName(vacationsEmployee()!) }}</p>
+
+      <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <app-datepicker name="vac_od" labelKey="pracownicy.leave.start_date" [ngModel]="vacDataOd()" (ngModelChange)="vacDataOd.set($event)" />
+        <app-datepicker name="vac_do" labelKey="pracownicy.leave.end_date" [ngModel]="vacDataDo()" (ngModelChange)="vacDataDo.set($event)" />
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.leave.type' | translate }}</label>
+          <select class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" [ngModel]="vacTyp()" (ngModelChange)="vacTyp.set($event)">
+            <option value="wypoczynkowy">{{ 'pracownicy.leave.type_vacation' | translate }}</option>
+            <option value="na_zadanie">{{ 'pracownicy.leave.type_on_demand' | translate }}</option>
+            <option value="L4">{{ 'pracownicy.leave.type_sick' | translate }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-4 flex justify-end">
+        <app-button variant="primary" [label]="'pracownicy.leave.add'" [disabled]="vacSaving()" (clicked)="saveVacation()" />
+      </div>
+
+      @if (vacations().length === 0) {
+        <p class="text-sm text-gray-500">{{ 'pracownicy.leave.no_vacations' | translate }}</p>
+      } @else {
+        <ul class="divide-y divide-gray-100 rounded-md border border-gray-200">
+          @for (v of vacations(); track v.id) {
+            <li class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+              <div>
+                <span class="font-medium">{{ v.data_od }} — {{ v.data_do }}</span>
+                <span class="ml-2 text-gray-500">{{ vacationTypeLabel(v.typ) }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <select
+                  class="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                  [ngModel]="v.status"
+                  (ngModelChange)="changeVacationStatus(v, $event)"
+                >
+                  <option value="oczekujacy">{{ 'pracownicy.leave.status_planned' | translate }}</option>
+                  <option value="zatwierdzony">{{ 'pracownicy.leave.status_approved' | translate }}</option>
+                  <option value="odrzucony">{{ 'pracownicy.leave.status_rejected' | translate }}</option>
+                  <option value="zrealizowany">{{ 'pracownicy.leave.status_completed' | translate }}</option>
+                </select>
+                <app-icon-button icon="trash" tone="danger" [ariaLabel]="'common.buttons.delete' | translate" (clicked)="deleteVacation(v)" />
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+}
+<!-- ===== Zakładka: Rozliczenie per port (Etap 7a) ===== -->
+@if (activeTab() === 'settlement') {
+  <div class="mt-5">
+    <div class="mb-4 flex flex-wrap items-end gap-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">{{ 'pracownicy.settlement.month' | translate }}</label>
+        <input
+          type="month"
+          class="mt-1 block rounded-md border border-gray-300 px-3 py-2 text-sm"
+          [value]="settlementMonth()"
+          (input)="changeSettlementMonth($any($event.target).value)"
+        />
+      </div>
+      <div class="flex gap-2">
+        <button type="button" class="rounded-md border px-3 py-2 text-sm" [class.bg-pbs-primary]="settlementPeriod()==='all'" [class.text-white]="settlementPeriod()==='all'" [class.border-gray-300]="settlementPeriod()!=='all'" (click)="changeSettlementPeriod('all')">{{ 'pracownicy.settlement.period_all' | translate }}</button>
+        <button type="button" class="rounded-md border px-3 py-2 text-sm" [class.bg-pbs-primary]="settlementPeriod()==='1-15'" [class.text-white]="settlementPeriod()==='1-15'" [class.border-gray-300]="settlementPeriod()!=='1-15'" (click)="changeSettlementPeriod('1-15')">{{ 'pracownicy.settlement.period_1_15' | translate }}</button>
+        <button type="button" class="rounded-md border px-3 py-2 text-sm" [class.bg-pbs-primary]="settlementPeriod()==='15-23'" [class.text-white]="settlementPeriod()==='15-23'" [class.border-gray-300]="settlementPeriod()!=='15-23'" (click)="changeSettlementPeriod('15-23')">{{ 'pracownicy.settlement.period_15_23' | translate }}</button>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto rounded-lg border border-gray-200">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.settlement.port' | translate }}</th>
+            <th class="px-3 py-2 text-right font-medium text-gray-600">{{ 'pracownicy.settlement.employees' | translate }}</th>
+            <th class="px-3 py-2 text-right font-medium text-gray-600">{{ 'pracownicy.settlement.hours' | translate }}</th>
+            <th class="px-3 py-2 text-right font-medium text-gray-600">{{ 'pracownicy.settlement.wages' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (row of portRows(); track $index) {
+            <tr [class.bg-gray-50]="row.terminal_id === null" [class.font-semibold]="row.terminal_id === null">
+              <td class="px-3 py-2">{{ row.terminal_nazwa ?? '—' }}</td>
+              <td class="px-3 py-2 text-right">{{ row.liczba_pracownikow }}</td>
+              <td class="px-3 py-2 text-right">{{ row.suma_godzin }} h</td>
+              <td class="px-3 py-2 text-right">{{ row.suma_wynagrodzen | number }} PLN</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+<!-- ===== Zakładka: Faktury (Etap 7a) ===== -->
+@if (activeTab() === 'invoices') {
+  <div class="mt-5">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.invoices.title' | translate }}</h2>
+      <app-add-button [label]="'pracownicy.invoices.add'" (add)="openAddInvoice()" />
+    </div>
+
+    @if (missingInvoices().length > 0) {
+      <div class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        <p class="font-medium">{{ 'pracownicy.invoices.missing_title' | translate }}</p>
+        <ul class="mt-1 list-disc pl-5">
+          @for (m of missingInvoices(); track m.order_id) {
+            <li>{{ m.numer_zlecenia }} — {{ m.klient_nazwa }} ({{ m.wartosc_pln | number }} PLN)</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <div class="overflow-x-auto rounded-lg border border-gray-200">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.number' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.client' | translate }}</th>
+            <th class="px-3 py-2 text-right font-medium text-gray-600">{{ 'pracownicy.invoices.amount' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.issue_date' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.typ' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.status' | translate }}</th>
+            <th class="px-3 py-2"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (inv of invoices(); track inv.id) {
+            <tr>
+              <td class="px-3 py-2 font-medium">{{ inv.numer_faktury }}</td>
+              <td class="px-3 py-2">{{ inv.klient_nazwa }}</td>
+              <td class="px-3 py-2 text-right">{{ inv.kwota_pln | number }} PLN</td>
+              <td class="px-3 py-2">{{ inv.data_wystawienia }}</td>
+              <td class="px-3 py-2">{{ invoiceTypLabel(inv.typ_wystawienia) }}</td>
+              <td class="px-3 py-2">
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class.bg-green-100]="inv.status==='zaplacona'" [class.text-green-800]="inv.status==='zaplacona'"
+                  [class.bg-amber-100]="inv.status==='wystawiona'" [class.text-amber-800]="inv.status==='wystawiona'"
+                  [class.bg-red-100]="inv.status==='przeterminowana'" [class.text-red-800]="inv.status==='przeterminowana'">
+                  {{ invoiceStatusLabel(inv.status) }}
+                </span>
+              </td>
+              <td class="px-3 py-2">
+                <div class="flex justify-end gap-1">
+                  <select class="rounded-md border border-gray-300 px-2 py-1 text-xs" [ngModel]="inv.status" (ngModelChange)="changeInvoiceStatus(inv, $event)">
+                    <option value="wystawiona">{{ 'pracownicy.invoices.status_issued' | translate }}</option>
+                    <option value="zaplacona">{{ 'pracownicy.invoices.status_paid' | translate }}</option>
+                    <option value="przeterminowana">{{ 'pracownicy.invoices.status_overdue' | translate }}</option>
+                  </select>
+                  <app-icon-button icon="settings" tone="primary" [ariaLabel]="'common.buttons.edit' | translate" (clicked)="openEditInvoice(inv)" />
+                  <app-icon-button icon="trash" tone="danger" [ariaLabel]="'common.buttons.delete' | translate" (clicked)="deleteInvoice(inv)" />
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+<!-- ===== Etap 7a: Modal faktury ===== -->
+@if (invoiceModalMode() === 'create' || invoiceModalMode() === 'edit') {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ invoiceModalMode() === 'edit' ? ('pracownicy.invoices.edit_title' | translate) : ('pracownicy.invoices.add_title' | translate) }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeInvoiceModal()" />
+      </div>
+
+      <app-form-input type="text" name="inv_numer" labelKey="pracownicy.invoices.number" [ngModel]="invNumer()" (ngModelChange)="invNumer.set($event)" />
+      <app-form-input type="text" name="inv_klient" labelKey="pracownicy.invoices.client" [ngModel]="invKlient()" (ngModelChange)="invKlient.set($event)" />
+      <app-form-input type="number" name="inv_kwota" labelKey="pracownicy.invoices.amount" [ngModel]="invKwota()" (ngModelChange)="invKwota.set($event)" />
+      <app-datepicker name="inv_data" labelKey="pracownicy.invoices.issue_date" [ngModel]="invDataWystawienia()" (ngModelChange)="invDataWystawienia.set($event)" />
+      <app-datepicker name="inv_termin" labelKey="pracownicy.invoices.due_date" [ngModel]="invTerminPlatnosci()" (ngModelChange)="invTerminPlatnosci.set($event)" />
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">{{ 'pracownicy.invoices.typ' | translate }}</label>
+        <select class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" [ngModel]="invTyp()" (ngModelChange)="invTyp.set($event)">
+          <option value="po_zleceniu">{{ 'pracownicy.invoices.typ_after_order' | translate }}</option>
+          <option value="po_tygodniu">{{ 'pracownicy.invoices.typ_after_week' | translate }}</option>
+          <option value="koniec_miesiaca">{{ 'pracownicy.invoices.typ_month_end' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeInvoiceModal()" />
+        <app-button variant="primary" [label]="'pracownicy.invoices.save'" [disabled]="invoiceSaving()" (clicked)="saveInvoiceModal()" />
       </div>
     </div>
   </div>

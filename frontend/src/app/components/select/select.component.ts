@@ -53,6 +53,7 @@ export type SelectSize = 'sm' | 'md' | 'lg';
         [ngModel]="value"
         (ngModelChange)="onChange($event)"
         (blur)="onTouched()"
+        class="mt-1.5"
       >
         @if (hasPlaceholder) {
           <option value="">{{ placeholderKey ? (placeholderKey | translate) : placeholder }}</option>

@@ -130,6 +130,16 @@ import { CommonModule } from '@angular/common';
         @case ('chevron-down') {
           <path d="M6 9l6 6 6-6" />
         }
+        @case ('chevron-left') {
+          <path d="M15 6l-6 6 6 6" />
+        }
+        @case ('chevron-right') {
+          <path d="M9 6l6 6-6 6" />
+        }
+        @case ('search') {
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.3-4.3" />
+        }
         @case ('document') {
           <path d="M7 3h6l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
           <path d="M13 3v4h4" />
@@ -144,6 +154,16 @@ import { CommonModule } from '@angular/common';
           <rect x="3" y="5" width="18" height="16" rx="2" />
           <path d="M3 9.5h18M8 3v4M16 3v4" />
         }
+        @case ('money') {
+          <circle cx="12" cy="12" r="9" />
+          <path d="M14.5 9.5c-.5-1-1.5-1.5-2.7-1.5-1.3 0-2.3.7-2.3 1.8 0 2.6 5.2 1.4 5.2 4.2 0 1.2-1.1 2.1-2.6 2.1-1.3 0-2.4-.6-2.8-1.7" />
+          <path d="M12 6.5v1.5M12 16v1.5" />
+        }
+        @case ('dots-vertical') {
+          <circle cx="12" cy="5" r="1.6" />
+          <circle cx="12" cy="12" r="1.6" />
+          <circle cx="12" cy="19" r="1.6" />
+        }
         @default {
           <circle cx="12" cy="12" r="9" />
         }
@@ -154,7 +174,10 @@ import { CommonModule } from '@angular/common';
     `
       :host {
         display: inline-flex;
+        align-items: center;
+        justify-content: center;
         line-height: 0;
+        vertical-align: middle;
       }
     `,
   ],

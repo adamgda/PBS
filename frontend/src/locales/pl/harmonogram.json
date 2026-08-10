@@ -4,7 +4,19 @@
   "view": {
     "week": "Tydzień",
     "month": "Miesiąc",
-    "day": "Dzień"
+    "day": "Dzień",
+    "week_label": "Tydzień {{n}} · {{range}}",
+    "prev": "Poprzedni okres",
+    "next": "Następny okres",
+    "today": "Dziś",
+    "today_short": "dziś"
+  },
+  "grid": {
+    "hours": "Godz."
+  },
+  "shift": {
+    "handover_title": "Przekazanie zmiany",
+    "handover_note": "Protokół przekazania wypełniony · stan OK"
   },
   "list": {
     "title": "Lista zleceń",
@@ -43,6 +55,10 @@
     "no_equipment": "Brak przypisanego sprzętu",
     "deleted_employee": "Pracownik usunięty"
   },
+  "detail": {
+    "no_order_title": "Wybierz zlecenie",
+    "no_order_hint": "Kliknij zlecenie w kalendarzu, aby zobaczyć szczegóły, rozliczenie godzin oraz przypisania."
+  },
   "form": {
     "add_title": "Dodaj zlecenie",
     "edit_title": "Edytuj zlecenie",
@@ -75,16 +91,41 @@
     "equipment_title": "Przypisz sprzęt do zlecenia",
     "select_employee": "Wybierz pracownika",
     "select_equipment": "Wybierz sprzęt",
+    "select_role": "Rola w zleceniu",
+    "no_role": "— brak roli —",
+    "hours": "Liczba godzin",
+    "hours_placeholder": "np. 8",
     "add": "Przypisz",
     "added_success": "Przypisano",
-    "removed_success": "Usunięto przypisanie"
+    "removed_success": "Usunięto przypisanie",
+    "select_order_first": "Najpierw wybierz zlecenie z kalendarza"
+  },
+  "available_employees": {
+    "title": "Dostępni pracownicy",
+    "search_placeholder": "Wybierz (autocomplete)...",
+    "on_leave": "urlop",
+    "assigned": "przypisany",
+    "empty": "Brak dostępnych pracowników",
+    "select_order": "Wybierz zlecenie z kalendarza, aby przypisać pracowników"
+  },
+  "wages": {
+    "title": "Rozliczenie godzin i wynagrodzeń",
+    "employee": "Pracownik",
+    "role": "Rola",
+    "hours": "Godz.",
+    "rate": "Stawka/h",
+    "wage": "Wynagrodz.",
+    "sum": "Suma"
   },
   "copy_week": {
     "title": "Kopiuj tydzień jako szablon",
     "source_week_start": "Tydzień źródłowy (poniedziałek)",
     "target_week_start": "Tydzień docelowy (poniedziałek)",
     "submit": "Kopiuj",
-    "copied": "Skopiowano zleceń: {{count}}"
+    "copied": "Skopiowano zleceń: {{count}}",
+    "source_summary": "Tydzień źródłowy",
+    "no_source": "Nie wybrano tygodnia źródłowego",
+    "note": "Skopiowane zostaną zlecenia wraz z przypisanymi pracownikami i sprzętem. Można je następnie edytować w docelowym tygodniu."
   },
   "buttons": {
     "add": "Dodaj zlecenie",

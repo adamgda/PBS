@@ -152,29 +152,29 @@ Legenda statusów:
 
 > Rozszerzenie sekcji Pracownicy wg `docs/technical-documentation.md` (10.2) i mockupu `other/mockup5/pracownicy.html`. Wszystkie pozycje poniżej są nowe (`- [ ]`).
 
-- [ ] Migracja: `employee_rates` (historia stawek godzinowych: `employee_id`, `stawka_godzinowa`, `data_od`, `data_do` NULLABLE) — `ON DELETE CASCADE`
-- [ ] Migracja: rozszerzenie `order_employees` o `rola` ENUM('operator','brygadzista','sztauer','lukowy','operator_zurawia') NULLABLE oraz `godziny` DECIMAL(5,2) NULLABLE
-- [ ] Migracja: `employee_vacations` (`employee_id`, `data_od`, `data_do`, `typ`, `status`) — `ON DELETE CASCADE`
-- [ ] Migracja: `invoices` (`order_id` NULLABLE, `numer_faktury` UNIQUE, `klient_nazwa`, `kwota_pln`, `data_wystawienia`, `termin_platnosci`, `status`, `typ_wystawienia` ENUM('po_zleceniu','po_tygodniu','koniec_miesiaca'))
-- [ ] Indeksy DB: `employee_rates(employee_id, data_od)`, `employee_vacations(employee_id, status)`, `invoices(order_id, status, typ_wystawienia, data_wystawienia, klient_nazwa)`, `order_employees(rola, employee_id, rola)`
-- [ ] Backend: `GET /api/v1/employees/{id}/rates` + `POST .../rates` (nowa stawka z `data_od` — zamyka poprzedni rekord `data_do`)
-- [ ] Backend: `GET/POST /api/v1/employees/{id}/vacations` + `PATCH /api/v1/vacations/{id}/status` + `DELETE /api/v1/vacations/{id}`
-- [ ] Backend: `PATCH /api/v1/orders/{id}/assign-employee` — zapis `rola` i `godziny` w `order_employees`
-- [ ] Backend: `GET /api/v1/employees/settlement?month=&period=all|1-15|15-23` (rozliczenie per pracownik: godziny × stawka z historii po dacie zlecenia)
-- [ ] Backend: `GET /api/v1/employees/settlement/by-port?month=&period=` (suma godzin i wynagrodzeń per port/terminal + wiersz „Razem wszystkie porty")
-- [ ] Backend: `GET /api/v1/employees/summary?month=` (suma godzin mc, suma wynagrodzeń z podziałem 1–15 / 15–23, licznik na urlopie)
-- [ ] Backend: `GET/POST/PUT/DELETE /api/v1/invoices` + `PATCH /api/v1/invoices/{id}/status` + `GET /api/v1/invoices/missing` (zlecenia zakończone bez faktury)
-- [ ] Frontend: kolumny w tabeli pracowników — Stawka/h, Godz. (mc), Wynagrodz. (godziny × stawka), Rola (dziś)
-- [ ] Frontend: okno „Zmień stawkę" (ikona monety) — nowa stawka + data wejścia w życie + podgląd historii zmian
-- [ ] Frontend: wybór roli dnia przy przypisywaniu pracownika do zlecenia (operator, brygadzista, sztauer, lukowy, operator żurawia)
-- [ ] Frontend: sekcja „Rozliczenie godzin per port" (tabela Port · Pracownicy · Suma godzin · Suma wynagrodzeń + wiersz „Razem") z przełącznikiem okresu (1–15 / 15–23 / cały mc)
-- [ ] Frontend: pasek podsumowania KPI — suma godzin (mc, wszystkie porty), suma wynagrodzeń z podziałem 1–15 i 15–23, liczba na urlopie
-- [ ] Frontend: okno „Urlopy" per pracownik + globalny przycisk „Urlopy" (rejestr od/do, typ, status; wykluczenie z dostępnych w harmonogramie; chip „Na urlopie")
-- [ ] Frontend: osobna sekcja/ikona „Faktury" (lista z terminem wystawienia: po zleceniu / po tygodniu / koniec miesiąca, status, filtrowanie, alerty o pominiętych/przeterminowanych)
+- [x] Migracja: `employee_rates` (historia stawek godzinowych: `employee_id`, `stawka_godzinowa`, `data_od`, `data_do` NULLABLE) — `ON DELETE CASCADE`
+- [x] Migracja: rozszerzenie `order_employees` o `rola` ENUM('operator','brygadzista','sztauer','lukowy','operator_zurawia') NULLABLE oraz `godziny` DECIMAL(5,2) NULLABLE
+- [x] Migracja: `employee_vacations` (`employee_id`, `data_od`, `data_do`, `typ`, `status`) — `ON DELETE CASCADE`
+- [x] Migracja: `invoices` (`order_id` NULLABLE, `numer_faktury` UNIQUE, `klient_nazwa`, `kwota_pln`, `data_wystawienia`, `termin_platnosci`, `status`, `typ_wystawienia` ENUM('po_zleceniu','po_tygodniu','koniec_miesiaca'))
+- [x] Indeksy DB: `employee_rates(employee_id, data_od)`, `employee_vacations(employee_id, status)`, `invoices(order_id, status, typ_wystawienia, data_wystawienia, klient_nazwa)`, `order_employees(rola, employee_id, rola)`
+- [x] Backend: `GET /api/v1/employees/{id}/rates` + `POST .../rates` (nowa stawka z `data_od` — zamyka poprzedni rekord `data_do`)
+- [x] Backend: `GET/POST /api/v1/employees/{id}/vacations` + `PATCH /api/v1/vacations/{id}/status` + `DELETE /api/v1/vacations/{id}`
+- [x] Backend: `PATCH /api/v1/orders/{id}/assign-employee` — zapis `rola` i `godziny` w `order_employees`
+- [x] Backend: `GET /api/v1/employees/settlement?month=&period=all|1-15|15-23` (rozliczenie per pracownik: godziny × stawka z historii po dacie zlecenia)
+- [x] Backend: `GET /api/v1/employees/settlement/by-port?month=&period=` (suma godzin i wynagrodzeń per port/terminal + wiersz „Razem wszystkie porty")
+- [x] Backend: `GET /api/v1/employees/summary?month=` (suma godzin mc, suma wynagrodzeń z podziałem 1–15 / 15–23, licznik na urlopie)
+- [x] Backend: `GET/POST/PUT/DELETE /api/v1/invoices` + `PATCH /api/v1/invoices/{id}/status` + `GET /api/v1/invoices/missing` (zlecenia zakończone bez faktury)
+- [x] Frontend: kolumny w tabeli pracowników — Stawka/h, Godz. (mc), Wynagrodz. (godziny × stawka), Rola (dziś)
+- [x] Frontend: okno „Zmień stawkę" (ikona monety) — nowa stawka + data wejścia w życie + podgląd historii zmian
+- [x] Frontend: wybór roli dnia przy przypisywaniu pracownika do zlecenia (operator, brygadzista, sztauer, lukowy, operator żurawia)
+- [x] Frontend: sekcja „Rozliczenie godzin per port" (tabela Port · Pracownicy · Suma godzin · Suma wynagrodzeń + wiersz „Razem") z przełącznikiem okresu (1–15 / 15–23 / cały mc)
+- [x] Frontend: pasek podsumowania KPI — suma godzin (mc, wszystkie porty), suma wynagrodzeń z podziałem 1–15 i 15–23, liczba na urlopie
+- [x] Frontend: okno „Urlopy" per pracownik + globalny przycisk „Urlopy" (rejestr od/do, typ, status; wykluczenie z dostępnych w harmonogramie; chip „Na urlopie")
+- [x] Frontend: osobna sekcja/ikona „Faktury" (lista z terminem wystawienia: po zleceniu / po tygodniu / koniec miesiąca, status, filtrowanie, alerty o pominiętych/przeterminowanych)
 - [ ] Frontend: widok mobilny (karty) ze stawką, godzinami, wynagrodzeniem i rolą dnia (wg mockupu `pracownicy.html`)
-- [ ] Lokalizacje: rozszerzenie `pracownicy.json` (stawka, godziny, wynagrodzenie, role, urlopy, faktury, rozliczenie per port, podział 1–15/15–23)
-- [ ] Testy: backend — historia stawek (rozliczenie po dacie), rozliczenie per port i podział okresów, CRUD urlopów, CRUD faktur, `invoices/missing`
-- [ ] Testy: frontend — okno stawki, wybór roli, rozliczenie per port, pasek KPI, sekcja faktur, urlopy
+- [x] Lokalizacje: rozszerzenie `pracownicy.json` (stawka, godziny, wynagrodzenie, role, urlopy, faktury, rozliczenie per port, podział 1–15/15–23)
+- [x] Testy: backend — historia stawek (rozliczenie po dacie), rozliczenie per port i podział okresów, CRUD urlopów, CRUD faktur, `invoices/missing`
+- [x] Testy: frontend — okno stawki, wybór roli, rozliczenie per port, pasek KPI, sekcja faktur, urlopy
 
 ## Etap 8 — Sekcja: Sprzęt
 
@@ -203,6 +203,15 @@ Legenda statusów:
 - [x] Frontend: przypisywanie pracowników i sprzętu do zlecenia
 - [x] Frontend: kopiowanie tygodnia jako szablon
 - [x] Lokalizacje: `harmonogram.json` w `locales/pl/`
+- [x] Backend: DTO `GET /orders/{id}` zwraca `rola`, `godziny`, `stawka_godzinowa` (z `employee_rates` na datę zlecenia) i `wynagrodzenie` dla przypisanych pracowników
+- [x] Frontend: panel detalu zlecenia w widoku głównym (karty + pille przypisań + tabela „Rozliczenie godzin i wynagrodzeń”)
+- [x] Frontend: panel „Dostępni pracownicy” z wyszukiwarką i jednoklikowym przyciskiem „Przypisz”
+- [x] Frontend: przypisywanie pracowników i sprzętu podczas tworzenia zlecenia (pille aplikowane po POST /orders)
+- [x] Frontend: pole „Liczba godzin” w modalu przypisania pracownika
+- [x] Frontend: siatka tygodniowa z rzędami zmian (06–14, 14–22, 22–06) i kolorowymi kartami zleceń
+- [x] Frontend: pasek nawigacji tygodnia (poprzedni/następny + etykieta tygodnia ISO + „Dziś”) i przełącznik widoku (Dzień/Tydzień/Miesiąc)
+- [x] Frontend: box „Przekazanie zmiany” w detalu zlecenia (wykrywanie objętych zmian)
+- [x] Testy: pokrycie godzin, szybkiego przypisywania, przypisań przy tworzeniu i sumy rozliczenia
 
 ## Etap 10 — Sekcja: Awaria
 

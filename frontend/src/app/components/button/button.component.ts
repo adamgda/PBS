@@ -51,6 +51,8 @@ export class ButtonComponent {
   @Input() variant: ButtonVariant = 'primary';
   /** Typ przycisku HTML. */
   @Input() type: 'button' | 'submit' = 'button';
+  /** Rozmiar przycisku — `sm` (kompaktowy, np. „Przypisz" w listach) lub `md` (domyślny). */
+  @Input() size: 'md' | 'sm' = 'md';
   /** Blokada przycisku. */
   @Input() disabled = false;
   /** Dodatkowe klasy Tailwind (np. marginesy 'mt-8', 'ml-4') — escape hatch dla rozmieszczenia. */
@@ -59,7 +61,7 @@ export class ButtonComponent {
   @Output() clicked = new EventEmitter<void>();
 
   private readonly baseClasses =
-    'px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50';
+    'font-medium rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50';
 
   get classes(): string {
     const variantClass = (() => {
@@ -77,6 +79,7 @@ export class ButtonComponent {
       }
     })();
     const base = this.variant === 'block' ? '' : this.baseClasses;
-    return `${base} ${variantClass} ${this.extraClass}`.trim();
+    const sizeClass = this.variant === 'block' ? '' : this.size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-4 py-2 text-sm';
+    return `${base} ${sizeClass} ${variantClass} ${this.extraClass}`.trim();
   }
 }

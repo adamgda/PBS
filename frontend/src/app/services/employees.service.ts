@@ -13,6 +13,15 @@ import {
   AssignEmployeeRequest,
   CreateDocumentRequest,
   UpdateDocumentRequest,
+  EmployeeRate,
+  CreateRateRequest,
+  EmployeeVacation,
+  CreateVacationRequest,
+  VacationStatus,
+  SettlementResponse,
+  SettlementByPortResponse,
+  SettlementPeriod,
+  EmployeeSummary,
 } from '../models/employee.model';
 import { invalidateCache } from './http.interceptor';
 
@@ -97,5 +106,58 @@ export class EmployeesService {
     return this.http
       .delete<{ success: boolean }>(`${this.apiUrl}/documents/${documentId}`)
       .pipe(tap(() => invalidateCache('/employees')));
+  }
+
+  // --- Stawki (Etap 7a) ---
+
+  listRates(employeeId: number): Observable<{ data: EmployeeRate[] }> {
+    return this.http.get<{ data: EmployeeRate[] }>(`${this.apiUrl}/employees/${employeeId}/rates`);
+  }
+
+  createRate(employeeId: number, payload: CreateRateRequest): Observable<EmployeeRate> {
+    return this.http
+      .post<EmployeeRate>(`${this.apiUrl}/employees/${employeeId}/rates`, payload)
+      .pipe(tap(() => invalidateCache('/employees')));
+  }
+
+  // --- Urlopy (Etap 7a) ---
+
+  listVacations(employeeId: number): Observable<{ data: EmployeeVacation[] }> {
+    return this.http.get<{ data: EmployeeVacation[] }>(`${this.apiUrl}/employees/${employeeId}/vacations`);
+  }
+
+  createVacation(employeeId: number, payload: CreateVacationRequest): Observable<EmployeeVacation> {
+    return this.http
+      .post<EmployeeVacation>(`${this.apiUrl}/employees/${employeeId}/vacations`, payload)
+      .pipe(tap(() => invalidateCache('/employees')));
+  }
+
+  updateVacationStatus(vacationId: number, status: VacationStatus): Observable<EmployeeVacation> {
+    return this.http
+      .patch<EmployeeVacation>(`${this.apiUrl}/vacations/${vacationId}/status`, { status })
+      .pipe(tap(() => invalidateCache('/employees')));
+  }
+
+  deleteVacation(vacationId: number): Observable<{ success: boolean }> {
+    return this.http
+      .delete<{ success: boolean }>(`${this.apiUrl}/vacations/${vacationId}`)
+      .pipe(tap(() => invalidateCache('/employees')));
+  }
+
+  // --- Rozliczenia i podsumowania (Etap 7a) ---
+
+  settlement(month: string, period: SettlementPeriod): Observable<SettlementResponse> {
+    const params = new HttpParams().set('month', month).set('period', period);
+    return this.http.get<SettlementResponse>(`${this.apiUrl}/employees/settlement`, { params });
+  }
+
+  settlementByPort(month: string, period: SettlementPeriod): Observable<SettlementByPortResponse> {
+    const params = new HttpParams().set('month', month).set('period', period);
+    return this.http.get<SettlementByPortResponse>(`${this.apiUrl}/employees/settlement/by-port`, { params });
+  }
+
+  summary(month: string): Observable<EmployeeSummary> {
+    const params = new HttpParams().set('month', month);
+    return this.http.get<EmployeeSummary>(`${this.apiUrl}/employees/summary`, { params });
   }
 }

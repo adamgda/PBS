@@ -10,6 +10,16 @@ export interface OrderEmployee {
   employee_id: number | null;
   employee_name: string | null;
   employee_email: string | null;
+  rola: string | null;
+  godziny: number | null;
+  stawka_godzinowa: number | null;
+  wynagrodzenie: number;
+}
+
+export interface AssignEmployeeRequest {
+  employee_id: number;
+  rola?: string | null;
+  godziny?: number | null;
 }
 
 export interface OrderEquipment {

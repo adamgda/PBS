@@ -1092,9 +1092,32 @@ Frontend (Angular) dodatkowo:
 
 ### 10.5 Harmonogram (zintegrowany ze Zleceniami)
 
-- Widok: siatka tygodniowa/miesięczna z przełączaniem na dzień
+- Widok: **siatka tygodniowa** (kolumna „Godz." + 7 dni Pon–Nd, rzędy zmian **06–14 / 14–22 / 22–06**)
+  z przełączaniem na dzień i miesiąc (generyczny kalendarz)
 - Każde zlecenie: numer, klient, terminal, datetime, zakres prac, wartość, status, przypisani pracownicy/sprzęt
+- **Pasek nawigacji widoku**: przyciski poprzedni/następny okres + etykieta „Tydzień N · DD–DD miesiąca rok"
+  (numer tygodnia ISO) + przycisk „Dziś" + przełącznik widoku (Dzień/Tydzień/Miesiąc)
+- Karty zleceń w siatce kolorowane wg statusu (nowe=cyan, w realizacji=amber, zakończone=emerald),
+  z podtytułem „terminal · zakres prac" i etykietą statusu dla zleceń w realizacji; bieżący dzień
+  podświetlony („dziś"). Zlecenie trafia do komórki (dzień × zmiana) na podstawie godziny rozpoczęcia.
 - Akcje: utwórz, edytuj, usuń zlecenie, kopiuj tydzień jako szablon
+- **Panel detalu zlecenia** (widok główny, po kliknięciu zlecenia w kalendarzu): karty podsumowujące
+  (klient, realizacja, wartość, status), pille przypisanych pracowników (z rolą) i sprzętu,
+  oraz tabela **„Rozliczenie godzin i wynagrodzeń”** (pracownik · rola · godz. · stawka/h · wynagrodzenie)
+  z wierszem sumy. Stawka godzinowa pobierana jest z `employee_rates` obowiązującego w dacie
+  rozpoczęcia zlecenia; wynagrodzenie = godziny × stawka.
+- **Box „Przekazanie zmiany”** w detalu: gdy zlecenie obejmuje więcej niż jedną zmianę (wg godzin
+  start/end), wyświetlane jest przejście między sąsiednimi zmianami (np. „06–14 → 14–22").
+- **Panel „Dostępni pracownicy”** (widok główny, obok detalu zlecenia): lista pracowników
+  z wyszukiwarką (autocomplete), stawką godzinową i rolą „dziś"; przycisk **„Przypisz”**
+  przypisuje pracownika jednym kliknięciem do wybranego zlecenia (rola dzisiejsza jako domyślna).
+  Pracownicy na urlopie są widoczni, ale wyłączeni (pill „urlop”); już przypisani oznaczeni
+  pill „przypisany”.
+- **Przypisywanie podczas tworzenia zlecenia**: w formularzu „Nowe zlecenie” dostępne są pille
+  przypisanych pracowników (z rolą) i sprzętu; wybór przez autocomplete, usunięcie przez ✕.
+  Przypisania są aplikowane po pomyślnym utworzeniu zlecenia (POST /orders) sekwencją wywołań
+  `assign-employee` / `assign-equipment`.
+- **Modal przypisania pracownika** zawiera pole **„Liczba godzin”** (zapisywane w `order_employees.godziny`).
 - Integracja z raportowaniem: dane pobierane z harmonogramu
 
 ### 10.6 Analityka
@@ -1229,10 +1252,16 @@ Frontend (Angular) dodatkowo:
 | PUT | `/api/v1/orders/{id}` | Edycja zlecenia |
 | DELETE | `/api/v1/orders/{id}` | Usunięcie zlecenia |
 | POST | `/api/v1/orders/{id}/copy-week` | Kopiowanie tygodnia jako szablon |
-| POST | `/api/v1/orders/{id}/assign-employee` | Przypisanie pracownika |
+| POST | `/api/v1/orders/{id}/assign-employee` | Przypisanie pracownika (payload: `employee_id`, opcjonalnie `rola`, `godziny`) |
 | DELETE | `/api/v1/orders/{id}/assign-employee/{empId}` | Usunięcie przypisania pracownika |
 | POST | `/api/v1/orders/{id}/assign-equipment` | Przypisanie sprzętu |
 | DELETE | `/api/v1/orders/{id}/assign-equipment/{eqId}` | Usunięcie przypisania sprzętu |
+
+**DTO `GET /api/v1/orders/{id}` — pole `employees[]`** zwraca dla każdego przypisanego pracownika:
+`id`, `order_id`, `employee_id`, `employee_name`, `employee_email`, `rola`, `godziny`,
+`stawka_godzinowa` (z `employee_rates` obowiązującej w dacie rozpoczęcia zlecenia) oraz
+`wynagrodzenie` (= `godziny × stawka_godzinowa`, `0` gdy brak danych). Pozwala to frontendowi
+zbudować tabelę „Rozliczenie godzin i wynagrodzeń” bez dodatkowych zapytań (anti-N+1).
 
 ### 11.9 Raporty
 

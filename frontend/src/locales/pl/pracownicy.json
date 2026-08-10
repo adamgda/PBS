@@ -11,20 +11,80 @@
     "terminal": "Terminal",
     "equipment": "Sprzęt",
     "status": "Status",
-    "hourly_rate": "Stawka godzinowa",
-    "hours_worked": "Przepracowane godziny",
+    "hourly_rate": "Stawka/h",
+    "hours_worked": "Godz. (mc)",
     "wage": "Wynagrodzenie",
+    "role_today": "Rola (dziś)",
+    "name": "Pracownik",
     "unassigned": "—"
+  },
+  "tabs_main": {
+    "list": "Pracownicy",
+    "settlement": "Rozliczenie per port",
+    "invoices": "Faktury"
+  },
+  "kpi": {
+    "hours_total": "Godziny (mc, wszystkie porty)",
+    "wages_total": "Wynagrodzenie (mc)",
+    "split_1_15": "Okres 1–15",
+    "split_15_23": "Okres 15–23",
+    "on_leave": "Na urlopie"
+  },
+  "quick_filters": {
+    "all": "Wszyscy",
+    "field": "W terenie",
+    "available": "Dostępni",
+    "entitlements": "Uprawnienia wygasają",
+    "on_leave": "Na urlopie"
+  },
+  "rate_modal": {
+    "title": "Zmień stawkę",
+    "new_rate": "Nowa stawka (PLN/h)",
+    "effective_date": "Data wejścia w życie",
+    "history": "Historia stawek",
+    "save": "Zapisz stawkę"
+  },
+  "settlement": {
+    "month": "Miesiąc",
+    "period_all": "Cały mc",
+    "period_1_15": "1–15",
+    "period_15_23": "15–23",
+    "port": "Port / terminal",
+    "employees": "Pracownicy",
+    "hours": "Suma godzin",
+    "wages": "Suma wynagrodzeń"
+  },
+  "invoices": {
+    "title": "Faktury wystawione",
+    "add": "Dodaj fakturę",
+    "add_title": "Dodaj fakturę",
+    "edit_title": "Edytuj fakturę",
+    "number": "Numer faktury",
+    "client": "Klient",
+    "amount": "Kwota (PLN)",
+    "issue_date": "Data wystawienia",
+    "due_date": "Termin płatności",
+    "typ": "Termin wystawienia",
+    "status": "Status",
+    "save": "Zapisz fakturę",
+    "missing_title": "Zlecenia zakończone bez faktury:",
+    "status_issued": "Wystawiona",
+    "status_paid": "Zapłacona",
+    "status_overdue": "Przeterminowana",
+    "typ_after_order": "Po zleceniu",
+    "typ_after_week": "Po tygodniu",
+    "typ_month_end": "Koniec miesiąca"
   },
   "filters": {
     "first_name": "Imię",
     "last_name": "Nazwisko",
+    "name": "Imię i nazwisko",
     "terminal": "Terminal",
     "equipment": "Sprzęt",
     "status": "Status",
     "status_active": "Aktywni",
     "status_inactive": "Nieaktywni",
-    "search_name_placeholder": "Szukaj po imieniu",
+    "search_name_placeholder": "Szukaj po imieniu lub nazwisku",
     "search_last_name_placeholder": "Szukaj po nazwisku",
     "all_terminals": "Wszystkie terminale",
     "all_equipment": "Cały sprzęt"
@@ -65,6 +125,7 @@
     "number": "Numer dokumentu",
     "issue_date": "Data wydania",
     "expiry_date": "Data ważności",
+    "status": "Status",
     "file": "Plik",
     "status_valid": "Ważny",
     "status_expiring": "Wygasa wkrótce",
@@ -91,7 +152,10 @@
     "status_planned": "Zaplanowany",
     "status_approved": "Zatwierdzony",
     "status_completed": "Zrealizowany",
+    "status_rejected": "Odrzucony",
     "add": "Dodaj urlop",
+    "no_vacations": "Brak urlopów.",
+    "on_leave_label": "Urlop",
     "on_leave_until": "Na urlopie do {{date}}"
   },
   "roles": {
@@ -107,8 +171,11 @@
     "save": "Zapisz pracownika",
     "edit": "Edytuj pracownika",
     "delete": "Usuń pracownika",
+    "actions": "Akcje",
     "assign": "Przypisz terminal/sprzęt",
-    "documents": "Certyfikaty i uprawnienia"
+    "documents": "Certyfikaty i uprawnienia",
+    "change_rate": "Zmień stawkę",
+    "vacations": "Urlopy"
   },
   "status": {
     "active": "Aktywny",
@@ -147,6 +214,22 @@
     "load_error": "Nie udało się pobrać listy pracowników",
     "first_name_required": "Imię jest wymagane",
     "last_name_required": "Nazwisko jest wymagane",
-    "document_name_required": "Nazwa dokumentu jest wymagana"
+    "document_name_required": "Nazwa dokumentu jest wymagana",
+    "rate_invalid": "Stawka musi być liczbą dodatnią",
+    "rate_date_required": "Data wejścia w życie jest wymagana",
+    "rate_saved": "Zaktualizowano stawkę pracownika {{name}}",
+    "vacation_dates_required": "Daty początku i końca są wymagane",
+    "vacation_added": "Dodano urlop",
+    "vacation_status_updated": "Zaktualizowano status urlopu",
+    "vacation_deleted": "Usunięto urlop",
+    "vacation_delete_confirm_title": "Usuwanie urlopu",
+    "vacation_delete_confirm_message": "Czy na pewno chcesz usunąć urlop {{range}}?",
+    "invoice_required": "Numer, klient i data wystawienia są wymagane",
+    "invoice_created": "Utworzono fakturę {{numer}}",
+    "invoice_updated": "Zaktualizowano fakturę {{numer}}",
+    "invoice_deleted": "Usunięto fakturę",
+    "invoice_status_updated": "Zaktualizowano status faktury",
+    "invoice_delete_confirm_title": "Usuwanie faktury",
+    "invoice_delete_confirm_message": "Czy na pewno chcesz usunąć fakturę {{numer}}?"
   }
 }

@@ -218,6 +218,193 @@ class OrderRepository extends BaseRepository
     {
         return $this->delete($id);
     }
+    // --- Rozliczenia godzin i wynagrodzeń (Etap 7a) ---
+
+    /**
+     * Rozliczenie per pracownik dla zadanego miesiąca i okresu.
+     *
+     * Zwraca dla każdego pracownika: employee_id, imie, nazwisko, terminal_id,
+     * rola (najczęstsza w miesiącu), godziny_1_15, godziny_15_23, godziny_total,
+     * wynagrodzenie (godziny × stawka z historii po dacie zlecenia).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function settlementPerEmployee(string $month, string $period): array
+    {
+        [$dayFrom, $dayTo] = $this->periodBounds($month, $period);
+
+        $sql = 'SELECT oe.`employee_id`,
+                       emp.`imie`, emp.`nazwisko`,
+                       o.`terminal_id`,
+                       MAX(oe.`rola`) AS rola,
+                       SUM(CASE WHEN DAY(o.`data_rozpoczecia`) < 15 THEN COALESCE(oe.`godziny`,0) ELSE 0 END) AS godziny_1_15,
+                       SUM(CASE WHEN DAY(o.`data_rozpoczecia`) >= 15 THEN COALESCE(oe.`godziny`,0) ELSE 0 END) AS godziny_15_23,
+                       SUM(COALESCE(oe.`godziny`,0)) AS godziny_total
+                FROM `order_employees` oe
+                INNER JOIN `orders` o ON o.`id` = oe.`order_id`
+                LEFT JOIN `employees` emp ON emp.`id` = oe.`employee_id`
+                WHERE DATE(o.`data_rozpoczecia`) BETWEEN :day_from AND :day_to
+                  AND oe.`employee_id` IS NOT NULL
+                GROUP BY oe.`employee_id`, emp.`imie`, emp.`nazwisko`, o.`terminal_id`
+                ORDER BY emp.`nazwisko` ASC, emp.`imie` ASC';
+
+        $stmt = $this->executeQuery($sql, [':day_from' => $dayFrom, ':day_to' => $dayTo]);
+
+        /** @var array<int, array<string, mixed>> */
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Rozliczenie per port (terminal) dla zadanego miesiąca i okresu.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function settlementPerPort(string $month, string $period): array
+    {
+        [$dayFrom, $dayTo] = $this->periodBounds($month, $period);
+
+        $sql = 'SELECT o.`terminal_id`,
+                       t.`nazwa` AS terminal_nazwa,
+                       COUNT(DISTINCT oe.`employee_id`) AS liczba_pracownikow,
+                       SUM(COALESCE(oe.`godziny`,0)) AS suma_godzin
+                FROM `order_employees` oe
+                INNER JOIN `orders` o ON o.`id` = oe.`order_id`
+                LEFT JOIN `terminals` t ON t.`id` = o.`terminal_id`
+                WHERE DATE(o.`data_rozpoczecia`) BETWEEN :day_from AND :day_to
+                  AND oe.`employee_id` IS NOT NULL
+                GROUP BY o.`terminal_id`, t.`nazwa`
+                ORDER BY t.`nazwa` ASC';
+
+        $stmt = $this->executeQuery($sql, [':day_from' => $dayFrom, ':day_to' => $dayTo]);
+
+        /** @var array<int, array<string, mixed>> */
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Szczegółowe wiersze rozliczeniowe (per pracownik + zlecenie) do dokładnego
+     * wyliczenia wynagrodzenia po stawce obowiązującej w dacie zlecenia.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function settlementDetail(string $month, string $period): array
+    {
+        [$dayFrom, $dayTo] = $this->periodBounds($month, $period);
+
+        $sql = 'SELECT oe.`employee_id`, DATE(o.`data_rozpoczecia`) AS data_zlecenia,
+                       oe.`godziny`, o.`terminal_id`, oe.`rola`
+                FROM `order_employees` oe
+                INNER JOIN `orders` o ON o.`id` = oe.`order_id`
+                WHERE DATE(o.`data_rozpoczecia`) BETWEEN :day_from AND :day_to
+                  AND oe.`employee_id` IS NOT NULL
+                ORDER BY oe.`employee_id` ASC, o.`data_rozpoczecia` ASC';
+        $stmt = $this->executeQuery($sql, [':day_from' => $dayFrom, ':day_to' => $dayTo]);
+
+        /** @var array<int, array<string, mixed>> */
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Suma godzin per pracownik w zadanym miesiącu (do kolumny „Godz. (mc)").
+     *
+     * @param array<int, int> $employeeIds
+     * @return array<int, float>  employee_id => suma godzin
+     */
+    public function hoursPerEmployeeInMonth(string $month, array $employeeIds): array
+    {
+        if ($employeeIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_map(static fn (int $id): string => (string) $id, $employeeIds));
+        $sql = "SELECT oe.`employee_id`, SUM(COALESCE(oe.`godziny`,0)) AS suma
+                FROM `order_employees` oe
+                INNER JOIN `orders` o ON o.`id` = oe.`order_id`
+                WHERE DATE_FORMAT(o.`data_rozpoczecia`, '%Y-%m') = :month
+                  AND oe.`employee_id` IS NOT NULL
+                  AND oe.`employee_id` IN ({$placeholders})
+                GROUP BY oe.`employee_id`";
+        $stmt = $this->executeQuery($sql, [':month' => $month]);
+
+        $map = [];
+        /** @var array<int, array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+        foreach ($rows as $row) {
+            $empId = $this->toInt($row['employee_id'] ?? 0);
+            $suma = $row['suma'] ?? null;
+            if ($empId > 0) {
+                $map[$empId] = $suma === null ? 0.0 : (is_numeric($suma) ? (float) $suma : 0.0);
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Najczęstsza rola pracownika w bieżącym dniu (agregacja z najświeższych zleceń).
+     *
+     * @return array<int, string>  employee_id => rola
+     */
+    public function currentRolesByDate(string $date): array
+    {
+        $sql = 'SELECT oe.`employee_id`, oe.`rola`
+                FROM `order_employees` oe
+                INNER JOIN `orders` o ON o.`id` = oe.`order_id`
+                WHERE DATE(o.`data_rozpoczecia`) = :date
+                  AND oe.`employee_id` IS NOT NULL
+                  AND oe.`rola` IS NOT NULL
+                ORDER BY oe.`id` DESC';
+        $stmt = $this->executeQuery($sql, [':date' => $date]);
+
+        /** @var array<int, array<string, mixed>> */
+        $rows = $stmt->fetchAll();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $empId = $this->toInt($row['employee_id'] ?? 0);
+            if ($empId > 0 && !array_key_exists($empId, $map)) {
+                $rola = $row['rola'];
+                if (is_string($rola)) {
+                    $map[$empId] = $rola;
+                }
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Wyznacza granice dni dla miesiąca i wybranego okresu rozliczeniowego.
+     *
+     * @return array{0: string, 1: string}  [day_from, day_to] w formacie Y-m-d
+     */
+    private function periodBounds(string $month, string $period): array
+    {
+        $ts = strtotime($month . '-01');
+        if ($ts === false) {
+            $fallback = strtotime(date('Y-m') . '-01');
+            $ts = $fallback === false ? time() : $fallback;
+        }
+        $year = (int) date('Y', $ts);
+        $mon = (int) date('m', $ts);
+        $lastDay = (int) date('t', $ts);
+
+        $dayFrom = 1;
+        $dayTo = $lastDay;
+
+        if ($period === '1-15') {
+            $dayFrom = 1;
+            $dayTo = min(15, $lastDay);
+        } elseif ($period === '15-23') {
+            $dayFrom = 15;
+            $dayTo = min(23, $lastDay);
+        }
+
+        return [
+            sprintf('%04d-%02d-%02d', $year, $mon, $dayFrom),
+            sprintf('%04d-%02d-%02d', $year, $mon, $dayTo),
+        ];
+    }
+
     // --- Przypisania pracowników i sprzętu ---
 
     /**
@@ -227,10 +414,24 @@ class OrderRepository extends BaseRepository
      */
     public function findAssignedEmployees(int $orderId): array
     {
-        $sql = 'SELECT oe.`id`, oe.`order_id`, oe.`employee_id`,
-                       emp.`imie`, emp.`nazwisko`, emp.`email`
+        // Stawka godzinowa obowiązująca w dacie rozpoczęcia zlecenia pobierana jest
+        // poprzez skorelowane podzapytanie do `employee_rates` (najnowsza stawka
+        // z data_od <= data_rozpoczecia zlecenia). Dzięki temu tabeli rozliczenia
+        // godzin i wynagrodzeń wystarczy jedno zapytanie (anti-N+1).
+        $sql = 'SELECT oe.`id`, oe.`order_id`, oe.`employee_id`, oe.`rola`, oe.`godziny`,
+                       emp.`imie`, emp.`nazwisko`, emp.`email`,
+                       o.`data_rozpoczecia` AS order_start,
+                       (
+                           SELECT er.`stawka_godzinowa`
+                           FROM `employee_rates` er
+                           WHERE er.`employee_id` = oe.`employee_id`
+                             AND er.`data_od` <= COALESCE(o.`data_rozpoczecia`, NOW())
+                           ORDER BY er.`data_od` DESC, er.`id` DESC
+                           LIMIT 1
+                       ) AS stawka_godzinowa
                 FROM `order_employees` oe
                 LEFT JOIN `employees` emp ON emp.`id` = oe.`employee_id`
+                LEFT JOIN `orders` o ON o.`id` = oe.`order_id`
                 WHERE oe.`order_id` = :order_id
                 ORDER BY oe.`id` ASC';
         $stmt = $this->executeQuery($sql, [':order_id' => $orderId]);
@@ -280,10 +481,16 @@ class OrderRepository extends BaseRepository
         return $result !== false && (int) $result > 0;
     }
 
-    public function attachEmployee(int $orderId, int $employeeId): bool
+    public function attachEmployee(int $orderId, int $employeeId, ?string $rola = null, ?float $godziny = null): bool
     {
-        $sql = 'INSERT IGNORE INTO `order_employees` (`order_id`, `employee_id`) VALUES (:order_id, :employee_id)';
-        $this->executeQuery($sql, [':order_id' => $orderId, ':employee_id' => $employeeId]);
+        $sql = 'INSERT IGNORE INTO `order_employees` (`order_id`, `employee_id`, `rola`, `godziny`)
+                VALUES (:order_id, :employee_id, :rola, :godziny)';
+        $this->executeQuery($sql, [
+            ':order_id' => $orderId,
+            ':employee_id' => $employeeId,
+            ':rola' => $rola,
+            ':godziny' => $godziny,
+        ]);
 
         return true;
     }
@@ -314,5 +521,17 @@ class OrderRepository extends BaseRepository
         $stmt->bindValue(':equipment_id', $equipmentId, \PDO::PARAM_INT);
 
         return $stmt->execute();
+    }
+
+    private function toInt(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return 0;
     }
 }

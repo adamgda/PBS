@@ -43,19 +43,6 @@ export type CalendarView = 'week' | 'month' | 'day';
           >{{ 'common.buttons.refresh' | translate }}</button>
           <span class="ml-2 font-semibold text-gray-900">{{ currentPeriodLabel() }}</span>
         </div>
-        <div class="flex gap-1">
-          @for (v of views; track v) {
-            <button
-              type="button"
-              class="px-3 py-1 rounded text-sm font-medium transition-colors"
-              [class.bg-pbs-primary]="view() === v"
-              [class.text-white]="view() === v"
-              [class.text-gray-600]="view() !== v"
-              [class.hover:bg-gray-50]="view() !== v"
-              (click)="changeView(v)"
-            >{{ v }}</button>
-          }
-        </div>
       </div>
 
       <!-- Grid -->
@@ -122,6 +109,10 @@ export type CalendarView = 'week' | 'month' | 'day';
 export class CalendarComponent {
   @Input({ required: true }) set events(value: CalendarEvent[]) {
     this._events.set(value);
+  }
+
+  @Input() set viewMode(value: CalendarView) {
+    this._view.set(value);
   }
 
   @Output() eventClick = new EventEmitter<CalendarEvent>();

@@ -168,11 +168,38 @@ it('assignEmployee attaches and returns 201', function (): void {
     $this->orderRepository->shouldReceive('findById')->with(1)->andReturn(orderRow());
     $this->employeeRepository->shouldReceive('findById')->with(2)->andReturn(['id' => 2]);
     $this->orderRepository->shouldReceive('isEmployeeAssigned')->with(1, 2)->andReturn(false);
-    $this->orderRepository->shouldReceive('attachEmployee')->with(1, 2)->andReturn(true);
+    $this->orderRepository->shouldReceive('attachEmployee')->with(1, 2, null, null)->andReturn(true);
 
     $response = $this->orderController->assignEmployee(new Request(query: [], body: ['employee_id' => 2], headers: []), ['id' => '1']);
     expect($response->statusCode())->toBe(201);
     expect($response->data()['assigned'])->toBeTrue();
+});
+
+it('assignEmployee saves rola and godziny', function (): void {
+    $this->orderRepository->shouldReceive('findById')->with(1)->andReturn(orderRow());
+    $this->employeeRepository->shouldReceive('findById')->with(2)->andReturn(['id' => 2]);
+    $this->orderRepository->shouldReceive('isEmployeeAssigned')->with(1, 2)->andReturn(false);
+    $this->orderRepository->shouldReceive('attachEmployee')->with(1, 2, 'operator', 8.0)->andReturn(true);
+
+    $response = $this->orderController->assignEmployee(
+        new Request(query: [], body: ['employee_id' => 2, 'rola' => 'operator', 'godziny' => 8], headers: []),
+        ['id' => '1'],
+    );
+    expect($response->statusCode())->toBe(201);
+    expect($response->data()['rola'])->toBe('operator');
+    expect($response->data()['godziny'])->toBe(8.0);
+});
+
+it('assignEmployee rejects invalid rola with 422', function (): void {
+    $this->orderRepository->shouldReceive('findById')->with(1)->andReturn(orderRow());
+    $this->employeeRepository->shouldReceive('findById')->with(2)->andReturn(['id' => 2]);
+    $this->orderRepository->shouldReceive('isEmployeeAssigned')->with(1, 2)->andReturn(false);
+
+    $response = $this->orderController->assignEmployee(
+        new Request(query: [], body: ['employee_id' => 2, 'rola' => 'nieistniejaca'], headers: []),
+        ['id' => '1'],
+    );
+    expect($response->statusCode())->toBe(422);
 });
 
 it('unassignEmployee returns 404 when not assigned', function (): void {

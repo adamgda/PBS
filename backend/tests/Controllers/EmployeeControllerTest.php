@@ -6,7 +6,10 @@ use App\Controllers\EmployeeController;
 use App\Http\Request;
 use App\Repository\AuditLogRepository;
 use App\Repository\EmployeeDocumentRepository;
+use App\Repository\EmployeeRateRepository;
 use App\Repository\EmployeeRepository;
+use App\Repository\EmployeeVacationRepository;
+use App\Repository\OrderRepository;
 use App\Services\EmployeeService;
 use App\Services\FileUploadService;
 use App\Services\VirusScannerInterface;
@@ -20,6 +23,15 @@ beforeEach(function (): void {
     $this->documentRepository = m::mock(EmployeeDocumentRepository::class, [$pdo]);
     $this->auditLogRepository = m::mock(AuditLogRepository::class, [$pdo]);
     $this->auditLogRepository->shouldReceive('logFromRequest')->byDefault();
+    $this->rateRepository = m::mock(EmployeeRateRepository::class, [$pdo]);
+    $this->vacationRepository = m::mock(EmployeeVacationRepository::class, [$pdo]);
+    $this->orderRepository = m::mock(OrderRepository::class, [$pdo]);
+    // Domyślne puste odpowiedzi dla metod wzbogacających listę (Etap 7a).
+    $this->rateRepository->shouldReceive('findCurrentRatesForEmployees')->byDefault()->andReturn([]);
+    $this->orderRepository->shouldReceive('hoursPerEmployeeInMonth')->byDefault()->andReturn([]);
+    $this->orderRepository->shouldReceive('currentRolesByDate')->byDefault()->andReturn([]);
+    $this->vacationRepository->shouldReceive('findOnLeaveEmployeeIds')->byDefault()->andReturn([]);
+    $this->documentRepository->shouldReceive('findForEmployeeIds')->byDefault()->andReturn([]);
 
     $this->scanner = m::mock(VirusScannerInterface::class);
     $this->scanner->shouldReceive('isAvailable')->byDefault()->andReturn(false);
@@ -37,6 +49,9 @@ beforeEach(function (): void {
         $this->documentRepository,
         $this->auditLogRepository,
         $fileUploadService,
+        $this->rateRepository,
+        $this->vacationRepository,
+        $this->orderRepository,
     );
     $this->employeeController = new EmployeeController($this->employeeService);
 });
@@ -48,7 +63,7 @@ afterEach(function (): void {
 // --- LIST (index) ---
 
 it('index returns paginated list', function (): void {
-    $filters = ['imie' => '', 'nazwisko' => '', 'terminal_id' => '', 'sprzet_id' => '', 'is_active' => '', 'sort' => 'id', 'direction' => 'asc'];
+    $filters = ['q' => '', 'imie' => '', 'nazwisko' => '', 'terminal_id' => '', 'sprzet_id' => '', 'is_active' => '', 'sort' => 'id', 'direction' => 'asc'];
     $this->employeeRepository->shouldReceive('search')
         ->with($filters, 25, 0, 'id', 'asc')
         ->andReturn([
@@ -67,7 +82,7 @@ it('index returns paginated list', function (): void {
 });
 
 it('index applies filters from query string', function (): void {
-    $filters = ['imie' => 'Jan', 'nazwisko' => '', 'terminal_id' => '', 'sprzet_id' => '', 'is_active' => '1', 'sort' => 'id', 'direction' => 'asc'];
+    $filters = ['q' => '', 'imie' => 'Jan', 'nazwisko' => '', 'terminal_id' => '', 'sprzet_id' => '', 'is_active' => '1', 'sort' => 'id', 'direction' => 'asc'];
     $this->employeeRepository->shouldReceive('search')->with($filters, 10, 0, 'id', 'asc')->andReturn([]);
     $this->employeeRepository->shouldReceive('countSearch')->with($filters)->andReturn(0);
 
@@ -76,6 +91,46 @@ it('index applies filters from query string', function (): void {
 
     expect($response->statusCode())->toBe(200);
     expect($response->data()['per_page'])->toBe(10);
+});
+
+it('index enriches employees with uprawnienie summary', function (): void {
+    $filters = ['q' => '', 'imie' => '', 'nazwisko' => '', 'terminal_id' => '', 'sprzet_id' => '', 'is_active' => '', 'sort' => 'id', 'direction' => 'asc'];
+    $this->employeeRepository->shouldReceive('search')
+        ->with($filters, 25, 0, 'id', 'asc')
+        ->andReturn([
+            ['id' => 1, 'imie' => 'Jan', 'nazwisko' => 'Kowalski', 'telefon' => null, 'email' => null, 'current_terminal_id' => null, 'terminal_nazwa' => null, 'current_sprzet_id' => null, 'sprzet_nazwa' => null, 'is_active' => 1, 'created_at' => null, 'updated_at' => null],
+            ['id' => 2, 'imie' => 'Anna', 'nazwisko' => 'Nowak', 'telefon' => null, 'email' => null, 'current_terminal_id' => null, 'terminal_nazwa' => null, 'current_sprzet_id' => null, 'sprzet_nazwa' => null, 'is_active' => 1, 'created_at' => null, 'updated_at' => null],
+        ]);
+    $this->employeeRepository->shouldReceive('countSearch')->with($filters)->andReturn(2);
+
+    $expiring = date('Y-m-d', strtotime('+10 days'));
+    $valid = date('Y-m-d', strtotime('+400 days'));
+    $this->documentRepository->shouldReceive('findForEmployeeIds')->with([1, 2])->andReturn([
+        ['id' => 1, 'employee_id' => 1, 'nazwa' => 'UDT HDS', 'numer_dokumentu' => null, 'data_wydania' => null, 'data_waznosci' => $expiring, 'plik' => null],
+        ['id' => 2, 'employee_id' => 2, 'nazwa' => 'BHP', 'numer_dokumentu' => null, 'data_wydania' => null, 'data_waznosci' => $valid, 'plik' => null],
+    ]);
+
+    $request = new Request(query: [], body: [], headers: []);
+    $response = $this->employeeController->index($request);
+
+    expect($response->statusCode())->toBe(200);
+    expect($response->data()['data'][0]['uprawnienie']['status'])->toBe('expiring');
+    expect($response->data()['data'][0]['uprawnienie']['nazwa'])->toBe('UDT HDS');
+    expect($response->data()['data'][0]['uprawnienie']['dni'])->toBe(10);
+    expect($response->data()['data'][1]['uprawnienie']['status'])->toBe('ok');
+    expect($response->data()['data'][1]['uprawnienie']['nazwa'])->toBe('BHP');
+});
+
+it('index passes q (imię/nazwisko) filter to repository', function (): void {
+    $filters = ['q' => 'Jan', 'imie' => '', 'nazwisko' => '', 'terminal_id' => '', 'sprzet_id' => '', 'is_active' => '', 'sort' => 'id', 'direction' => 'asc'];
+    $this->employeeRepository->shouldReceive('search')->with($filters, 25, 0, 'id', 'asc')->andReturn([]);
+    $this->employeeRepository->shouldReceive('countSearch')->with($filters)->andReturn(0);
+
+    $request = new Request(query: ['q' => 'Jan'], body: [], headers: []);
+    $response = $this->employeeController->index($request);
+
+    expect($response->statusCode())->toBe(200);
+    expect($response->data()['data'])->toHaveCount(0);
 });
 
 // --- STORE (create) ---

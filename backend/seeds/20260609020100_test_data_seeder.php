@@ -130,20 +130,56 @@ final class TestDataSeeder implements SeederInterface
             'INSERT INTO `orders` (`numer_zlecenia`, `klient_nazwa`, `terminal_id`, `data_rozpoczecia`, `data_zakonczenia`, `zakres_prac`, `wartosc_pln`, `status`)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         );
-        $stmtOrderEmp = $pdo->prepare('INSERT INTO `order_employees` (`order_id`, `employee_id`) VALUES (?, ?)');
+        $stmtOrderEmp = $pdo->prepare('INSERT INTO `order_employees` (`order_id`, `employee_id`, `rola`, `godziny`) VALUES (?, ?, ?, ?)');
         $stmtOrderEq = $pdo->prepare('INSERT INTO `order_equipment` (`order_id`, `equipment_id`) VALUES (?, ?)');
 
-        foreach ($orders as $o) {
+        // Role przypisań (Etap 7a) — pracownik pełni daną rolę w zleceniu.
+        $orderRoles = ['operator', 'brygadzista', 'sztauer'];
+        $orderHours = [8.0, 7.5, 6.0];
+
+        $orderIds = [];
+        foreach ($orders as $i => $o) {
             $stmtOrder->execute($o);
             $orderId = (int) $pdo->lastInsertId();
+            $orderIds[] = $orderId;
             $empIdx = array_search($o[2], $terminalIds, true);
             if ($empIdx !== false && isset($employeeIds[$empIdx])) {
-                $stmtOrderEmp->execute([$orderId, $employeeIds[$empIdx]]);
+                $stmtOrderEmp->execute([$orderId, $employeeIds[$empIdx], $orderRoles[$i % 3], $orderHours[$i % 3]]);
             }
             if (isset($vehicleEquipmentIds[$empIdx !== false ? $empIdx : 0])) {
                 $stmtOrderEq->execute([$orderId, $vehicleEquipmentIds[$empIdx !== false ? $empIdx : 0]]);
             }
         }
+
+        // --- Stawki godzinowe (Etap 7a) ---
+        $stmtRate = $pdo->prepare(
+            'INSERT INTO `employee_rates` (`employee_id`, `stawka_godzinowa`, `data_od`, `data_do`)
+             VALUES (?, ?, ?, ?)',
+        );
+        $rateBase = [45.00, 50.00, 48.00, 52.00, 55.00];
+        $rateStart = date('Y-m-01');
+        $prevStart = date('Y-m-d', strtotime('first day of last month'));
+        foreach ($employeeIds as $i => $empId) {
+            $stmtRate->execute([$empId, $rateBase[$i % 5] - 5, $prevStart, date('Y-m-d', strtotime('last day of last month'))]);
+            $stmtRate->execute([$empId, $rateBase[$i % 5], $rateStart, null]);
+        }
+
+        // --- Urlopy (Etap 7a) ---
+        $stmtVacation = $pdo->prepare(
+            'INSERT INTO `employee_vacations` (`employee_id`, `data_od`, `data_do`, `typ`, `status`)
+             VALUES (?, ?, ?, ?, ?)',
+        );
+        $stmtVacation->execute([$employeeIds[1], date('Y-m-d', strtotime('+1 week')), date('Y-m-d', strtotime('+1 week +2 days')), 'wypoczynkowy', 'zatwierdzony']);
+        $stmtVacation->execute([$employeeIds[3], date('Y-m-d', strtotime('+2 days')), date('Y-m-d', strtotime('+4 days')), 'na_zadanie', 'oczekujacy']);
+
+        // --- Faktury (Etap 7a) ---
+        $stmtInvoice = $pdo->prepare(
+            'INSERT INTO `invoices` (`order_id`, `numer_faktury`, `klient_nazwa`, `kwota_pln`, `data_wystawienia`, `termin_platnosci`, `status`, `typ_wystawienia`)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        );
+        // Pierwsze zlecenie ma fakturę, trzecie (zakonczone) nie — pojawi się w invoices/missing.
+        $stmtInvoice->execute([$orderIds[0], 'F-2026-001', 'Baltic Operator Sp. z o.o.', 5000, date('Y-m-d', strtotime('-2 days')), date('Y-m-d', strtotime('+14 days')), 'wystawiona', 'po_zleceniu']);
+        $stmtInvoice->execute([null, 'F-2026-002', 'Port Operations Sp. z o.o.', 3200, date('Y-m-d', strtotime('-10 days')), date('Y-m-d', strtotime('-2 days')), 'przeterminowana', 'koniec_miesiaca']);
 
         // --- Awaria (Etap 10) ---
         $incidents = [

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 
 import { EmployeesService } from '../../services/employees.service';
 import { TerminalsService } from '../../services/terminals.service';
+import { EquipmentService } from '../../services/equipment.service';
+import { InvoicesService } from '../../services/invoices.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmService } from '../../services/confirm.service';
 import { TranslateService } from '../../services/translate.service';
@@ -32,10 +34,20 @@ import {
   EmployeeListParams,
   CreateEmployeeRequest,
   AssignEmployeeRequest,
+  EmployeeRate,
+  EmployeeVacation,
+  VacationType,
+  SettlementPeriod,
+  SettlementByPortRow,
+  EmployeeSummary,
 } from '../../models/employee.model';
+import { Invoice, InvoiceStatus, InvoiceTypWystawienia, MissingInvoiceRow } from '../../models/invoice.model';
 
 type ModalMode = 'create' | 'edit' | null;
 type DocModalMode = 'create' | 'edit' | null;
+
+/** Klucz szybkiego filtra (chipsy wg mocka pracownicy.html). */
+type QuickFilterKey = 'field' | 'available' | 'entitlements' | 'on_leave';
 
 /**
  * Sekcja Pracownicy (Etap 7).
@@ -70,6 +82,8 @@ type DocModalMode = 'create' | 'edit' | null;
 export class EmployeesComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly terminalsService = inject(TerminalsService);
+  private readonly equipmentService = inject(EquipmentService);
+  private readonly invoicesService = inject(InvoicesService);
   private readonly toastService = inject(ToastService);
   private readonly confirmService = inject(ConfirmService);
   private readonly translate = inject(TranslateService);
@@ -133,30 +147,162 @@ export class EmployeesComponent {
   private readonly _sprzetOptions = signal<AutocompleteOption[]>([]);
   readonly sprzetOptions = this._sprzetOptions.asReadonly();
 
+  // --- Opcje filtrów (terminal + sprzęt) ---
+  private readonly _equipmentFilterOptions = signal<AutocompleteOption[]>([]);
+  /** Opcje listy rozwijanej dla filtra „Terminal". */
+  readonly terminalFilterOptions = computed<{ value: string; label: string }[]>(() =>
+    this._terminalOptions().map((o) => ({ value: String(o.value), label: o.label })),
+  );
+  /** Opcje listy rozwijanej dla filtra „Sprzęt". */
+  readonly equipmentFilterOptions = computed<{ value: string; label: string }[]>(() =>
+    this._equipmentFilterOptions().map((o) => ({ value: String(o.value), label: o.label })),
+  );
+
+  // --- Etap 7a: stawki, urlopy, rozliczenia, KPI, faktury ---
+  readonly activeTab = signal<'list' | 'settlement' | 'invoices'>('list');
+
+  // Modal „Zmień stawkę"
+  readonly rateEmployee = signal<Employee | null>(null);
+  readonly rateValue = signal<string>('');
+  readonly rateDataOd = signal<string>('');
+  readonly rateSaving = signal<boolean>(false);
+  private readonly _rateHistory = signal<EmployeeRate[]>([]);
+  readonly rateHistory = this._rateHistory.asReadonly();
+
+  // Panel urlopów
+  readonly vacationsEmployee = signal<Employee | null>(null);
+  private readonly _vacations = signal<EmployeeVacation[]>([]);
+  readonly vacations = this._vacations.asReadonly();
+  readonly vacDataOd = signal<string>('');
+  readonly vacDataDo = signal<string>('');
+  readonly vacTyp = signal<VacationType>('wypoczynkowy');
+  readonly vacSaving = signal<boolean>(false);
+
+  // Rozliczenie per port + KPI
+  readonly settlementMonth = signal<string>(this.currentMonth());
+  readonly settlementPeriod = signal<SettlementPeriod>('all');
+  private readonly _portRows = signal<SettlementByPortRow[]>([]);
+  readonly portRows = this._portRows.asReadonly();
+  private readonly _summary = signal<EmployeeSummary | null>(null);
+  readonly summary = this._summary.asReadonly();
+  readonly settlementLoading = signal<boolean>(false);
+
+  // Faktury
+  private readonly _invoices = signal<Invoice[]>([]);
+  readonly invoices = this._invoices.asReadonly();
+  private readonly _invoiceTotal = signal<number>(0);
+  readonly invoiceTotal = this._invoiceTotal.asReadonly();
+  readonly invoicePage = signal<number>(1);
+  readonly invoicePerPage = signal<number>(25);
+  readonly invoicesLoading = signal<boolean>(false);
+  private readonly _missingInvoices = signal<MissingInvoiceRow[]>([]);
+  readonly missingInvoices = this._missingInvoices.asReadonly();
+
+  // Modal faktury
+  readonly invoiceModalMode = signal<'create' | 'edit' | null>(null);
+  readonly invoiceEditing = signal<Invoice | null>(null);
+  readonly invoiceSaving = signal<boolean>(false);
+  readonly invNumer = signal<string>('');
+  readonly invKlient = signal<string>('');
+  readonly invKwota = signal<string>('');
+  readonly invDataWystawienia = signal<string>('');
+  readonly invTerminPlatnosci = signal<string>('');
+  readonly invStatus = signal<InvoiceStatus>('wystawiona');
+  readonly invTyp = signal<InvoiceTypWystawienia>('po_zleceniu');
+  readonly invOrderId = signal<string>('');
+
   private readonly statusOptions = [
     { value: '1', labelKey: 'pracownicy.status.active' },
     { value: '0', labelKey: 'pracownicy.status.inactive' },
   ];
 
   readonly columns = computed<DataTableColumn<Employee>[]>(() => [
-    { key: 'imie', label: this.t('pracownicy.list.first_name'), sortable: true, isTitle: true },
-    { key: 'nazwisko', label: this.t('pracownicy.list.last_name'), sortable: true },
+    { key: 'name', label: this.t('pracownicy.list.name'), isTitle: true, formatter: (e) => `${e.imie} ${e.nazwisko}` },
     { key: 'telefon', label: this.t('pracownicy.list.phone') },
     { key: 'email', label: this.t('pracownicy.list.email') },
     { key: 'terminal_nazwa', label: this.t('pracownicy.list.terminal') },
     { key: 'sprzet_nazwa', label: this.t('pracownicy.list.equipment') },
+    { key: 'stawka_godzinowa', label: this.t('pracownicy.list.hourly_rate') },
+    { key: 'godziny_mc', label: this.t('pracownicy.list.hours_worked') },
+    { key: 'wynagrodzenie', label: this.t('pracownicy.list.wage') },
+    { key: 'rola_dzis', label: this.t('pracownicy.list.role_today') },
     { key: 'is_active', label: this.t('pracownicy.list.status'), sortable: true },
   ]);
 
   readonly filterConfigs = computed<FilterConfig[]>(() => [
-    { key: 'imie', label: this.t('pracownicy.filters.first_name'), type: 'text', placeholder: this.t('pracownicy.filters.search_name_placeholder') },
-    { key: 'nazwisko', label: this.t('pracownicy.filters.last_name'), type: 'text', placeholder: this.t('pracownicy.filters.search_last_name_placeholder') },
+    { key: 'q', label: this.t('pracownicy.filters.name'), type: 'text', placeholder: this.t('pracownicy.filters.search_name_placeholder') },
+    { key: 'terminal_id', label: this.t('pracownicy.filters.terminal'), type: 'select', options: this.terminalFilterOptions() },
+    { key: 'sprzet_id', label: this.t('pracownicy.filters.equipment'), type: 'select', options: this.equipmentFilterOptions() },
     { key: 'is_active', label: this.t('pracownicy.filters.status'), type: 'select', options: this.statusOptions.map((o) => ({ value: o.value, label: this.t(o.labelKey) })) },
   ]);
+
+  // --- Chipsy szybkich filtrów (mock: Wszyscy / W terenie / Dostępni / Uprawnienia / Na urlopie) ---
+  readonly quickFilter = signal<QuickFilterKey | null>(null);
+
+  /** Definicje chipsów (klucz + klucz tłumaczenia etykiety). */
+  readonly quickFilterChips: { key: QuickFilterKey; label: string }[] = [
+    { key: 'field', label: 'pracownicy.quick_filters.field' },
+    { key: 'available', label: 'pracownicy.quick_filters.available' },
+    { key: 'entitlements', label: 'pracownicy.quick_filters.entitlements' },
+    { key: 'on_leave', label: 'pracownicy.quick_filters.on_leave' },
+  ];
+
+  /** Lista przefiltrowana klient-side przez aktywny chip. */
+  readonly filteredEmployees = computed<Employee[]>(() => {
+    const q = this.quickFilter();
+    const list = this._employees();
+    if (!q) return list;
+    return list.filter((e) => this.matchesQuickFilter(e, q));
+  });
+
+  /** Liczniki do chipsów — liczone z aktualnie załadowanej strony listy. */
+  readonly quickFilterCounts = computed<Record<QuickFilterKey | 'all', number>>(() => {
+    const list = this._employees();
+    return {
+      all: list.length,
+      field: list.filter((e) => !!(e.terminal_nazwa || e.sprzet_nazwa)).length,
+      available: list.filter((e) => e.is_active && !e.on_leave).length,
+      entitlements: list.filter((e) => e.uprawnienie?.status === 'expired' || e.uprawnienie?.status === 'expiring').length,
+      on_leave: list.filter((e) => e.on_leave).length,
+    };
+  });
+
+  setQuickFilter(key: QuickFilterKey | 'all' | null): void {
+    this.quickFilter.set(key === 'all' || key === null ? null : key);
+    this._page.set(1);
+  }
+
+  private matchesQuickFilter(e: Employee, key: QuickFilterKey): boolean {
+    switch (key) {
+      case 'field':
+        return !!(e.terminal_nazwa || e.sprzet_nazwa);
+      case 'available':
+        return e.is_active && !e.on_leave;
+      case 'entitlements':
+        return e.uprawnienie?.status === 'expired' || e.uprawnienie?.status === 'expiring';
+      case 'on_leave':
+        return e.on_leave;
+      default:
+        return true;
+    }
+  }
+
+  // --- Menu akcji wiersza (dropdown, oszczędność miejsca) ---
+  readonly openActionsId = signal<number | null>(null);
+
+  toggleActions(id: number): void {
+    this.openActionsId.update((cur) => (cur === id ? null : id));
+  }
+
+  closeActions(): void {
+    this.openActionsId.set(null);
+  }
 
   constructor() {
     this.load();
     this.loadTerminalOptions();
+    this.loadEquipmentFilterOptions();
+    this.loadSummary();
   }
 
   // --- Ładowanie listy ---
@@ -515,10 +661,368 @@ export class EmployeesComponent {
     });
   }
 
+  // --- Etap 7a: stawki, urlopy, rozliczenia, KPI, faktury ---
+
+  private currentMonth(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  setTab(tab: 'list' | 'settlement' | 'invoices'): void {
+    this.activeTab.set(tab);
+    if (tab === 'list') {
+      this.loadSummary();
+    } else if (tab === 'settlement') {
+      this.loadSettlement();
+      this.loadSummary();
+    } else if (tab === 'invoices') {
+      this.loadInvoices();
+      this.loadMissingInvoices();
+    }
+  }
+
+  // --- Stawki ---
+
+  openChangeRate(employee: Employee): void {
+    this.rateEmployee.set(employee);
+    this.rateValue.set(employee.stawka_godzinowa ? String(employee.stawka_godzinowa) : '');
+    this.rateDataOd.set(this.currentMonth() + '-01');
+    this.rateSaving.set(false);
+    this.loadRateHistory(employee.id);
+  }
+
+  closeRateModal(): void {
+    this.rateEmployee.set(null);
+    this._rateHistory.set([]);
+    this.rateSaving.set(false);
+  }
+
+  loadRateHistory(employeeId: number): void {
+    this.employeesService.listRates(employeeId).subscribe({
+      next: (res) => this._rateHistory.set(res.data),
+      error: () => this._rateHistory.set([]),
+    });
+  }
+
+  saveRate(): void {
+    const employee = this.rateEmployee();
+    if (!employee) return;
+    const stawka = parseFloat(this.rateValue().replace(',', '.'));
+    if (!stawka || stawka <= 0) {
+      this.toastService.error(this.t('pracownicy.messages.rate_invalid'));
+      return;
+    }
+    if (!this.rateDataOd()) {
+      this.toastService.error(this.t('pracownicy.messages.rate_date_required'));
+      return;
+    }
+    this.rateSaving.set(true);
+    this.employeesService.createRate(employee.id, { stawka_godzinowa: stawka, data_od: this.rateDataOd() }).subscribe({
+      next: () => {
+        this.rateSaving.set(false);
+        this.closeRateModal();
+        this.toastService.success(this.t('pracownicy.messages.rate_saved', { name: `${employee.imie} ${employee.nazwisko}` }));
+        this.load();
+      },
+      error: (err) => {
+        this.rateSaving.set(false);
+        this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
+      },
+    });
+  }
+
+  // --- Urlopy ---
+
+  openVacations(employee: Employee): void {
+    this.vacationsEmployee.set(employee);
+    this.vacDataOd.set('');
+    this.vacDataDo.set('');
+    this.vacTyp.set('wypoczynkowy');
+    this.loadVacations(employee.id);
+  }
+
+  closeVacations(): void {
+    this.vacationsEmployee.set(null);
+    this._vacations.set([]);
+  }
+
+  loadVacations(employeeId: number): void {
+    this.employeesService.listVacations(employeeId).subscribe({
+      next: (res) => this._vacations.set(res.data),
+      error: () => this._vacations.set([]),
+    });
+  }
+
+  saveVacation(): void {
+    const employee = this.vacationsEmployee();
+    if (!employee) return;
+    if (!this.vacDataOd() || !this.vacDataDo()) {
+      this.toastService.error(this.t('pracownicy.messages.vacation_dates_required'));
+      return;
+    }
+    this.vacSaving.set(true);
+    this.employeesService
+      .createVacation(employee.id, { data_od: this.vacDataOd(), data_do: this.vacDataDo(), typ: this.vacTyp() })
+      .subscribe({
+        next: () => {
+          this.vacSaving.set(false);
+          this.vacDataOd.set('');
+          this.vacDataDo.set('');
+          this.toastService.success(this.t('pracownicy.messages.vacation_added'));
+          this.loadVacations(employee.id);
+          this.load();
+        },
+        error: (err) => {
+          this.vacSaving.set(false);
+          this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
+        },
+      });
+  }
+
+  changeVacationStatus(vac: EmployeeVacation, status: EmployeeVacation['status']): void {
+    this.employeesService.updateVacationStatus(vac.id, status).subscribe({
+      next: () => {
+        this.toastService.success(this.t('pracownicy.messages.vacation_status_updated'));
+        const employee = this.vacationsEmployee();
+        if (employee) this.loadVacations(employee.id);
+        this.load();
+      },
+      error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
+    });
+  }
+
+  async deleteVacation(vac: EmployeeVacation): Promise<void> {
+    const confirmed = await this.confirmService.confirm({
+      title: this.t('pracownicy.messages.vacation_delete_confirm_title'),
+      message: this.t('pracownicy.messages.vacation_delete_confirm_message', { range: `${vac.data_od} – ${vac.data_do}` }),
+      danger: true,
+    });
+    if (!confirmed) return;
+    this.employeesService.deleteVacation(vac.id).subscribe({
+      next: () => {
+        this.toastService.success(this.t('pracownicy.messages.vacation_deleted'));
+        const employee = this.vacationsEmployee();
+        if (employee) this.loadVacations(employee.id);
+        this.load();
+      },
+      error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
+    });
+  }
+  // --- Rozliczenie per port + KPI ---
+
+  loadSettlement(): void {
+    this.settlementLoading.set(true);
+    this.employeesService.settlementByPort(this.settlementMonth(), this.settlementPeriod()).subscribe({
+      next: (res) => {
+        this._portRows.set(res.data);
+        this.settlementLoading.set(false);
+      },
+      error: () => {
+        this.settlementLoading.set(false);
+        this._portRows.set([]);
+      },
+    });
+  }
+
+  loadSummary(): void {
+    this.employeesService.summary(this.settlementMonth()).subscribe({
+      next: (res) => this._summary.set(res),
+      error: () => this._summary.set(null),
+    });
+  }
+
+  changeSettlementPeriod(period: SettlementPeriod): void {
+    this.settlementPeriod.set(period);
+    this.loadSettlement();
+  }
+
+  changeSettlementMonth(month: string): void {
+    this.settlementMonth.set(month);
+    this.loadSettlement();
+    this.loadSummary();
+  }
+
+  // --- Faktury ---
+
+  loadInvoices(): void {
+    this.invoicesLoading.set(true);
+    this.invoicesService
+      .list({ page: this.invoicePage(), per_page: this.invoicePerPage(), sort: 'data_wystawienia', direction: 'desc' })
+      .subscribe({
+        next: (res) => {
+          this._invoices.set(res.data);
+          this._invoiceTotal.set(res.total);
+          this.invoicesLoading.set(false);
+        },
+        error: () => {
+          this.invoicesLoading.set(false);
+          this._invoices.set([]);
+        },
+      });
+  }
+
+  loadMissingInvoices(): void {
+    this.invoicesService.missing(1, 100).subscribe({
+      next: (res) => this._missingInvoices.set(res.data),
+      error: () => this._missingInvoices.set([]),
+    });
+  }
+
+  openAddInvoice(): void {
+    this.invoiceModalMode.set('create');
+    this.invoiceEditing.set(null);
+    this.invNumer.set('');
+    this.invKlient.set('');
+    this.invKwota.set('');
+    this.invDataWystawienia.set(this.currentMonth() + '-01');
+    this.invTerminPlatnosci.set('');
+    this.invStatus.set('wystawiona');
+    this.invTyp.set('po_zleceniu');
+    this.invOrderId.set('');
+  }
+
+  openEditInvoice(invoice: Invoice): void {
+    this.invoiceModalMode.set('edit');
+    this.invoiceEditing.set(invoice);
+    this.invNumer.set(invoice.numer_faktury);
+    this.invKlient.set(invoice.klient_nazwa);
+    this.invKwota.set(String(invoice.kwota_pln));
+    this.invDataWystawienia.set(invoice.data_wystawienia ?? '');
+    this.invTerminPlatnosci.set(invoice.termin_platnosci ?? '');
+    this.invStatus.set(invoice.status);
+    this.invTyp.set(invoice.typ_wystawienia);
+    this.invOrderId.set(invoice.order_id !== null ? String(invoice.order_id) : '');
+  }
+
+  closeInvoiceModal(): void {
+    this.invoiceModalMode.set(null);
+    this.invoiceEditing.set(null);
+    this.invoiceSaving.set(false);
+  }
+
+  saveInvoiceModal(): void {
+    const numer = this.invNumer().trim();
+    const klient = this.invKlient().trim();
+    if (!numer || !klient || !this.invDataWystawienia()) {
+      this.toastService.error(this.t('pracownicy.messages.invoice_required'));
+      return;
+    }
+    const kwota = parseFloat(this.invKwota().replace(',', '.')) || 0;
+    const payload = {
+      numer_faktury: numer,
+      klient_nazwa: klient,
+      kwota_pln: kwota,
+      data_wystawienia: this.invDataWystawienia(),
+      termin_platnosci: this.invTerminPlatnosci() || null,
+      status: this.invStatus(),
+      typ_wystawienia: this.invTyp(),
+      order_id: this.invOrderId() ? Number(this.invOrderId()) : null,
+    };
+    this.invoiceSaving.set(true);
+    const editing = this.invoiceEditing();
+    const done = () => {
+      this.invoiceSaving.set(false);
+      this.closeInvoiceModal();
+      this.toastService.success(this.t(editing ? 'pracownicy.messages.invoice_updated' : 'pracownicy.messages.invoice_created', { numer }));
+      this.loadInvoices();
+      this.loadMissingInvoices();
+    };
+    const fail = (err: { error?: { error?: string } }): void => {
+      this.invoiceSaving.set(false);
+      this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
+    };
+    if (editing) {
+      this.invoicesService.update(editing.id, payload).subscribe({ next: done, error: fail });
+    } else {
+      this.invoicesService.create(payload).subscribe({ next: done, error: fail });
+    }
+  }
+
+  changeInvoiceStatus(invoice: Invoice, status: InvoiceStatus): void {
+    this.invoicesService.updateStatus(invoice.id, status).subscribe({
+      next: () => {
+        this.toastService.success(this.t('pracownicy.messages.invoice_status_updated'));
+        this.loadInvoices();
+      },
+      error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
+    });
+  }
+
+  async deleteInvoice(invoice: Invoice): Promise<void> {
+    const confirmed = await this.confirmService.confirm({
+      title: this.t('pracownicy.messages.invoice_delete_confirm_title'),
+      message: this.t('pracownicy.messages.invoice_delete_confirm_message', { numer: invoice.numer_faktury }),
+      danger: true,
+    });
+    if (!confirmed) return;
+    this.invoicesService.delete(invoice.id).subscribe({
+      next: () => {
+        this.toastService.success(this.t('pracownicy.messages.invoice_deleted'));
+        this.loadInvoices();
+        this.loadMissingInvoices();
+      },
+      error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
+    });
+  }
   // --- Pomocnicze ---
 
   statusLabel(employee: Employee): string {
     return this.t(employee.is_active ? 'pracownicy.status.active' : 'pracownicy.status.inactive');
+  }
+
+  roleLabel(role: string | null): string {
+    if (!role) return this.t('pracownicy.list.unassigned');
+    const map: Record<string, string> = {
+      operator: 'pracownicy.roles.operator',
+      brygadzista: 'pracownicy.roles.foreman',
+      sztauer: 'pracownicy.roles.stevedore',
+      lukowy: 'pracownicy.roles.hatch',
+      operator_zurawia: 'pracownicy.roles.crane_operator',
+    };
+    return this.t(map[role] ?? 'pracownicy.list.unassigned');
+  }
+
+  vacationTypeLabel(typ: VacationType): string {
+    const map: Record<VacationType, string> = {
+      wypoczynkowy: 'pracownicy.leave.type_vacation',
+      na_zadanie: 'pracownicy.leave.type_on_demand',
+      L4: 'pracownicy.leave.type_sick',
+    };
+    return this.t(map[typ] ?? typ);
+  }
+
+  vacationStatusLabel(status: EmployeeVacation['status']): string {
+    const map: Record<string, string> = {
+      oczekujacy: 'pracownicy.leave.status_planned',
+      zatwierdzony: 'pracownicy.leave.status_approved',
+      odrzucony: 'pracownicy.leave.status_rejected',
+      zrealizowany: 'pracownicy.leave.status_completed',
+    };
+    return this.t(map[status] ?? status);
+  }
+
+  invoiceStatusLabel(status: InvoiceStatus): string {
+    const map: Record<InvoiceStatus, string> = {
+      wystawiona: 'pracownicy.invoices.status_issued',
+      zaplacona: 'pracownicy.invoices.status_paid',
+      przeterminowana: 'pracownicy.invoices.status_overdue',
+    };
+    return this.t(map[status] ?? status);
+  }
+
+  invoiceStatusTone(status: InvoiceStatus): 'success' | 'warning' | 'danger' {
+    if (status === 'zaplacona') return 'success';
+    if (status === 'przeterminowana') return 'danger';
+    return 'warning';
+  }
+
+  invoiceTypLabel(typ: InvoiceTypWystawienia): string {
+    const map: Record<InvoiceTypWystawienia, string> = {
+      po_zleceniu: 'pracownicy.invoices.typ_after_order',
+      po_tygodniu: 'pracownicy.invoices.typ_after_week',
+      koniec_miesiaca: 'pracownicy.invoices.typ_month_end',
+    };
+    return this.t(map[typ] ?? typ);
   }
 
   docStatusLabel(doc: EmployeeDocument): string {
@@ -546,6 +1050,19 @@ export class EmployeesComponent {
       },
       error: () => {
         this._terminalOptions.set([]);
+      },
+    });
+  }
+
+  private loadEquipmentFilterOptions(): void {
+    this.equipmentService.list({ per_page: 100 }).subscribe({
+      next: (res) => {
+        this._equipmentFilterOptions.set(
+          res.data.map((e) => ({ value: e.id, label: e.nazwa })),
+        );
+      },
+      error: () => {
+        this._equipmentFilterOptions.set([]);
       },
     });
   }

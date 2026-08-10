@@ -50,6 +50,12 @@ class EmployeeRepository extends BaseRepository
         $where = [];
         $params = [];
 
+        $q = is_string($filters['q'] ?? null) ? trim($filters['q']) : '';
+        if ($q !== '') {
+            $where[] = '(e.`imie` LIKE :q OR e.`nazwisko` LIKE :q)';
+            $params[':q'] = '%' . $q . '%';
+        }
+
         $imie = is_string($filters['imie'] ?? null) ? trim($filters['imie']) : '';
         if ($imie !== '') {
             $where[] = 'e.`imie` LIKE :imie';
@@ -102,6 +108,12 @@ class EmployeeRepository extends BaseRepository
     {
         $where = [];
         $params = [];
+
+        $q = is_string($filters['q'] ?? null) ? trim($filters['q']) : '';
+        if ($q !== '') {
+            $where[] = '(`imie` LIKE :q OR `nazwisko` LIKE :q)';
+            $params[':q'] = '%' . $q . '%';
+        }
 
         $imie = is_string($filters['imie'] ?? null) ? trim($filters['imie']) : '';
         if ($imie !== '') {

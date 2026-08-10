@@ -7,7 +7,10 @@ namespace App\Services;
 use App\Http\Request;
 use App\Repository\AuditLogRepository;
 use App\Repository\EmployeeDocumentRepository;
+use App\Repository\EmployeeRateRepository;
 use App\Repository\EmployeeRepository;
+use App\Repository\EmployeeVacationRepository;
+use App\Repository\OrderRepository;
 
 /**
  * Serwis zarządzania pracownikami — sekcja Pracownicy (Etap 7).
@@ -38,6 +41,9 @@ final class EmployeeService
         private readonly EmployeeDocumentRepository $documentRepository,
         private readonly AuditLogRepository $auditLogRepository,
         private readonly FileUploadService $fileUploadService,
+        private readonly EmployeeRateRepository $rateRepository,
+        private readonly EmployeeVacationRepository $vacationRepository,
+        private readonly OrderRepository $orderRepository,
     ) {}
 
     /**
@@ -58,12 +64,144 @@ final class EmployeeService
         $rows = $this->employeeRepository->search($filters, $perPage, $offset, $sort, $direction);
         $total = $this->employeeRepository->countSearch($filters);
 
+        $dtos = array_map(fn (array $row): array => $this->toDto($row), $rows);
+        $dtos = $this->enrichWithSettlementColumns($dtos);
+
         return [
-            'data' => array_map(fn (array $row): array => $this->toDto($row), $rows),
+            'data' => $dtos,
             'total' => $total,
             'page' => $page,
             'per_page' => $perPage,
         ];
+    }
+
+    /**
+     * Wzbogaca listę DTO pracowników o: aktualną stawkę, sumę godzin w miesiącu,
+     * wyliczone wynagrodzenie (godziny × stawka), rolę „dziś" oraz status urlopu.
+     *
+     * @param array<int, array<string, mixed>> $dtos
+     * @return array<int, array<string, mixed>>
+     */
+    private function enrichWithSettlementColumns(array $dtos): array
+    {
+        if ($dtos === []) {
+            return $dtos;
+        }
+
+        $ids = array_map(fn (array $d): int => $this->toInt($d['id'] ?? 0), $dtos);
+        $today = date('Y-m-d');
+        $month = date('Y-m');
+
+        $rates = $this->rateRepository->findCurrentRatesForEmployees($ids, $today);
+        $hours = $this->orderRepository->hoursPerEmployeeInMonth($month, $ids);
+        $roles = $this->orderRepository->currentRolesByDate($today);
+        $onLeave = $this->vacationRepository->findOnLeaveEmployeeIds($ids, $today);
+
+        $documents = $this->documentRepository->findForEmployeeIds($ids);
+        if (!is_array($documents)) {
+            $documents = [];
+        }
+        $uprawnienia = $this->computeUprawnieniaSummary($documents, $today);
+
+        foreach ($dtos as &$dto) {
+            $id = $this->toInt($dto['id'] ?? 0);
+            $stawka = $rates[$id] ?? 0.0;
+            $godziny = $hours[$id] ?? 0.0;
+            $dto['stawka_godzinowa'] = $stawka;
+            $dto['godziny_mc'] = $godziny;
+            $dto['wynagrodzenie'] = round($godziny * $stawka, 2);
+            $dto['rola_dzis'] = array_key_exists($id, $roles) ? $roles[$id] : null;
+            $dto['on_leave'] = array_key_exists($id, $onLeave);
+            $dto['uprawnienie'] = $uprawnienia[$id] ?? ['nazwa' => null, 'data_waznosci' => null, 'dni' => null, 'status' => 'none'];
+        }
+
+        return $dtos;
+    }
+
+    /**
+     * Podsumowanie „najpilniejszego" dokumentu dla każdego pracownika (kolumna Uprawnienia).
+     *
+     * Priorytet: wygasły > wygasający (≤30 dni) > ważny. Gdy brak dokumentów — status 'none'.
+     *
+     * @param array<int, array<string, mixed>> $documents
+     * @param string $today data w formacie YYYY-MM-DD
+     * @return array<int, array{nazwa: string|null, data_waznosci: string|null, dni: int|null, status: string}>
+     */
+    private function computeUprawnieniaSummary(array $documents, string $today): array
+    {
+        $now = strtotime($today);
+
+        $grouped = [];
+        foreach ($documents as $doc) {
+            $empId = $this->toInt($doc['employee_id'] ?? 0);
+            $grouped[$empId][] = $doc;
+        }
+
+        $result = [];
+        foreach ($grouped as $empId => $docs) {
+            $expired = [];
+            $active = [];
+            $hasUnbounded = false;
+            $unboundedName = null;
+
+            foreach ($docs as $doc) {
+                $expiry = is_string($doc['data_waznosci'] ?? null) && $doc['data_waznosci'] !== '' ? $doc['data_waznosci'] : null;
+                $nazwa = is_string($doc['nazwa'] ?? null) && $doc['nazwa'] !== '' ? $doc['nazwa'] : null;
+
+                if ($expiry === null) {
+                    $hasUnbounded = true;
+                    if ($unboundedName === null) {
+                        $unboundedName = $nazwa;
+                    }
+                    continue;
+                }
+
+                $ts = strtotime($expiry);
+                if ($ts === false) {
+                    continue;
+                }
+
+                if ($ts < $now) {
+                    $expired[] = ['nazwa' => $nazwa, 'data_waznosci' => $expiry, 'ts' => $ts];
+                } else {
+                    $active[] = ['nazwa' => $nazwa, 'data_waznosci' => $expiry, 'ts' => $ts];
+                }
+            }
+
+            if ($expired !== []) {
+                // Najświeżej wygasły (największa data ważności) — najistotniejszy komunikat.
+                usort($expired, static fn (array $a, array $b): int => $b['ts'] <=> $a['ts']);
+                $worst = $expired[0];
+                $result[$empId] = [
+                    'nazwa' => $worst['nazwa'],
+                    'data_waznosci' => $worst['data_waznosci'],
+                    'dni' => (int) floor(($worst['ts'] - $now) / 86400),
+                    'status' => 'expired',
+                ];
+            } elseif ($active !== []) {
+                // Najbliższa ważność.
+                usort($active, static fn (array $a, array $b): int => $a['ts'] <=> $b['ts']);
+                $nearest = $active[0];
+                $dni = (int) floor(($nearest['ts'] - $now) / 86400);
+                $result[$empId] = [
+                    'nazwa' => $nearest['nazwa'],
+                    'data_waznosci' => $nearest['data_waznosci'],
+                    'dni' => $dni,
+                    'status' => $dni <= self::EXPIRY_WARNING_DAYS ? 'expiring' : 'ok',
+                ];
+            } elseif ($hasUnbounded) {
+                $result[$empId] = [
+                    'nazwa' => $unboundedName,
+                    'data_waznosci' => null,
+                    'dni' => null,
+                    'status' => 'ok',
+                ];
+            } else {
+                $result[$empId] = ['nazwa' => null, 'data_waznosci' => null, 'dni' => null, 'status' => 'none'];
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -359,7 +497,440 @@ final class EmployeeService
 
         return ['success' => true];
     }
+    // --- Stawki godzinowe (Etap 7a) ---
 
+    /**
+     * GET /api/v1/employees/{id}/rates — historia stawek pracownika.
+     *
+     * @return array<string, mixed>|array{error: string, code: int}
+     */
+    public function listRates(int $employeeId): array
+    {
+        if ($this->employeeRepository->findById($employeeId) === null) {
+            return ['error' => 'Employee not found', 'code' => 404];
+        }
+
+        $rates = $this->rateRepository->findByEmployeeId($employeeId);
+
+        return ['data' => array_map(fn (array $r): array => $this->rateToDto($r), $rates)];
+    }
+
+    /**
+     * POST /api/v1/employees/{id}/rates — nowa stawka z datą wejścia w życie.
+     * Zamyka poprzedni rekord (data_do = dzień przed nową data_od).
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>|array{error: string, code: int}
+     */
+    public function createRate(int $employeeId, array $data, Request $request): array
+    {
+        if ($this->employeeRepository->findById($employeeId) === null) {
+            return ['error' => 'Employee not found', 'code' => 404];
+        }
+
+        $stawka = $this->toFloat($data['stawka_godzinowa'] ?? null);
+        if ($stawka <= 0) {
+            return ['error' => 'Stawka godzinowa must be a positive number', 'code' => 422];
+        }
+
+        $dataOd = is_string($data['data_od'] ?? null) ? trim($data['data_od']) : '';
+        if ($dataOd === '' || strtotime($dataOd) === false) {
+            return ['error' => 'Valid data_od is required', 'code' => 422];
+        }
+
+        $this->rateRepository->closePreviousRate($employeeId, $dataOd);
+
+        $created = $this->rateRepository->createRate([
+            'employee_id' => $employeeId,
+            'stawka_godzinowa' => $stawka,
+            'data_od' => $dataOd,
+            'data_do' => null,
+        ]);
+
+        $this->auditLog($request, 'employee_rate_created', $employeeId);
+
+        return $this->rateToDto($created);
+    }
+
+    // --- Urlopy (Etap 7a) ---
+
+    /**
+     * GET /api/v1/employees/{id}/vacations — lista urlopów pracownika.
+     *
+     * @return array<string, mixed>|array{error: string, code: int}
+     */
+    public function listVacations(int $employeeId): array
+    {
+        if ($this->employeeRepository->findById($employeeId) === null) {
+            return ['error' => 'Employee not found', 'code' => 404];
+        }
+
+        $vacations = $this->vacationRepository->findByEmployeeId($employeeId);
+
+        return ['data' => array_map(fn (array $v): array => $this->vacationToDto($v), $vacations)];
+    }
+
+    /**
+     * POST /api/v1/employees/{id}/vacations — dodanie urlopu.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>|array{error: string, code: int}
+     */
+    public function createVacation(int $employeeId, array $data, Request $request): array
+    {
+        if ($this->employeeRepository->findById($employeeId) === null) {
+            return ['error' => 'Employee not found', 'code' => 404];
+        }
+
+        $dataOd = is_string($data['data_od'] ?? null) ? trim($data['data_od']) : '';
+        $dataDo = is_string($data['data_do'] ?? null) ? trim($data['data_do']) : '';
+        if ($dataOd === '' || $dataDo === '' || strtotime($dataOd) === false || strtotime($dataDo) === false) {
+            return ['error' => 'Valid data_od and data_do are required', 'code' => 422];
+        }
+        if (strtotime($dataDo) < strtotime($dataOd)) {
+            return ['error' => 'data_do must not be before data_od', 'code' => 422];
+        }
+
+        $typ = is_string($data['typ'] ?? null) ? $data['typ'] : 'wypoczynkowy';
+        if (!in_array($typ, ['wypoczynkowy', 'na_zadanie', 'L4'], true)) {
+            return ['error' => 'Invalid vacation type', 'code' => 422];
+        }
+
+        $status = is_string($data['status'] ?? null) ? $data['status'] : 'oczekujacy';
+        if (!in_array($status, ['oczekujacy', 'zatwierdzony', 'odrzucony', 'zrealizowany'], true)) {
+            return ['error' => 'Invalid vacation status', 'code' => 422];
+        }
+
+        $created = $this->vacationRepository->createVacation([
+            'employee_id' => $employeeId,
+            'data_od' => $dataOd,
+            'data_do' => $dataDo,
+            'typ' => $typ,
+            'status' => $status,
+        ]);
+
+        $this->auditLog($request, 'employee_vacation_created', $employeeId);
+
+        return $this->vacationToDto($created);
+    }
+
+    /**
+     * PATCH /api/v1/vacations/{id}/status — zmiana statusu urlopu.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>|array{error: string, code: int}
+     */
+    public function updateVacationStatus(int $vacationId, array $data, Request $request): array
+    {
+        $vacation = $this->vacationRepository->findById($vacationId);
+        if ($vacation === null) {
+            return ['error' => 'Vacation not found', 'code' => 404];
+        }
+
+        $status = is_string($data['status'] ?? null) ? $data['status'] : '';
+        if (!in_array($status, ['oczekujacy', 'zatwierdzony', 'odrzucony', 'zrealizowany'], true)) {
+            return ['error' => 'Invalid vacation status', 'code' => 422];
+        }
+
+        $updated = $this->vacationRepository->updateVacation($vacationId, ['status' => $status]);
+        $this->auditLog($request, 'employee_vacation_status_updated', $vacationId);
+
+        return $updated !== null ? $this->vacationToDto($updated) : ['success' => true];
+    }
+
+    /**
+     * DELETE /api/v1/vacations/{id} — usunięcie urlopu.
+     *
+     * @return array{success: bool}|array{error: string, code: int}
+     */
+    public function deleteVacation(int $vacationId, Request $request): array
+    {
+        if ($this->vacationRepository->findById($vacationId) === null) {
+            return ['error' => 'Vacation not found', 'code' => 404];
+        }
+
+        $this->vacationRepository->delete($vacationId);
+        $this->auditLog($request, 'employee_vacation_deleted', $vacationId);
+
+        return ['success' => true];
+    }
+    // --- Rozliczenia i podsumowania (Etap 7a) ---
+
+    /**
+     * GET /api/v1/employees/settlement?month=&period=all|1-15|15-23
+     * Rozliczenie per pracownik (godziny × stawka po dacie zlecenia).
+     *
+     * @return array<string, mixed>
+     */
+    public function settlement(string $month, string $period): array
+    {
+        $month = $this->normalizeMonth($month);
+        $period = $this->normalizePeriod($period);
+
+        $detail = $this->orderRepository->settlementDetail($month, $period);
+        $employeeIds = array_values(array_unique(array_map(fn (array $r): int => $this->toInt($r['employee_id'] ?? 0), $detail)));
+        $allRates = $this->rateRepository->findAllByEmployeeIds($employeeIds);
+
+        $per = [];
+        foreach ($detail as $row) {
+            $empId = $this->toInt($row['employee_id'] ?? 0);
+            $date = is_string($row['data_zlecenia'] ?? null) ? $row['data_zlecenia'] : $month . '-01';
+            $godziny = $this->toFloat($row['godziny'] ?? null);
+            $day = (int) substr($date, 8, 2);
+
+            if (!array_key_exists($empId, $per)) {
+                $per[$empId] = [
+                    'employee_id' => $empId,
+                    'imie' => null,
+                    'nazwisko' => null,
+                    'godziny_1_15' => 0.0,
+                    'godziny_15_23' => 0.0,
+                    'godziny_total' => 0.0,
+                    'wynagrodzenie' => 0.0,
+                ];
+            }
+
+            $stawka = $this->rateAt($allRates[$empId] ?? [], $date);
+            $wage = round($godziny * $stawka, 2);
+
+            if ($day < 15) {
+                $per[$empId]['godziny_1_15'] += $godziny;
+            } else {
+                $per[$empId]['godziny_15_23'] += $godziny;
+            }
+            $per[$empId]['godziny_total'] += $godziny;
+            $per[$empId]['wynagrodzenie'] += $wage;
+        }
+
+        $ids = array_keys($per);
+        foreach ($ids as $id) {
+            $emp = $this->employeeRepository->findById($id);
+            if ($emp !== null) {
+                $per[$id]['imie'] = is_string($emp['imie'] ?? null) ? $emp['imie'] : null;
+                $per[$id]['nazwisko'] = is_string($emp['nazwisko'] ?? null) ? $emp['nazwisko'] : null;
+            }
+            $per[$id]['wynagrodzenie'] = round($per[$id]['wynagrodzenie'], 2);
+        }
+
+        $rows = array_values($per);
+
+        return [
+            'month' => $month,
+            'period' => $period,
+            'data' => $rows,
+            'total_godziny' => round(array_sum(array_map(fn (array $r): float => (float) $r['godziny_total'], $rows)), 2),
+            'total_wynagrodzenie' => round(array_sum(array_map(fn (array $r): float => (float) $r['wynagrodzenie'], $rows)), 2),
+        ];
+    }
+
+    /**
+     * GET /api/v1/employees/settlement/by-port?month=&period=
+     * Suma godzin i wynagrodzeń per port/terminal + wiersz „Razem".
+     *
+     * @return array<string, mixed>
+     */
+    public function settlementByPort(string $month, string $period): array
+    {
+        $month = $this->normalizeMonth($month);
+        $period = $this->normalizePeriod($period);
+
+        $detail = $this->orderRepository->settlementDetail($month, $period);
+        $employeeIds = array_values(array_unique(array_map(fn (array $r): int => $this->toInt($r['employee_id'] ?? 0), $detail)));
+        $allRates = $this->rateRepository->findAllByEmployeeIds($employeeIds);
+
+        $ports = [];
+        $portEmployees = [];
+        $totalGodziny = 0.0;
+        $totalWynagrodzenie = 0.0;
+
+        foreach ($detail as $row) {
+            $termId = $this->toInt($row['terminal_id'] ?? 0);
+            $empId = $this->toInt($row['employee_id'] ?? 0);
+            $date = is_string($row['data_zlecenia'] ?? null) ? $row['data_zlecenia'] : $month . '-01';
+            $godziny = $this->toFloat($row['godziny'] ?? null);
+            $stawka = $this->rateAt($allRates[$empId] ?? [], $date);
+            $wage = round($godziny * $stawka, 2);
+
+            if (!array_key_exists($termId, $ports)) {
+                $ports[$termId] = [
+                    'terminal_id' => $termId,
+                    'terminal_nazwa' => null,
+                    'liczba_pracownikow' => 0,
+                    'suma_godzin' => 0.0,
+                    'suma_wynagrodzen' => 0.0,
+                ];
+                $portEmployees[$termId] = [];
+            }
+            $ports[$termId]['suma_godzin'] += $godziny;
+            $ports[$termId]['suma_wynagrodzen'] += $wage;
+            $portEmployees[$termId][$empId] = true;
+
+            $totalGodziny += $godziny;
+            $totalWynagrodzenie += $wage;
+        }
+
+        foreach (array_keys($ports) as $termId) {
+            $ports[$termId]['liczba_pracownikow'] = count($portEmployees[$termId] ?? []);
+            $ports[$termId]['suma_godzin'] = round($ports[$termId]['suma_godzin'], 2);
+            $ports[$termId]['suma_wynagrodzen'] = round($ports[$termId]['suma_wynagrodzen'], 2);
+        }
+
+        $rows = array_values($ports);
+        usort($rows, static fn (array $a, array $b): int => strcmp((string) $a['terminal_nazwa'], (string) $b['terminal_nazwa']));
+
+        $rows[] = [
+            'terminal_id' => null,
+            'terminal_nazwa' => 'Razem (wszystkie porty)',
+            'liczba_pracownikow' => count($employeeIds),
+            'suma_godzin' => round($totalGodziny, 2),
+            'suma_wynagrodzen' => round($totalWynagrodzenie, 2),
+        ];
+
+        return [
+            'month' => $month,
+            'period' => $period,
+            'data' => $rows,
+        ];
+    }
+
+    /**
+     * GET /api/v1/employees/summary?month=
+     * Suma godzin (mc), suma wynagrodzeń z podziałem 1–15 / 15–23, licznik na urlopie.
+     *
+     * @return array<string, mixed>
+     */
+    public function summary(string $month): array
+    {
+        $month = $this->normalizeMonth($month);
+        $today = date('Y-m-d');
+
+        $allEmployees = $this->employeeRepository->findAll([], 1000, 0);
+        $allIds = array_map(fn (array $e): int => $this->toInt($e['id'] ?? 0), $allEmployees);
+        $onLeaveCount = $this->vacationRepository->countOnLeave($allIds, $today);
+
+        $settlement = $this->settlement($month, 'all');
+
+        $godziny1_15 = 0.0;
+        $godziny15_23 = 0.0;
+        $wynagrodzenie1_15 = 0.0;
+        $wynagrodzenie15_23 = 0.0;
+
+        $detail = $this->orderRepository->settlementDetail($month, 'all');
+        $employeeIds = array_values(array_unique(array_map(fn (array $r): int => $this->toInt($r['employee_id'] ?? 0), $detail)));
+        $allRates = $this->rateRepository->findAllByEmployeeIds($employeeIds);
+
+        foreach ($detail as $row) {
+            $date = is_string($row['data_zlecenia'] ?? null) ? $row['data_zlecenia'] : $month . '-01';
+            $day = $this->toInt(substr($date, 8, 2));
+            $godziny = $this->toFloat($row['godziny'] ?? null);
+            $empId = $this->toInt($row['employee_id'] ?? 0);
+            $stawka = $this->rateAt($allRates[$empId] ?? [], $date);
+            $wage = round($godziny * $stawka, 2);
+
+            if ($day < 15) {
+                $godziny1_15 += $godziny;
+                $wynagrodzenie1_15 += $wage;
+            } else {
+                $godziny15_23 += $godziny;
+                $wynagrodzenie15_23 += $wage;
+            }
+        }
+
+        return [
+            'month' => $month,
+            'godziny_total' => $settlement['total_godziny'],
+            'wynagrodzenie_total' => $settlement['total_wynagrodzenie'],
+            'godziny_1_15' => round($godziny1_15, 2),
+            'godziny_15_23' => round($godziny15_23, 2),
+            'wynagrodzenie_1_15' => round($wynagrodzenie1_15, 2),
+            'wynagrodzenie_15_23' => round($wynagrodzenie15_23, 2),
+            'na_urlopie' => $onLeaveCount,
+        ];
+    }
+
+    // --- Pomocnicze rozliczeń ---
+
+    /**
+     * Wybiera stawkę obowiązującą w danej dacie z listy (posortowanej data_od DESC).
+     *
+     * @param array<int, array<string, mixed>> $rates
+     */
+    private function rateAt(array $rates, string $date): float
+    {
+        foreach ($rates as $rate) {
+            $dataOd = is_string($rate['data_od'] ?? null) ? $rate['data_od'] : null;
+            if ($dataOd !== null && $dataOd <= $date) {
+                return $this->toFloat($rate['stawka_godzinowa'] ?? null);
+            }
+        }
+
+        return 0.0;
+    }
+
+    private function normalizeMonth(string $month): string
+    {
+        $trimmed = trim($month);
+        if ($trimmed !== '' && strtotime($trimmed . '-01') !== false) {
+            return $trimmed;
+        }
+
+        return date('Y-m');
+    }
+
+    private function normalizePeriod(string $period): string
+    {
+        return in_array($period, ['all', '1-15', '15-23'], true) ? $period : 'all';
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function rateToDto(array $row): array
+    {
+        return [
+            'id' => $this->toInt($row['id'] ?? 0),
+            'employee_id' => $this->toInt($row['employee_id'] ?? 0),
+            'stawka_godzinowa' => $this->toFloat($row['stawka_godzinowa'] ?? null),
+            'data_od' => is_string($row['data_od'] ?? null) ? $row['data_od'] : null,
+            'data_do' => is_string($row['data_do'] ?? null) ? $row['data_do'] : null,
+            'created_at' => is_string($row['created_at'] ?? null) ? $row['created_at'] : null,
+            'updated_at' => is_string($row['updated_at'] ?? null) ? $row['updated_at'] : null,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function vacationToDto(array $row): array
+    {
+        return [
+            'id' => $this->toInt($row['id'] ?? 0),
+            'employee_id' => $this->toInt($row['employee_id'] ?? 0),
+            'data_od' => is_string($row['data_od'] ?? null) ? $row['data_od'] : null,
+            'data_do' => is_string($row['data_do'] ?? null) ? $row['data_do'] : null,
+            'typ' => is_string($row['typ'] ?? null) ? $row['typ'] : 'wypoczynkowy',
+            'status' => is_string($row['status'] ?? null) ? $row['status'] : 'oczekujacy',
+            'created_at' => is_string($row['created_at'] ?? null) ? $row['created_at'] : null,
+            'updated_at' => is_string($row['updated_at'] ?? null) ? $row['updated_at'] : null,
+        ];
+    }
+
+    private function toFloat(mixed $value): float
+    {
+        if ($value === null) {
+            return 0.0;
+        }
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (float) $value;
+        }
+
+        return 0.0;
+    }
     // --- Walidacja ---
 
     /**

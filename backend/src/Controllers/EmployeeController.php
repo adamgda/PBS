@@ -39,6 +39,7 @@ final class EmployeeController extends Controller
         $query = $request->query();
 
         $filters = [
+            'q' => is_string($query['q'] ?? null) ? (string) $query['q'] : '',
             'imie' => is_string($query['imie'] ?? null) ? (string) $query['imie'] : '',
             'nazwisko' => is_string($query['nazwisko'] ?? null) ? (string) $query['nazwisko'] : '',
             'terminal_id' => is_string($query['terminal_id'] ?? null) ? (string) $query['terminal_id'] : '',
@@ -240,6 +241,156 @@ final class EmployeeController extends Controller
         return $this->json($result, 200);
     }
 
+    // --- Stawki, urlopy, rozliczenia (Etap 7a) ---
+
+    /**
+     * GET /api/v1/employees/{id}/rates — historia stawek pracownika.
+     *
+     * @param array<string, string> $params
+     */
+    public function listRates(Request $request, array $params = []): Response
+    {
+        $id = $this->toInt($params['id'] ?? 0, 0);
+        $result = $this->employeeService->listRates($id);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 200);
+    }
+
+    /**
+     * POST /api/v1/employees/{id}/rates — nowa stawka z datą wejścia w życie.
+     *
+     * @param array<string, string> $params
+     */
+    public function createRate(Request $request, array $params = []): Response
+    {
+        $id = $this->toInt($params['id'] ?? 0, 0);
+        $result = $this->employeeService->createRate($id, $request->body(), $request);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 201);
+    }
+
+    /**
+     * GET /api/v1/employees/{id}/vacations — lista urlopów pracownika.
+     *
+     * @param array<string, string> $params
+     */
+    public function listVacations(Request $request, array $params = []): Response
+    {
+        $id = $this->toInt($params['id'] ?? 0, 0);
+        $result = $this->employeeService->listVacations($id);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 200);
+    }
+
+    /**
+     * POST /api/v1/employees/{id}/vacations — dodanie urlopu.
+     *
+     * @param array<string, string> $params
+     */
+    public function createVacation(Request $request, array $params = []): Response
+    {
+        $id = $this->toInt($params['id'] ?? 0, 0);
+        $result = $this->employeeService->createVacation($id, $request->body(), $request);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 201);
+    }
+
+    /**
+     * PATCH /api/v1/vacations/{id}/status — zmiana statusu urlopu.
+     *
+     * @param array<string, string> $params
+     */
+    public function updateVacationStatus(Request $request, array $params = []): Response
+    {
+        $id = $this->toInt($params['id'] ?? 0, 0);
+        $result = $this->employeeService->updateVacationStatus($id, $request->body(), $request);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 200);
+    }
+
+    /**
+     * DELETE /api/v1/vacations/{id} — usunięcie urlopu.
+     *
+     * @param array<string, string> $params
+     */
+    public function deleteVacation(Request $request, array $params = []): Response
+    {
+        $id = $this->toInt($params['id'] ?? 0, 0);
+        $result = $this->employeeService->deleteVacation($id, $request);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 200);
+    }
+
+    /**
+     * GET /api/v1/employees/settlement?month=&period= — rozliczenie per pracownik.
+     *
+     * @param array<string, string> $params
+     */
+    public function settlement(Request $request, array $params = []): Response
+    {
+        $query = $request->query();
+        $month = is_string($query['month'] ?? null) ? (string) $query['month'] : '';
+        $period = is_string($query['period'] ?? null) ? (string) $query['period'] : 'all';
+
+        return $this->json($this->employeeService->settlement($month, $period), 200);
+    }
+
+    /**
+     * GET /api/v1/employees/settlement/by-port?month=&period= — rozliczenie per port.
+     *
+     * @param array<string, string> $params
+     */
+    public function settlementByPort(Request $request, array $params = []): Response
+    {
+        $query = $request->query();
+        $month = is_string($query['month'] ?? null) ? (string) $query['month'] : '';
+        $period = is_string($query['period'] ?? null) ? (string) $query['period'] : 'all';
+
+        return $this->json($this->employeeService->settlementByPort($month, $period), 200);
+    }
+
+    /**
+     * GET /api/v1/employees/summary?month= — podsumowanie KPI.
+     *
+     * @param array<string, string> $params
+     */
+    public function summary(Request $request, array $params = []): Response
+    {
+        $query = $request->query();
+        $month = is_string($query['month'] ?? null) ? (string) $query['month'] : '';
+
+        return $this->json($this->employeeService->summary($month), 200);
+    }
     // --- Pomocnicze ---
 
     /**

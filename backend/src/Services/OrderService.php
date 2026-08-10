@@ -279,10 +279,35 @@ final class OrderService
             return ['error' => 'Employee already assigned to this order', 'code' => 409];
         }
 
-        $this->orderRepository->attachEmployee($orderId, $employeeId);
+        $body = $request->body();
+        $rola = is_string($body['rola'] ?? null) ? $body['rola'] : null;
+        if ($rola !== null && !in_array($rola, ['operator', 'brygadzista', 'sztauer', 'lukowy', 'operator_zurawia'], true)) {
+            return ['error' => 'Invalid rola', 'code' => 422];
+        }
+
+        $godziny = null;
+        if (array_key_exists('godziny', $body) && $body['godziny'] !== null) {
+            $godzinyVal = $body['godziny'];
+            if (is_numeric($godzinyVal)) {
+                $godziny = (float) $godzinyVal;
+                if ($godziny < 0) {
+                    return ['error' => 'godziny must not be negative', 'code' => 422];
+                }
+            } else {
+                return ['error' => 'godziny must be numeric', 'code' => 422];
+            }
+        }
+
+        $this->orderRepository->attachEmployee($orderId, $employeeId, $rola, $godziny);
         $this->auditLog($request, 'order.assign_employee', $orderId);
 
-        return ['order_id' => $orderId, 'employee_id' => $employeeId, 'assigned' => true];
+        return [
+            'order_id' => $orderId,
+            'employee_id' => $employeeId,
+            'rola' => $rola,
+            'godziny' => $godziny,
+            'assigned' => true,
+        ];
     }
 
     /**
@@ -377,6 +402,22 @@ final class OrderService
     {
         $imie = is_string($row['imie'] ?? null) ? $row['imie'] : null;
         $nazwisko = is_string($row['nazwisko'] ?? null) ? $row['nazwisko'] : null;
+        $rola = is_string($row['rola'] ?? null) && $row['rola'] !== '' ? $row['rola'] : null;
+
+        $godziny = null;
+        if (array_key_exists('godziny', $row) && $row['godziny'] !== null) {
+            $godziny = is_numeric($row['godziny']) ? (float) $row['godziny'] : null;
+        }
+
+        $stawka = null;
+        if (array_key_exists('stawka_godzinowa', $row) && $row['stawka_godzinowa'] !== null) {
+            $stawka = is_numeric($row['stawka_godzinowa']) ? (float) $row['stawka_godzinowa'] : null;
+        }
+
+        $wynagrodzenie = 0.0;
+        if ($godziny !== null && $stawka !== null) {
+            $wynagrodzenie = round($godziny * $stawka, 2);
+        }
 
         return [
             'id' => $this->toInt($row['id'] ?? 0),
@@ -384,6 +425,10 @@ final class OrderService
             'employee_id' => $this->nullableInt($row['employee_id'] ?? null),
             'employee_name' => ($imie === null && $nazwisko === null) ? null : trim(((string) $imie . ' ' . (string) $nazwisko)),
             'employee_email' => is_string($row['email'] ?? null) ? $row['email'] : null,
+            'rola' => $rola,
+            'godziny' => $godziny,
+            'stawka_godzinowa' => $stawka,
+            'wynagrodzenie' => $wynagrodzenie,
         ];
     }
 

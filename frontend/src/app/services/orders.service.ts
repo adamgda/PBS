@@ -62,9 +62,9 @@ export class OrdersService {
       .pipe(tap(() => invalidateCache('/orders')));
   }
 
-  assignEmployee(orderId: number, employeeId: number): Observable<unknown> {
+  assignEmployee(orderId: number, payload: { employee_id: number; rola?: string | null; godziny?: number | null }): Observable<unknown> {
     return this.http
-      .post(`${this.apiUrl}/orders/${orderId}/assign-employee`, { employee_id: employeeId })
+      .post(`${this.apiUrl}/orders/${orderId}/assign-employee`, payload)
       .pipe(tap(() => invalidateCache('/orders')));
   }
 

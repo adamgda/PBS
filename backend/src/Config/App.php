@@ -9,6 +9,7 @@ use App\Controllers\EmployeeController;
 use App\Controllers\EquipmentController;
 use App\Controllers\HealthController;
 use App\Controllers\IncidentController;
+use App\Controllers\InvoiceController;
 use App\Controllers\OrderController;
 use App\Controllers\TerminalController;
 use App\Controllers\UserController;
@@ -21,10 +22,13 @@ use App\Middleware\PermissionMiddleware;
 use App\Middleware\RateLimiterMiddleware;
 use App\Repository\AuditLogRepository;
 use App\Repository\EmployeeDocumentRepository;
+use App\Repository\EmployeeRateRepository;
 use App\Repository\EmployeeRepository;
+use App\Repository\EmployeeVacationRepository;
 use App\Repository\EquipmentHistoryRepository;
 use App\Repository\EquipmentRepository;
 use App\Repository\IncidentRepository;
+use App\Repository\InvoiceRepository;
 use App\Repository\OrderRepository;
 use App\Repository\PasswordResetRepository;
 use App\Repository\RefreshTokenRepository;
@@ -39,6 +43,7 @@ use App\Services\EmployeeService;
 use App\Services\EquipmentService;
 use App\Services\FileUploadService;
 use App\Services\IncidentService;
+use App\Services\InvoiceService;
 use App\Services\OrderService;
 use App\Services\JwtService;
 use App\Services\MailService;
@@ -70,12 +75,15 @@ final class App
         $terminalRepository = new TerminalRepository($pdo);
         $employeeRepository = new EmployeeRepository($pdo);
         $employeeDocumentRepository = new EmployeeDocumentRepository($pdo);
+        $employeeRateRepository = new EmployeeRateRepository($pdo);
+        $employeeVacationRepository = new EmployeeVacationRepository($pdo);
         $equipmentRepository = new EquipmentRepository($pdo);
         $vehicleDetailsRepository = new VehicleDetailsRepository($pdo);
         $servicePlanRepository = new ServicePlanRepository($pdo);
         $equipmentHistoryRepository = new EquipmentHistoryRepository($pdo);
         $orderRepository = new OrderRepository($pdo);
         $incidentRepository = new IncidentRepository($pdo);
+        $invoiceRepository = new InvoiceRepository($pdo);
 
         // === Serwisy ===
         $jwtSecret = $config->get('JWT_SECRET', 'dev-secret-key-change-in-production') ?? 'dev-secret-key-change-in-production';
@@ -127,6 +135,9 @@ final class App
             $employeeDocumentRepository,
             $auditLogRepository,
             $fileUploadService,
+            $employeeRateRepository,
+            $employeeVacationRepository,
+            $orderRepository,
         );
         $employeeController = new EmployeeController($employeeService);
 
@@ -157,6 +168,10 @@ final class App
             $auditLogRepository,
         );
         $incidentController = new IncidentController($incidentService);
+
+        // === Serwis faktur (Etap 7a) ===
+        $invoiceService = new InvoiceService($invoiceRepository, $auditLogRepository);
+        $invoiceController = new InvoiceController($invoiceService);
 
         // === Guard uprawnień per-route ===
         // Opakowuje handler kontrolera sprawdzaniem PermissionMiddleware dla wskazanych sekcji.
@@ -258,6 +273,11 @@ final class App
             // Sekcja Pracownicy (Etap 7) — wymagane uprawnienie `pracownicy`
             ['method' => 'GET', 'path' => '/api/v1/employees', 'handler' => $pracownicyGuard([$employeeController, 'index'])],
             ['method' => 'POST', 'path' => '/api/v1/employees', 'handler' => $pracownicyGuard([$employeeController, 'store'])],
+            // Statyczne trasy GET /employees/* muszą poprzedzać trasę zmienną {id}
+            // (wymóg nikic/fast-route — trasa zmienna „zasłania" statyczne).
+            ['method' => 'GET', 'path' => '/api/v1/employees/settlement', 'handler' => $pracownicyGuard([$employeeController, 'settlement'])],
+            ['method' => 'GET', 'path' => '/api/v1/employees/settlement/by-port', 'handler' => $pracownicyGuard([$employeeController, 'settlementByPort'])],
+            ['method' => 'GET', 'path' => '/api/v1/employees/summary', 'handler' => $pracownicyGuard([$employeeController, 'summary'])],
             ['method' => 'GET', 'path' => '/api/v1/employees/{id}', 'handler' => $pracownicyGuard([$employeeController, 'show'])],
             ['method' => 'PUT', 'path' => '/api/v1/employees/{id}', 'handler' => $pracownicyGuard([$employeeController, 'update'])],
             ['method' => 'DELETE', 'path' => '/api/v1/employees/{id}', 'handler' => $pracownicyGuard([$employeeController, 'destroy'])],
@@ -266,6 +286,22 @@ final class App
             ['method' => 'POST', 'path' => '/api/v1/employees/{id}/documents', 'handler' => $pracownicyGuard([$employeeController, 'createDocument'])],
             ['method' => 'PUT', 'path' => '/api/v1/documents/{id}', 'handler' => $pracownicyGuard([$employeeController, 'updateDocument'])],
             ['method' => 'DELETE', 'path' => '/api/v1/documents/{id}', 'handler' => $pracownicyGuard([$employeeController, 'deleteDocument'])],
+            // Sekcja Pracownicy — rozszerzenie Etap 7a (stawki, urlopy, rozliczenia, faktury)
+            ['method' => 'GET', 'path' => '/api/v1/employees/{id}/rates', 'handler' => $pracownicyGuard([$employeeController, 'listRates'])],
+            ['method' => 'POST', 'path' => '/api/v1/employees/{id}/rates', 'handler' => $pracownicyGuard([$employeeController, 'createRate'])],
+            ['method' => 'GET', 'path' => '/api/v1/employees/{id}/vacations', 'handler' => $pracownicyGuard([$employeeController, 'listVacations'])],
+            ['method' => 'POST', 'path' => '/api/v1/employees/{id}/vacations', 'handler' => $pracownicyGuard([$employeeController, 'createVacation'])],
+            ['method' => 'PATCH', 'path' => '/api/v1/vacations/{id}/status', 'handler' => $pracownicyGuard([$employeeController, 'updateVacationStatus'])],
+            ['method' => 'DELETE', 'path' => '/api/v1/vacations/{id}', 'handler' => $pracownicyGuard([$employeeController, 'deleteVacation'])],
+
+            // Sekcja Faktury (Etap 7a) — wymagane uprawnienie `pracownicy`
+            ['method' => 'GET', 'path' => '/api/v1/invoices', 'handler' => $pracownicyGuard([$invoiceController, 'index'])],
+            ['method' => 'POST', 'path' => '/api/v1/invoices', 'handler' => $pracownicyGuard([$invoiceController, 'store'])],
+            ['method' => 'GET', 'path' => '/api/v1/invoices/missing', 'handler' => $pracownicyGuard([$invoiceController, 'missing'])],
+            ['method' => 'GET', 'path' => '/api/v1/invoices/{id}', 'handler' => $pracownicyGuard([$invoiceController, 'show'])],
+            ['method' => 'PUT', 'path' => '/api/v1/invoices/{id}', 'handler' => $pracownicyGuard([$invoiceController, 'update'])],
+            ['method' => 'DELETE', 'path' => '/api/v1/invoices/{id}', 'handler' => $pracownicyGuard([$invoiceController, 'destroy'])],
+            ['method' => 'PATCH', 'path' => '/api/v1/invoices/{id}/status', 'handler' => $pracownicyGuard([$invoiceController, 'updateStatus'])],
 
             // Sekcja Sprzęt (Etap 8) — wymagane uprawnienie `sprzet`
             ['method' => 'GET', 'path' => '/api/v1/equipment', 'handler' => $sprzetGuard([$equipmentController, 'index'])],
@@ -341,6 +377,9 @@ final class App
         try {
             $response = $this->handle($request);
         } catch (\Throwable $e) {
+            // Loguj wyjątek do stderr (widoczne w konsoli serwera PHP built-in / start-backend.sh),
+            // aby ułatwić diagnostykę błędów 500 — wcześniej wyjątek był połykany bez śladu.
+            error_log('[PBS] Unhandled exception: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             $appDebug = filter_var($this->config->get('APP_DEBUG', 'false'), FILTER_VALIDATE_BOOL);
             $response = Response::error(
                 500,
