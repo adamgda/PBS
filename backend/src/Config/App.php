@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Config;
 
 use App\Controllers\AuthController;
+use App\Controllers\AnalyticsController;
+use App\Controllers\DashboardController;
 use App\Controllers\EmployeeController;
 use App\Controllers\EquipmentController;
 use App\Controllers\HealthController;
 use App\Controllers\IncidentController;
 use App\Controllers\InvoiceController;
 use App\Controllers\OrderController;
+use App\Controllers\ReportController;
 use App\Controllers\TerminalController;
 use App\Controllers\UserController;
 use App\Http\Request;
@@ -21,6 +24,10 @@ use App\Middleware\MiddlewarePipeline;
 use App\Middleware\PermissionMiddleware;
 use App\Middleware\RateLimiterMiddleware;
 use App\Repository\AuditLogRepository;
+use App\Repository\AnalyticsRepository;
+use App\Repository\DashboardRepository;
+use App\Repository\DailyTerminalReportRepository;
+use App\Repository\DailyVehicleReportRepository;
 use App\Repository\EmployeeDocumentRepository;
 use App\Repository\EmployeeRateRepository;
 use App\Repository\EmployeeRepository;
@@ -38,13 +45,16 @@ use App\Repository\UserRepository;
 use App\Repository\VehicleDetailsRepository;
 use App\Router\Router;
 use App\Services\AuthService;
+use App\Services\AnalyticsService;
 use App\Services\ClamAvScanner;
+use App\Services\DashboardService;
 use App\Services\EmployeeService;
 use App\Services\EquipmentService;
 use App\Services\FileUploadService;
 use App\Services\IncidentService;
 use App\Services\InvoiceService;
 use App\Services\OrderService;
+use App\Services\ReportService;
 use App\Services\JwtService;
 use App\Services\MailService;
 use App\Services\PasswordPolicyService;
@@ -84,6 +94,10 @@ final class App
         $orderRepository = new OrderRepository($pdo);
         $incidentRepository = new IncidentRepository($pdo);
         $invoiceRepository = new InvoiceRepository($pdo);
+        $dailyTerminalReportRepository = new DailyTerminalReportRepository($pdo);
+        $dailyVehicleReportRepository = new DailyVehicleReportRepository($pdo);
+        $analyticsRepository = new AnalyticsRepository($pdo);
+        $dashboardRepository = new DashboardRepository($pdo);
 
         // === Serwisy ===
         $jwtSecret = $config->get('JWT_SECRET', 'dev-secret-key-change-in-production') ?? 'dev-secret-key-change-in-production';
@@ -173,6 +187,25 @@ final class App
         $invoiceService = new InvoiceService($invoiceRepository, $auditLogRepository);
         $invoiceController = new InvoiceController($invoiceService);
 
+        // === Serwis raportowania (Etap 11) ===
+        $reportService = new ReportService(
+            $dailyTerminalReportRepository,
+            $dailyVehicleReportRepository,
+            $terminalRepository,
+            $equipmentRepository,
+            $orderRepository,
+            $auditLogRepository,
+        );
+        $reportController = new ReportController($reportService);
+
+        // === Serwis analityki (Etap 12) ===
+        $analyticsService = new AnalyticsService($analyticsRepository);
+        $analyticsController = new AnalyticsController($analyticsService);
+
+        // === Serwis dashboardu (Etap 13) ===
+        $dashboardService = new DashboardService($dashboardRepository);
+        $dashboardController = new DashboardController($dashboardService);
+
         // === Guard uprawnień per-route ===
         // Opakowuje handler kontrolera sprawdzaniem PermissionMiddleware dla wskazanych sekcji.
         $ustawieniaGuard = static function (callable $handler): callable {
@@ -245,6 +278,43 @@ final class App
                 );
             };
         };
+
+        // Guard uprawnień sekcji „raportowanie" (Etap 11).
+        $raportowanieGuard = static function (callable $handler): callable {
+            $permissionMiddleware = new PermissionMiddleware(['raportowanie']);
+
+            return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
+                return $permissionMiddleware->process(
+                    $request,
+                    static fn (Request $req): Response => $handler($req, $routeParams),
+                );
+            };
+        };
+
+        // Guard uprawnień sekcji „analityka" (Etap 12).
+        $analitykaGuard = static function (callable $handler): callable {
+            $permissionMiddleware = new PermissionMiddleware(['analityka']);
+
+            return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
+                return $permissionMiddleware->process(
+                    $request,
+                    static fn (Request $req): Response => $handler($req, $routeParams),
+                );
+            };
+        };
+
+        // Guard uprawnień sekcji „dashboard" (Etap 13).
+        $dashboardGuard = static function (callable $handler): callable {
+            $permissionMiddleware = new PermissionMiddleware(['dashboard']);
+
+            return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
+                return $permissionMiddleware->process(
+                    $request,
+                    static fn (Request $req): Response => $handler($req, $routeParams),
+                );
+            };
+        };
+
 
         // === Trasy ===
         $routes = [
@@ -334,6 +404,28 @@ final class App
             ['method' => 'GET', 'path' => '/api/v1/incidents/{id}', 'handler' => $awariaGuard([$incidentController, 'show'])],
             ['method' => 'PATCH', 'path' => '/api/v1/incidents/{id}/status', 'handler' => $awariaGuard([$incidentController, 'updateStatus'])],
             ['method' => 'POST', 'path' => '/api/v1/incidents/{id}/comments', 'handler' => $awariaGuard([$incidentController, 'addComment'])],
+
+            // Sekcja Raportowanie (Etap 11) — wymagane uprawnienie `raportowanie`
+            ['method' => 'GET', 'path' => '/api/v1/reports/terminal', 'handler' => $raportowanieGuard([$reportController, 'terminalIndex'])],
+            ['method' => 'POST', 'path' => '/api/v1/reports/terminal', 'handler' => $raportowanieGuard([$reportController, 'terminalStore'])],
+            ['method' => 'GET', 'path' => '/api/v1/reports/terminal/{id}', 'handler' => $raportowanieGuard([$reportController, 'terminalShow'])],
+            ['method' => 'PUT', 'path' => '/api/v1/reports/terminal/{id}', 'handler' => $raportowanieGuard([$reportController, 'terminalUpdate'])],
+            ['method' => 'GET', 'path' => '/api/v1/reports/vehicle', 'handler' => $raportowanieGuard([$reportController, 'vehicleIndex'])],
+            ['method' => 'POST', 'path' => '/api/v1/reports/vehicle', 'handler' => $raportowanieGuard([$reportController, 'vehicleStore'])],
+            ['method' => 'GET', 'path' => '/api/v1/reports/vehicle/{id}', 'handler' => $raportowanieGuard([$reportController, 'vehicleShow'])],
+            ['method' => 'PUT', 'path' => '/api/v1/reports/vehicle/{id}', 'handler' => $raportowanieGuard([$reportController, 'vehicleUpdate'])],
+
+            // Sekcja Analityka (Etap 12) — wymagane uprawnienie `analityka`
+            ['method' => 'GET', 'path' => '/api/v1/analytics/overview', 'handler' => $analitykaGuard([$analyticsController, 'overview'])],
+            ['method' => 'GET', 'path' => '/api/v1/analytics/terminals', 'handler' => $analitykaGuard([$analyticsController, 'terminals'])],
+            ['method' => 'GET', 'path' => '/api/v1/analytics/employees', 'handler' => $analitykaGuard([$analyticsController, 'employees'])],
+            ['method' => 'GET', 'path' => '/api/v1/analytics/equipment', 'handler' => $analitykaGuard([$analyticsController, 'equipment'])],
+            ['method' => 'GET', 'path' => '/api/v1/analytics/relations', 'handler' => $analitykaGuard([$analyticsController, 'relations'])],
+
+            // Sekcja Dashboard (Etap 13) — wymagane uprawnienie `dashboard`
+            ['method' => 'GET', 'path' => '/api/v1/dashboard/summary', 'handler' => $dashboardGuard([$dashboardController, 'summary'])],
+            ['method' => 'GET', 'path' => '/api/v1/dashboard/alerts', 'handler' => $dashboardGuard([$dashboardController, 'alerts'])],
+
         ];
 
         $this->router = new Router($routes);

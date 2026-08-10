@@ -45,7 +45,7 @@ final class EquipmentService
     /**
      * Lista sprzętu z paginacją i filtrami.
      *
-     * @param array{nazwa?: string, kategoria?: string, employee_id?: string, terminal_id?: string, is_active?: string, sort?: string, direction?: string} $filters
+     * @param array{nazwa?: string, kategoria?: string, numer_seryjny?: string, ostatni_przebieg?: string, employee_id?: string, terminal_id?: string, is_active?: string, sort?: string, direction?: string} $filters
      * @return array{data: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
     public function list(array $filters, int $page, int $perPage): array

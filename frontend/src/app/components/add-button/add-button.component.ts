@@ -19,7 +19,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
   template: `
     <button
       type="button"
-      class="inline-flex items-center gap-2 rounded-md bg-pbs-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+      class="inline-flex items-center gap-2 rounded-lg bg-pbs-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-pbs-navy-600 hover:shadow disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pbs-primary focus-visible:ring-offset-2"
       [disabled]="disabled"
       (click)="add.emit()"
     >

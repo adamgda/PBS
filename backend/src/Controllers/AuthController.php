@@ -31,12 +31,13 @@ final class AuthController extends Controller
         $body = $request->body();
         $email = is_string($body['email'] ?? null) ? $body['email'] : '';
         $password = is_string($body['password'] ?? null) ? $body['password'] : '';
+        $remember = filter_var($body['remember'] ?? false, FILTER_VALIDATE_BOOL);
 
         if ($email === '' || $password === '') {
             return $this->error(422, 'Email and password are required');
         }
 
-        $result = $this->authService->login($email, $password, $request);
+        $result = $this->authService->login($email, $password, $request, $remember);
 
         if (isset($result['error'])) {
             return $this->error($result['code'], $result['error']);

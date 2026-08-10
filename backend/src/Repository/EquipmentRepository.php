@@ -41,7 +41,7 @@ class EquipmentRepository extends BaseRepository
     /**
      * Wyszukiwanie sprzętu z paginacją, filtrowaniem i sortowaniem.
      *
-     * @param array{nazwa?: string, kategoria?: string, employee_id?: string, terminal_id?: string, is_active?: string} $filters
+     * @param array{nazwa?: string, kategoria?: string, numer_seryjny?: string, ostatni_przebieg?: string, employee_id?: string, terminal_id?: string, is_active?: string} $filters
      * @return array<int, array<string, mixed>>
      */
     public function search(array $filters, int $limit, int $offset, string $sort, string $direction): array
@@ -63,6 +63,18 @@ class EquipmentRepository extends BaseRepository
         if ($kategoria !== '') {
             $where[] = 'e.`kategoria` = :kategoria';
             $params[':kategoria'] = $kategoria;
+        }
+
+        $numerSeryjny = is_string($filters['numer_seryjny'] ?? null) ? trim($filters['numer_seryjny']) : '';
+        if ($numerSeryjny !== '') {
+            $where[] = 'e.`numer_seryjny` LIKE :numer_seryjny';
+            $params[':numer_seryjny'] = '%' . $numerSeryjny . '%';
+        }
+
+        $ostatniPrzebieg = is_string($filters['ostatni_przebieg'] ?? null) ? trim($filters['ostatni_przebieg']) : '';
+        if ($ostatniPrzebieg !== '') {
+            $where[] = 'vd.`ostatni_przebieg` = :ostatni_przebieg';
+            $params[':ostatni_przebieg'] = (int) $ostatniPrzebieg;
         }
 
         $employeeId = is_string($filters['employee_id'] ?? null) ? $filters['employee_id'] : '';
@@ -101,7 +113,7 @@ class EquipmentRepository extends BaseRepository
     }
 
     /**
-     * @param array{nazwa?: string, kategoria?: string, employee_id?: string, terminal_id?: string, is_active?: string} $filters
+     * @param array{nazwa?: string, kategoria?: string, numer_seryjny?: string, ostatni_przebieg?: string, employee_id?: string, terminal_id?: string, is_active?: string} $filters
      */
     public function countSearch(array $filters): int
     {
@@ -110,35 +122,47 @@ class EquipmentRepository extends BaseRepository
 
         $nazwa = is_string($filters['nazwa'] ?? null) ? trim($filters['nazwa']) : '';
         if ($nazwa !== '') {
-            $where[] = '`nazwa` LIKE :nazwa';
+            $where[] = 'e.`nazwa` LIKE :nazwa';
             $params[':nazwa'] = '%' . $nazwa . '%';
         }
 
         $kategoria = is_string($filters['kategoria'] ?? null) ? $filters['kategoria'] : '';
         if ($kategoria !== '') {
-            $where[] = '`kategoria` = :kategoria';
+            $where[] = 'e.`kategoria` = :kategoria';
             $params[':kategoria'] = $kategoria;
+        }
+
+        $numerSeryjny = is_string($filters['numer_seryjny'] ?? null) ? trim($filters['numer_seryjny']) : '';
+        if ($numerSeryjny !== '') {
+            $where[] = 'e.`numer_seryjny` LIKE :numer_seryjny';
+            $params[':numer_seryjny'] = '%' . $numerSeryjny . '%';
+        }
+
+        $ostatniPrzebieg = is_string($filters['ostatni_przebieg'] ?? null) ? trim($filters['ostatni_przebieg']) : '';
+        if ($ostatniPrzebieg !== '') {
+            $where[] = 'vd.`ostatni_przebieg` = :ostatni_przebieg';
+            $params[':ostatni_przebieg'] = (int) $ostatniPrzebieg;
         }
 
         $employeeId = is_string($filters['employee_id'] ?? null) ? $filters['employee_id'] : '';
         if ($employeeId !== '') {
-            $where[] = '`current_employee_id` = :employee_id';
+            $where[] = 'e.`current_employee_id` = :employee_id';
             $params[':employee_id'] = (int) $employeeId;
         }
 
         $terminalId = is_string($filters['terminal_id'] ?? null) ? $filters['terminal_id'] : '';
         if ($terminalId !== '') {
-            $where[] = '`current_terminal_id` = :terminal_id';
+            $where[] = 'e.`current_terminal_id` = :terminal_id';
             $params[':terminal_id'] = (int) $terminalId;
         }
 
         $isActive = is_string($filters['is_active'] ?? null) ? $filters['is_active'] : '';
         if ($isActive !== '') {
-            $where[] = '`is_active` = :is_active';
+            $where[] = 'e.`is_active` = :is_active';
             $params[':is_active'] = $isActive === '1';
         }
 
-        $sql = 'SELECT COUNT(*) FROM `equipment`';
+        $sql = 'SELECT COUNT(*) FROM `equipment` e LEFT JOIN `vehicle_details` vd ON vd.`equipment_id` = e.`id`';
         if ($where !== []) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }

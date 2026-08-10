@@ -22,6 +22,7 @@ final class AuthService
     private const int LOCKOUT_MINUTES = 15;
     private const int DAILY_FAILED_LIMIT = 20;
     private const int RESET_TOKEN_TTL_MINUTES = 60;
+    private const int REMEMBER_REFRESH_TTL = 2592000; // 30 dni — sesja przy „zapamiętaj mnie"
 
     public function __construct(
         private readonly UserRepository $userRepository,
@@ -40,7 +41,7 @@ final class AuthService
      *
      * @return array{access_token: string, refresh_token: string, expires_in: int, user: array<string, mixed>}|array{error: string, code: int}
      */
-    public function login(string $email, string $password, Request $request): array
+    public function login(string $email, string $password, Request $request, bool $remember = false): array
     {
         $user = $this->userRepository->findByEmail($email);
 
@@ -90,7 +91,9 @@ final class AuthService
         $permissions = $this->decodePermissions($user['permissions'] ?? null);
 
         $access = $this->jwtService->generateAccessToken($userId, $role, $permissions);
-        $refresh = $this->jwtService->generateRefreshToken($userId);
+        $refresh = $remember
+            ? $this->jwtService->generateRefreshToken($userId, self::REMEMBER_REFRESH_TTL)
+            : $this->jwtService->generateRefreshToken($userId);
 
         return [
             'access_token' => $access['token'],

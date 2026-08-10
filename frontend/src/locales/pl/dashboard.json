@@ -1,25 +1,51 @@
 {
   "title": "Dashboard",
+  "welcome": "Dzień dobry",
+  "welcome_suffix": "w systemie PORTBS",
+  "last_update": "Dane na dzień",
+  "error": "Nie udało się pobrać danych dashboardu. Spróbuj ponownie później.",
   "kpi": {
     "active_employees": "Aktywni pracownicy",
+    "active_employees_sub": "Zatrudnieni i aktywni",
     "active_terminals": "Obsługiwane terminale",
+    "active_terminals_sub": "Aktywne terminale",
     "vehicles_in_use": "Pojazdy w użyciu",
+    "vehicles_in_use_sub": "Aktywne pojazdy floty",
     "active_incidents": "Aktywne awarie",
+    "active_incidents_sub": "Nierozwiązane zgłoszenia",
     "hours_today": "Przepracowane godziny dziś",
     "employees_on_leave": "Pracownicy na urlopie",
     "monthly_wages": "Suma wynagrodzeń (miesiąc)"
   },
+  "charts": {
+    "title": "Przegląd operacji",
+    "subtitle": "Kluczowe wskaźniki operacyjne w czasie",
+    "area_title": "Operacje w ciągu 14 dni",
+    "area_subtitle": "Liczba obsłużonych zleceń dziennie",
+    "donut_title": "Struktura floty",
+    "donut_subtitle": "Udział typów pojazdów",
+    "bar_title": "Obrót per terminal",
+    "bar_subtitle": "Wartość obsługiwanych ładunków (tys. PLN)"
+  },
   "alerts": {
-    "title": "Alerty",
+    "title": "Alerty i uwagi",
     "expiring_certs": "Certyfikaty bliskie wygaśnięcia",
     "upcoming_inspections": "Zbliżające się przeglądy",
     "unresolved_incidents": "Nierozwiązane awarie",
     "returning_from_leave": "Zbliżające się powroty z urlopów"
   },
   "shortcuts": {
-    "title": "Skróty",
+    "title": "Szybkie akcje",
     "report_incident": "Zgłoś awarię",
     "create_report": "Utwórz raport",
     "add_order": "Dodaj zlecenie"
+  },
+  "activity": {
+    "title": "Ostatnia aktywność",
+    "item_new_employee": "Zarejestrowano nowego pracownika",
+    "item_incident_closed": "Zamknięto zgłoszenie awarii",
+    "item_invoice_paid": "Otrzymano płatność faktury",
+    "item_terminal_online": "Terminal wrócił do pracy",
+    "empty": "Brak ostatniej aktywności"
   }
 }

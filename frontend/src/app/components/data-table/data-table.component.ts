@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SelectComponent, SelectOption } from '../select/select.component';
+import { SvgIconComponent } from '../svg-icon/svg-icon.component';
 
 export type SortDirection = 'asc' | 'desc' | null;
 
@@ -29,39 +30,41 @@ export interface DataTableSortEvent {
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, SelectComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, SelectComponent, SvgIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100">
       @if (loading()) {
-        <div class="p-8 text-center text-gray-500">
-          {{ 'common.table.loading' | translate }}
+        <div class="flex flex-col items-center justify-center gap-3 p-10 text-gray-400">
+          <app-svg-icon name="spinner" size="lg" class="animate-spin text-pbs-secondary" />
+          <span class="text-sm">{{ 'common.table.loading' | translate }}</span>
         </div>
       } @else if (data().length === 0) {
-        <div class="p-8 text-center text-gray-500">
-          {{ 'common.table.no_data' | translate }}
+        <div class="flex flex-col items-center justify-center gap-2 p-10 text-gray-400">
+          <app-svg-icon name="search" size="lg" />
+          <span class="text-sm">{{ 'common.table.no_data' | translate }}</span>
         </div>
       } @else {
         <!-- Desktop: tabela (przewijana tylko przy zbyt dużej szerokości) -->
         <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
-          <thead class="bg-gray-50 text-gray-700 text-sm">
+          <thead class="bg-gray-50/90 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
             <tr>
               @for (col of columns(); track col.key) {
                 <th
-                  class="px-4 py-3 text-left font-medium"
+                  class="px-4 py-3 font-medium"
                   [style.width]="col.width"
                 >
                   @if (col.sortable) {
                     <button
                       type="button"
-                      class="flex items-center gap-1 hover:text-pbs-primary"
+                      class="group flex items-center gap-1 uppercase tracking-wider hover:text-pbs-primary"
                       (click)="onSort(col.key)"
                     >
                       <span>{{ col.label }}</span>
-                      @if (sortKey() === col.key) {
-                        <span>{{ sortDirection() === 'asc' ? '▲' : '▼' }}</span>
-                      }
+                      <span class="text-[10px] opacity-60">
+                        {{ sortKey() === col.key ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                      </span>
                     </button>
                   } @else {
                     <span>{{ col.label }}</span>
@@ -77,7 +80,7 @@ export interface DataTableSortEvent {
           </thead>
           <tbody class="divide-y divide-gray-100 text-sm text-gray-800">
             @for (row of data(); track row) {
-              <tr class="hover:bg-gray-50 transition-colors">
+              <tr class="transition-colors hover:bg-pbs-navy-50/60">
                 @for (col of columns(); track col.key) {
                   <td class="px-4 py-3">
                     @if (cellTemplates[col.key]; as tpl) {
@@ -102,9 +105,9 @@ export interface DataTableSortEvent {
         </div>
 
         <!-- Mobile: karty (brak przewijania poziomego) -->
-        <div class="block md:hidden divide-y divide-gray-100">
+        <div class="block space-y-3 p-3 md:hidden">
           @for (row of data(); track row) {
-            <div class="p-4">
+            <div class="rounded-lg bg-white p-4 ring-1 ring-gray-100">
               @if (hasTitleColumn()) {
                 <!-- Nagłówek karty: tytuł + akcje (akcje jednoznacznie powiązane z rekordem) -->
                 <div class="mb-2 flex items-start justify-between gap-3">
@@ -189,32 +192,35 @@ export interface DataTableSortEvent {
 
         <!-- Paginacja -->
         @if (total() > 0) {
-          <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-600">
-            <div>
-              {{ 'common.table.total' | translate }}: {{ total() }}
-            </div>
+          <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-4 py-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-2">
+              <span class="text-xs font-medium uppercase tracking-wide text-gray-400">{{ 'common.table.total' | translate }}</span>
+              <span class="font-semibold text-gray-800">{{ total() }}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="mr-1 text-gray-500">{{ 'common.table.page' | translate }} {{ page() }} {{ 'common.table.of' | translate }} {{ totalPages() }}</span>
               <button
                 type="button"
-                class="px-3 py-1 rounded border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
                 [disabled]="page() === 1"
                 (click)="onPageChange(page() - 1)"
+                aria-label="Poprzednia strona"
               >
-                ←
+                <app-svg-icon name="chevron-left" size="sm" />
               </button>
-              <span>{{ page() }} / {{ totalPages() }}</span>
               <button
                 type="button"
-                class="px-3 py-1 rounded border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
                 [disabled]="page() === totalPages()"
                 (click)="onPageChange(page() + 1)"
+                aria-label="Następna strona"
               >
-                →
+                <app-svg-icon name="chevron-right" size="sm" />
               </button>
               <app-select
                 [options]="perPageOptions"
                 size="sm"
-                extraClass="ml-2"
+                extraClass="ml-1"
                 [ngModel]="perPage()"
                 (ngModelChange)="onPerPageChange($event)"
               />

@@ -405,6 +405,29 @@ class OrderRepository extends BaseRepository
         ];
     }
 
+    /**
+     * Zlecenia przypadające w danym dniu dla wskazanego terminala (auto-dane raportu
+     * terminalowego — pracownicy/sprzęt obecni w porcie danego dnia z harmonogramu).
+     *
+     * Zlecenie jest „obecne" w dniu `date`, gdy `data_rozpoczecia <= date <= data_zakonczenia`.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findOrdersForTerminalOnDate(int $terminalId, string $date): array
+    {
+        $sql = 'SELECT o.*, t.`nazwa` AS terminal_nazwa
+                FROM `orders` o
+                LEFT JOIN `terminals` t ON t.`id` = o.`terminal_id`
+                WHERE o.`terminal_id` = :terminal_id
+                  AND o.`data_rozpoczecia` <= :date
+                  AND o.`data_zakonczenia` >= :date
+                ORDER BY o.`data_rozpoczecia` ASC, o.`id` ASC';
+        $stmt = $this->executeQuery($sql, [':terminal_id' => $terminalId, ':date' => $date]);
+
+        /** @var array<int, array<string, mixed>> */
+        return $stmt->fetchAll();
+    }
+
     // --- Przypisania pracowników i sprzętu ---
 
     /**

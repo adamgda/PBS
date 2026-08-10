@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { ToastService } from '../../services/toast.service';
+import { SvgIconComponent } from '../svg-icon/svg-icon.component';
 
 /**
  * Komponent powiadomień Toast — wyświetla komunikaty z ToastService.
@@ -10,37 +11,34 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-toast-notification',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SvgIconComponent],
   template: `
     <div
-      class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full"
+      class="fixed right-4 top-4 z-50 flex w-full max-w-sm flex-col gap-2"
       role="alert"
       aria-live="polite"
     >
       @for (toast of toasts(); track toast.id) {
         <div
-          class="flex items-start gap-3 p-4 rounded-lg shadow-lg border-l-4 transition-all"
-          [class.bg-green-50]="toast.type === 'success'"
-          [class.text-green-800]="toast.type === 'success'"
-          [class.border-green-500]="toast.type === 'success'"
-          [class.bg-red-50]="toast.type === 'error'"
-          [class.text-red-800]="toast.type === 'error'"
-          [class.border-red-500]="toast.type === 'error'"
-          [class.bg-yellow-50]="toast.type === 'warning'"
-          [class.text-yellow-800]="toast.type === 'warning'"
-          [class.border-yellow-500]="toast.type === 'warning'"
-          [class.bg-blue-50]="toast.type === 'info'"
-          [class.text-blue-800]="toast.type === 'info'"
-          [class.border-blue-500]="toast.type === 'info'"
+          class="flex animate-slide-in-right items-center gap-3 rounded-xl bg-white p-3.5 shadow-elevated ring-1 ring-gray-100"
         >
-          <span class="flex-1 text-sm font-medium">{{ toast.message }}</span>
+          <span
+            class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white shadow-sm"
+            [class.bg-emerald-500]="toast.type === 'success'"
+            [class.bg-red-500]="toast.type === 'error'"
+            [class.bg-amber-500]="toast.type === 'warning'"
+            [class.bg-blue-500]="toast.type === 'info'"
+          >
+            <app-svg-icon [name]="toastTypeIcon(toast.type)" size="sm" />
+          </span>
+          <span class="flex-1 text-sm font-medium text-gray-800">{{ toast.message }}</span>
           <button
             type="button"
-            class="text-current opacity-60 hover:opacity-100 transition-opacity"
+            class="grid h-7 w-7 shrink-0 place-items-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
             (click)="dismiss(toast.id)"
             aria-label="Zamknij"
           >
-            ✕
+            <app-svg-icon name="close" size="sm" />
           </button>
         </div>
       }
@@ -51,6 +49,19 @@ export class ToastNotificationComponent {
   private readonly toastService = inject(ToastService);
 
   readonly toasts = this.toastService.toasts;
+
+  toastTypeIcon(type: string): string {
+    switch (type) {
+      case 'success':
+        return 'check';
+      case 'error':
+        return 'alert';
+      case 'warning':
+        return 'alert';
+      default:
+        return 'alert';
+    }
+  }
 
   dismiss(id: number): void {
     this.toastService.dismiss(id);

@@ -59,7 +59,7 @@ export class AuthService {
    * Wywoływane przez interceptor przy 401 lub proaktywnie przed wygaśnięciem.
    */
   refresh(): Observable<RefreshResponse> {
-    return this.http.post<RefreshResponse>(`${this.apiUrl}/auth/refresh`, {}).pipe(
+    return this.http.post<RefreshResponse>(`${this.apiUrl}/auth/refresh`, { refresh_token: this.getRefreshToken() }).pipe(
       tap((res) => this.storeTokens(res)),
       catchError((err) => {
         this.logout();
@@ -72,7 +72,7 @@ export class AuthService {
    * Wylogowanie — POST /auth/logout + wyczyszczenie stanu lokalnego.
    */
   logout(): Observable<unknown> {
-    return this.http.post(`${this.apiUrl}/auth/logout`, {}).pipe(
+    return this.http.post(`${this.apiUrl}/auth/logout`, { refresh_token: this.getRefreshToken() }).pipe(
       tap(() => this.clearSession()),
       catchError(() => {
         // Nawet jeśli request się nie powiedzie, czyścimy stan lokalny
@@ -139,6 +139,14 @@ export class AuthService {
    */
   getAccessToken(): string | null {
     return localStorage.getItem('pbs_access_token');
+  }
+
+  /**
+   * Zwraca bieżący refresh token (do wysłania w body /auth/refresh oraz /auth/logout).
+   * Backend nie używa cookie — token przechowywany jest w localStorage.
+   */
+  getRefreshToken(): string | null {
+    return localStorage.getItem('pbs_refresh_token');
   }
 
   /**

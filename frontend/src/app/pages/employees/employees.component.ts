@@ -185,6 +185,8 @@ export class EmployeesComponent {
   readonly portRows = this._portRows.asReadonly();
   private readonly _summary = signal<EmployeeSummary | null>(null);
   readonly summary = this._summary.asReadonly();
+  private readonly _summaryLoading = signal<boolean>(false);
+  readonly summaryLoading = this._summaryLoading.asReadonly();
   readonly settlementLoading = signal<boolean>(false);
 
   // Faktury
@@ -825,9 +827,16 @@ export class EmployeesComponent {
   }
 
   loadSummary(): void {
+    this._summaryLoading.set(true);
     this.employeesService.summary(this.settlementMonth()).subscribe({
-      next: (res) => this._summary.set(res),
-      error: () => this._summary.set(null),
+      next: (res) => {
+        this._summary.set(res);
+        this._summaryLoading.set(false);
+      },
+      error: () => {
+        this._summary.set(null);
+        this._summaryLoading.set(false);
+      },
     });
   }
 

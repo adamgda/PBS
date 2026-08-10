@@ -79,6 +79,7 @@
     "logout": "Wyloguj",
     "email": "E-mail",
     "password": "Hasło",
+    "invalid_credentials": "Nieprawidłowy email lub hasło",
     "set_password": "Ustaw hasło",
     "login_title": "PORTBS - logowanie",
     "login_subtitle": "Wprowadź dane dostępowe, aby kontynuować",

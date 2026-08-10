@@ -72,31 +72,55 @@
   </ng-template>
 
   <ng-template #actionsTpl let-eq>
-    <div class="flex justify-end gap-1">
-      <app-icon-button
-        icon="exchange"
-        tone="primary"
-        [ariaLabel]="'sprzet.buttons.assign' | translate"
-        (clicked)="openAssign(eq)"
-      />
-      <app-icon-button
-        icon="document"
-        tone="primary"
-        [ariaLabel]="'sprzet.buttons.details' | translate"
-        (clicked)="openDetails(eq)"
-      />
-      <app-icon-button
-        icon="settings"
-        tone="primary"
-        [ariaLabel]="'sprzet.buttons.edit' | translate"
-        (clicked)="openEdit(eq)"
-      />
-      <app-icon-button
-        icon="trash"
-        tone="danger"
-        [ariaLabel]="'sprzet.buttons.delete' | translate"
-        (clicked)="deleteEquipment(eq)"
-      />
+    <div class="relative flex justify-end">
+      <button
+        type="button"
+        class="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+        [attr.aria-label]="'common.buttons.actions' | translate"
+        (click)="toggleActions(eq.id)"
+      >
+        <app-svg-icon name="dots-vertical" size="sm" />
+      </button>
+
+      @if (openActionsId() === eq.id) {
+        <!-- Tło zamykające po kliknięciu poza menu -->
+        <div class="fixed inset-0 z-10" (click)="closeActions()"></div>
+        <div class="absolute right-0 top-9 z-20 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            (click)="openAssign(eq); closeActions()"
+          >
+            <app-svg-icon name="exchange" size="sm" class="shrink-0 text-indigo-500" />
+            {{ 'sprzet.buttons.assign' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            (click)="openDetails(eq); closeActions()"
+          >
+            <app-svg-icon name="document" size="sm" class="shrink-0 text-emerald-600" />
+            {{ 'sprzet.buttons.details' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            (click)="openEdit(eq); closeActions()"
+          >
+            <app-svg-icon name="settings" size="sm" class="shrink-0 text-gray-500" />
+            {{ 'sprzet.buttons.edit' | translate }}
+          </button>
+          <div class="my-1 border-t border-gray-100"></div>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50"
+            (click)="closeActions(); deleteEquipment(eq)"
+          >
+            <app-svg-icon name="trash" size="sm" class="shrink-0" />
+            {{ 'sprzet.buttons.delete' | translate }}
+          </button>
+        </div>
+      }
     </div>
   </ng-template>
 </div>

@@ -11,6 +11,8 @@ export interface AuthTokens {
 export interface LoginRequest {
   email: string;
   password: string;
+  /** „Zapamiętaj mnie" — wydłuża czas życia sesji (backend ustawia dłuższy TTL refresh tokena). */
+  remember?: boolean;
 }
 
 export interface LoginResponse extends AuthTokens {

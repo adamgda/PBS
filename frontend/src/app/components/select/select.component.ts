@@ -110,11 +110,11 @@ export class SelectComponent implements ControlValueAccessor {
   get classes(): string {
     switch (this.size) {
       case 'sm':
-        return 'pl-2 pr-8 py-1 rounded border border-gray-200 text-sm';
+        return 'pl-2 pr-8 py-1 rounded-md border border-gray-200 text-sm transition-all hover:border-gray-300';
       case 'lg':
-        return 'block w-full rounded-lg border border-gray-200 bg-white pl-3 pr-9 py-2.5 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary';
+        return 'block w-full rounded-lg border border-gray-200 bg-white pl-3 pr-9 py-2.5 text-sm shadow-sm transition-all hover:border-gray-300 focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60';
       default:
-        return 'pl-3 pr-8 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent';
+        return 'pl-3 pr-8 py-2 border border-gray-200 rounded-md text-sm transition-all hover:border-gray-300 focus:ring-2 focus:ring-pbs-secondary/60 focus:border-transparent';
     }
   }
 

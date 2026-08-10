@@ -227,37 +227,37 @@ Legenda statusów:
 
 ## Etap 11 — Sekcja: Raportowanie
 
-- [ ] Backend: `GET/POST /api/v1/reports/terminal`
-- [ ] Backend: `GET/PUT /api/v1/reports/terminal/{id}`
-- [ ] Backend: `GET/POST /api/v1/reports/vehicle`
-- [ ] Backend: `GET/PUT /api/v1/reports/vehicle/{id}`
-- [ ] Frontend: raporty terminalowe (auto-dane z harmonogramu)
-- [ ] Frontend: raporty pojazdowe (przebieg, przebieg OC)
-- [ ] Frontend: lista i edycja raportów
-- [ ] Lokalizacje: `raportowanie.json` w `locales/pl/`
+- [x] Backend: `GET/POST /api/v1/reports/terminal`
+- [x] Backend: `GET/PUT /api/v1/reports/terminal/{id}`
+- [x] Backend: `GET/POST /api/v1/reports/vehicle`
+- [x] Backend: `GET/PUT /api/v1/reports/vehicle/{id}`
+- [x] Frontend: raporty terminalowe (auto-dane z harmonogramu)
+- [x] Frontend: raporty pojazdowe (przebieg, przebieg OC)
+- [x] Frontend: lista i edycja raportów
+- [x] Lokalizacje: `raportowanie.json` w `locales/pl/`
 
 ## Etap 12 — Sekcja: Analityka
 
-- [ ] Backend: `GET /api/v1/analytics/overview`
-- [ ] Backend: `GET /api/v1/analytics/terminals`
-- [ ] Backend: `GET /api/v1/analytics/employees`
-- [ ] Backend: `GET /api/v1/analytics/equipment`
-- [ ] Backend: `GET /api/v1/analytics/relations`
-- [ ] Frontend: wykresy (integracja danych + cross-sekcje)
-- [ ] Frontend: filtry czasowe (zakres dat, domyślnie 30 dni)
-- [ ] Frontend: statystyki (terminale, pracownicy, sprzęt + relacje)
-- [ ] Frontend: czas przestoju awarii w analityce
-- [ ] Lokalizacje: `analityka.json` w `locales/pl/`
+- [x] Backend: `GET /api/v1/analytics/overview`
+- [x] Backend: `GET /api/v1/analytics/terminals`
+- [x] Backend: `GET /api/v1/analytics/employees`
+- [x] Backend: `GET /api/v1/analytics/equipment`
+- [x] Backend: `GET /api/v1/analytics/relations`
+- [x] Frontend: wykresy (integracja danych + cross-sekcje)
+- [x] Frontend: filtry czasowe (zakres dat, domyślnie 30 dni)
+- [x] Frontend: statystyki (terminale, pracownicy, sprzęt + relacje)
+- [x] Frontend: czas przestoju awarii w analityce
+- [x] Lokalizacje: `analityka.json` w `locales/pl/`
 
 ## Etap 13 — Sekcja: Dashboard
 
-- [ ] Backend: `GET /api/v1/dashboard/summary` (KPI)
-- [ ] Backend: `GET /api/v1/dashboard/alerts`
-- [ ] Frontend: siatka kart KPI
-- [ ] Frontend: widgety alertów (certyfikaty, przeglądy, awarie)
-- [ ] Frontend: skróty akcji (zgłoś awarię, utwórz raport, dodaj zlecenie)
-- [ ] Frontend: responsywność mobile-first
-- [ ] Lokalizacje: `dashboard.json` w `locales/pl/`
+- [x] Backend: `GET /api/v1/dashboard/summary` (KPI)
+- [x] Backend: `GET /api/v1/dashboard/alerts`
+- [x] Frontend: siatka kart KPI
+- [x] Frontend: widgety alertów (certyfikaty, przeglądy, awarie)
+- [x] Frontend: skróty akcji (zgłoś awarię, utwórz raport, dodaj zlecenie)
+- [x] Frontend: responsywność mobile-first
+- [x] Lokalizacje: `dashboard.json` w `locales/pl/`
 
 ## Etap 14 — Alerty i powiadomienia
 

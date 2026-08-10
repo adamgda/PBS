@@ -42,6 +42,8 @@ final class EquipmentController extends Controller
         $filters = [
             'nazwa' => is_string($query['nazwa'] ?? null) ? (string) $query['nazwa'] : '',
             'kategoria' => is_string($query['kategoria'] ?? null) ? (string) $query['kategoria'] : '',
+            'numer_seryjny' => is_string($query['numer_seryjny'] ?? null) ? (string) $query['numer_seryjny'] : '',
+            'ostatni_przebieg' => is_string($query['ostatni_przebieg'] ?? null) ? (string) $query['ostatni_przebieg'] : '',
             'employee_id' => is_string($query['employee_id'] ?? null) ? (string) $query['employee_id'] : '',
             'terminal_id' => is_string($query['terminal_id'] ?? null) ? (string) $query['terminal_id'] : '',
             'is_active' => is_string($query['is_active'] ?? null) ? (string) $query['is_active'] : '',

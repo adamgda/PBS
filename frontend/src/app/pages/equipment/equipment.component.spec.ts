@@ -38,6 +38,8 @@ describe('EquipmentComponent', () => {
       (r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/equipment`),
     );
     req.flush({ data: [], total: 0, page: 1, per_page: 25 });
+    // Konstruktor ładuje też opcje pracownika/terminala (filtry + autocomplete).
+    flushOptions();
   }
 
   /** Obsługuje żądania opcji (GET /employees + /terminals) wysyłane przez loadOptions(). */

@@ -95,6 +95,18 @@ export class EquipmentComponent {
   readonly perPage = this._perPage.asReadonly();
   readonly sortKey = this._sortKey.asReadonly();
   readonly sortDirection = this._sortDirection.asReadonly();
+
+  // --- Menu akcji wiersza (dropdown, jak w Pracownikach) ---
+  readonly openActionsId = signal<number | null>(null);
+
+  toggleActions(id: number): void {
+    this.openActionsId.update((cur) => (cur === id ? null : id));
+  }
+
+  closeActions(): void {
+    this.openActionsId.set(null);
+  }
+
   // Modal dodawania/edycji
   readonly modalMode = signal<ModalMode>(null);
   readonly modalEquipment = signal<Equipment | null>(null);
@@ -140,6 +152,16 @@ export class EquipmentComponent {
   readonly employeeOptions = this._employeeOptions.asReadonly();
   readonly terminalOptions = this._terminalOptions.asReadonly();
 
+  // --- Opcje filtrów (pracownik + terminal) ---
+  /** Opcje listy rozwijanej dla filtra „Pracownik". */
+  readonly employeeFilterOptions = computed<{ value: string; label: string }[]>(() =>
+    this._employeeOptions().map((o) => ({ value: String(o.value), label: o.label })),
+  );
+  /** Opcje listy rozwijanej dla filtra „Terminal". */
+  readonly terminalFilterOptions = computed<{ value: string; label: string }[]>(() =>
+    this._terminalOptions().map((o) => ({ value: String(o.value), label: o.label })),
+  );
+
   private readonly statusOptions = [
     { value: '1', labelKey: 'sprzet.status.active' },
     { value: '0', labelKey: 'sprzet.status.inactive' },
@@ -162,11 +184,16 @@ export class EquipmentComponent {
   readonly filterConfigs = computed<FilterConfig[]>(() => [
     { key: 'nazwa', label: this.t('sprzet.filters.name'), type: 'text', placeholder: this.t('sprzet.filters.search_placeholder') },
     { key: 'kategoria', label: this.t('sprzet.filters.category'), type: 'select', options: this.categoryOptions.map((o) => ({ value: o.value, label: this.t(o.labelKey) })) },
+    { key: 'numer_seryjny', label: this.t('sprzet.filters.serial_number'), type: 'text', placeholder: this.t('sprzet.filters.serial_number_placeholder') },
+    { key: 'ostatni_przebieg', label: this.t('sprzet.filters.mileage'), type: 'text', placeholder: this.t('sprzet.filters.mileage_placeholder') },
+    { key: 'employee_id', label: this.t('sprzet.filters.employee'), type: 'select', options: this.employeeFilterOptions() },
+    { key: 'terminal_id', label: this.t('sprzet.filters.terminal'), type: 'select', options: this.terminalFilterOptions() },
     { key: 'is_active', label: this.t('sprzet.filters.status'), type: 'select', options: this.statusOptions.map((o) => ({ value: o.value, label: this.t(o.labelKey) })) },
   ]);
 
   constructor() {
     this.load();
+    this.loadOptions();
   }
 
   // --- Ładowanie listy ---

@@ -18,6 +18,10 @@
   "filters": {
     "name": "Nazwa",
     "category": "Kategoria",
+    "serial_number": "Numer seryjny",
+    "serial_number_placeholder": "Szukaj po numerze seryjnym",
+    "mileage": "Przebieg (km)",
+    "mileage_placeholder": "np. 125000",
     "employee": "Pracownik",
     "terminal": "Terminal",
     "status": "Status",

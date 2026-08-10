@@ -26,6 +26,7 @@
   "kpi": {
     "hours_total": "Godziny (mc, wszystkie porty)",
     "wages_total": "Wynagrodzenie (mc)",
+    "split": "Podział godzin",
     "split_1_15": "Okres 1–15",
     "split_15_23": "Okres 15–23",
     "on_leave": "Na urlopie"

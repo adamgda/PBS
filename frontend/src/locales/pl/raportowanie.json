@@ -1,0 +1,73 @@
+{
+  "title": "Raportowanie",
+  "subtitle": "Dzienne raporty z terminali i pojazdów",
+  "type": {
+    "terminal_title": "Raport z terminala",
+    "terminal_desc": "Sytuacja w porcie · auto-dane z harmonogramu",
+    "vehicle_title": "Raport z pojazdu",
+    "vehicle_desc": "Przebieg + obsługa codzienna (OC)"
+  },
+  "buttons": {
+    "add_terminal": "Nowy raport terminalowy",
+    "add_vehicle": "Nowy raport pojazdowy",
+    "save": "Zapisz raport",
+    "edit": "Edytuj"
+  },
+  "list": {
+    "all_terminal": "Raporty terminalowe",
+    "all_vehicle": "Raporty pojazdowe",
+    "date": "Data raportu",
+    "terminal": "Terminal",
+    "equipment": "Pojazd",
+    "opis": "Opis",
+    "przebieg": "Aktualny przebieg",
+    "przebieg_oc": "Przebieg OC",
+    "author": "Autor"
+  },
+  "filters": {
+    "terminal": "Terminal",
+    "equipment": "Pojazd",
+    "date_from": "Od",
+    "date_to": "Do"
+  },
+  "form": {
+    "add_terminal_title": "Nowy raport — terminal",
+    "edit_terminal_title": "Edytuj raport — terminal",
+    "add_vehicle_title": "Nowy raport — pojazd",
+    "edit_vehicle_title": "Edytuj raport — pojazd",
+    "terminal": "Terminal",
+    "terminal_placeholder": "Szukaj terminala...",
+    "equipment": "Pojazd",
+    "equipment_placeholder": "Szukaj pojazdu...",
+    "date": "Data raportu",
+    "opis": "Opis",
+    "opis_placeholder": "Opis sytuacji w porcie...",
+    "przebieg": "Aktualny przebieg",
+    "przebieg_oc": "Przebieg OC",
+    "przebieg_oc_placeholder": "Opis obsługi codziennej maszyny...",
+    "uwagi": "Uwagi",
+    "uwagi_placeholder": "Dodatkowe uwagi..."
+  },
+  "auto_data": {
+    "title": "Auto-dane z harmonogramu",
+    "orders": "Zlecenia",
+    "employees": "Pracownicy",
+    "equipment": "Sprzęt",
+    "total_hours": "Suma godzin",
+    "total_wages": "Suma wynagrodzeń"
+  },
+  "messages": {
+    "terminal_required": "Wybierz terminal",
+    "equipment_required": "Wybierz pojazd",
+    "date_required": "Podaj datę raportu",
+    "opis_required": "Opis jest wymagany",
+    "przebieg_required": "Podaj poprawny aktualny przebieg",
+    "przebieg_oc_required": "Opis przebiegu OC jest wymagany",
+    "created": {
+      "success": "Raport utworzony pomyślnie"
+    },
+    "updated": {
+      "success": "Raport zaktualizowany pomyślnie"
+    }
+  }
+}

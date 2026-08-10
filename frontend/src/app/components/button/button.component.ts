@@ -61,21 +61,21 @@ export class ButtonComponent {
   @Output() clicked = new EventEmitter<void>();
 
   private readonly baseClasses =
-    'font-medium rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50';
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium rounded-lg transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pbs-primary focus-visible:ring-offset-2';
 
   get classes(): string {
     const variantClass = (() => {
       switch (this.variant) {
         case 'secondary':
-          return 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+          return 'bg-gray-100 text-gray-700 shadow-sm hover:bg-gray-200';
         case 'outline':
-          return 'border border-gray-200 text-gray-700 hover:bg-gray-50';
+          return 'border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300';
         case 'danger':
-          return 'bg-pbs-danger text-white hover:bg-red-600';
+          return 'bg-pbs-danger text-white shadow-sm hover:bg-red-600 hover:shadow';
         case 'block':
-          return 'flex w-full items-center justify-center gap-2 rounded-lg bg-pbs-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-pbs-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+          return 'flex w-full items-center justify-center gap-2 rounded-xl bg-pbs-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-pbs-navy-600 hover:shadow disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-pbs-primary focus-visible:ring-offset-2';
         default:
-          return 'bg-pbs-primary text-white hover:bg-blue-700';
+          return 'bg-pbs-primary text-white shadow-sm hover:bg-pbs-navy-600 hover:shadow';
       }
     })();
     const base = this.variant === 'block' ? '' : this.baseClasses;

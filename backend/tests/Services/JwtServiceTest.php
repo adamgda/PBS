@@ -39,6 +39,20 @@ describe('JwtService', function (): void {
         expect($decoded->typ)->toBe('refresh');
     });
 
+    it('generates a refresh token with a custom TTL', function (): void {
+        $customTtl = 30 * 86400; // 30 dni
+        $result = $this->service->generateRefreshToken(42, $customTtl);
+
+        expect($result['token'])->toBeString();
+        // expiresAt powinno odpowiadać przekazanemu TTL (nie domyślnemu 604800)
+        expect($result['expiresAt'] - time())->toBeGreaterThanOrEqual($customTtl - 5);
+        expect($result['expiresAt'] - time())->toBeLessThanOrEqual($customTtl + 5);
+
+        $decoded = $this->service->validateToken($result['token'], 'refresh');
+        expect($decoded)->not->toBeNull();
+        expect((int) $decoded->exp)->toBe($result['expiresAt']);
+    });
+
     it('rejects access token when expecting refresh type', function (): void {
         $access = $this->service->generateAccessToken(1, 'user', []);
         $decoded = $this->service->validateToken($access['token'], 'refresh');

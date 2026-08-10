@@ -8,12 +8,15 @@
   <!-- ===== Współdzielona lista nawigacji (używana w drawerze i w sidebarze) ===== -->
   <ng-template #navList>
     <nav class="flex flex-col gap-1 px-3" aria-label="Główna nawigacja">
+      <p class="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-blue-100/40">
+        {{ 'common.nav.menu' | translate }}
+      </p>
       @for (item of visibleMenuItems(); track item.path) {
         <a
           [routerLink]="item.path"
-          routerLinkActive="bg-white/15 text-white"
+          routerLinkActive="bg-white/15 text-white shadow-sm"
           [routerLinkActiveOptions]="{ exact: false }"
-          class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-blue-100/80 transition-colors hover:bg-white/10 hover:text-white"
+          class="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-blue-100/80 transition-all duration-150 hover:bg-white/10 hover:text-white"
         >
           <span class="shrink-0 text-blue-100/80 transition-colors group-hover:text-white">
             <app-svg-icon [name]="item.icon" />
@@ -58,7 +61,7 @@
 
   <!-- ===== Drawer nawigacji (mobile) ===== -->
   <aside
-    class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-pbs-primary shadow-2xl transition-transform duration-300 ease-out md:hidden"
+    class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-gradient-to-b from-pbs-primary to-pbs-navy-950 shadow-2xl transition-transform duration-300 ease-out md:hidden"
     [class.translate-x-0]="mobileOpen()"
     [class.-translate-x-full]="!mobileOpen()"
     [attr.aria-hidden]="!mobileOpen()"
@@ -94,7 +97,7 @@
 
   <!-- ===== Stały sidebar (desktop) ===== -->
   <aside
-    class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-pbs-primary shadow-xl md:flex"
+    class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-gradient-to-b from-pbs-primary to-pbs-navy-950 shadow-xl md:flex"
   >
     <div class="flex items-center gap-2 px-5 py-5">
       <span
@@ -114,7 +117,7 @@
 
   <!-- ===== Górny app-bar ===== -->
   <header
-    class="sticky top-0 z-20 bg-pbs-primary/95 text-white shadow-sm backdrop-blur supports-[backdrop-filter]:bg-pbs-primary/80"
+    class="sticky top-0 z-20 border-b border-white/10 bg-pbs-primary/95 text-white shadow-sm backdrop-blur supports-[backdrop-filter]:bg-pbs-primary/85"
   >
     <div class="flex h-14 items-center justify-between gap-2 px-4 pt-[env(safe-area-inset-top)] md:pl-[calc(16rem+1rem)] md:pr-6">
       <!-- Po lewej: hamburger (mobile) / tytuł sekcji (desktop) -->

@@ -43,7 +43,7 @@ export class LoginComponent {
     this.loading.set(true);
     this.error.set(null);
 
-    this.authService.login({ email: this.email(), password: this.password() }).subscribe({
+    this.authService.login({ email: this.email(), password: this.password(), remember: this.remember() }).subscribe({
       next: () => {
         this.loading.set(false);
         this.toastService.success(this.translateService.instant('common.auth.login'));
@@ -52,7 +52,14 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        const msg = err?.error?.message || this.translateService.instant('common.messages.error.generic');
+        let msg = this.translateService.instant('common.messages.error.generic');
+        
+        if (err.status === 401) {
+          msg = this.translateService.instant('common.auth.invalid_credentials');
+        } else if (err?.error?.message) {
+          msg = err.error.message;
+        }
+        
         this.error.set(msg);
         this.toastService.error(msg);
       },

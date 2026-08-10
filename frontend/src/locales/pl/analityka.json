@@ -1,11 +1,36 @@
 {
   "title": "Analityka",
+  "subtitle": "Statystyki i wykresy operacyjne portu",
+  "loading": "Ładowanie danych…",
+  "empty": "Brak danych w wybranym okresie",
+  "presets": {
+    "7": "7 dni",
+    "30": "30 dni",
+    "90": "90 dni",
+    "365": "12 mies."
+  },
   "filters": {
+    "period": "Okres",
     "date_range": "Zakres dat",
     "last_30_days": "Ostatnie 30 dni",
     "custom": "Niestandardowy"
   },
+  "kpi": {
+    "orders": "Obsłużone zlecenia",
+    "hours": "Suma godzin",
+    "wages": "Suma wynagrodzeń",
+    "incidents": "Awarie",
+    "downtime": "Czas przestoju"
+  },
   "charts": {
+    "terminal_load": "Obciążenie terminali",
+    "terminal_load_desc": "Liczba obsłużonych zleceń w wybranym okresie",
+    "equipment_distribution": "Najczęściej przypisywany sprzęt",
+    "equipment_distribution_desc": "Udział w przypisaniach",
+    "orders_over_time": "Zlecenia w czasie",
+    "orders_over_time_desc": "Liczba zleceń per terminal w wybranym okresie",
+    "orders": "Zlecenia",
+    "assignments": "Przypisania",
     "total_hours": "Suma przepracowanych godzin (wszystkie porty)",
     "hours_per_port": "Suma godzin per port",
     "hours_per_employee": "Suma godzin i wynagrodzenie per pracownik",
@@ -16,10 +41,21 @@
     "monthly_wages": "Suma wynagrodzeń za miesiąc"
   },
   "stats": {
+    "employees": "Godziny i wynagrodzenia pracowników",
+    "employees_desc": "Suma godzin i wynagrodzenie per pracownik w wybranym okresie",
+    "relations": "Najczęściej przypisywani pracownicy",
+    "relations_desc": "Relacje pracownik ↔ sprzęt ↔ terminal",
+    "assignments": "przypisań",
     "most_serviced_terminals": "Najczęściej obsługiwane terminale",
     "most_assigned_employees": "Najczęściej przypisywani pracownicy",
     "most_used_equipment": "Najczęściej używany sprzęt",
-    "relations": "Relacje między zasobami",
+    "relations_short": "Relacje między zasobami",
     "incident_downtime": "Czas przestoju awarii"
+  },
+  "table": {
+    "employee": "Pracownik",
+    "hours": "Godziny",
+    "wages": "Wynagrodzenie",
+    "role": "Stanowisko"
   }
 }

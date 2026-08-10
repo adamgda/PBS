@@ -56,18 +56,22 @@ final class JwtService
     }
 
     /**
+     * Generuje refresh token. Opcjonalny `$ttl` pozwala przedłużyć/skrócić czas życia
+     * (np. dłuższa sesja dla „zapamiętaj mnie"). Domyślnie używa refreshTtl z konfiguracji.
+     *
      * @return array{token: string, jti: string, expiresAt: int}
      */
-    public function generateRefreshToken(int $userId): array
+    public function generateRefreshToken(int $userId, ?int $ttl = null): array
     {
         $now = time();
         $jti = $this->generateJti();
+        $tokenTtl = $ttl ?? $this->refreshTtl;
 
         $payload = [
             'iss' => 'pbs-backend',
             'sub' => $userId,
             'iat' => $now,
-            'exp' => $now + $this->refreshTtl,
+            'exp' => $now + $tokenTtl,
             'jti' => $jti,
             'typ' => 'refresh',
         ];
@@ -77,7 +81,7 @@ final class JwtService
         return [
             'token' => $token,
             'jti' => $jti,
-            'expiresAt' => $now + $this->refreshTtl,
+            'expiresAt' => $now + $tokenTtl,
         ];
     }
 

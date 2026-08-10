@@ -63,14 +63,14 @@ export const routes: Routes = [
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'analityka' },
     loadComponent: () =>
-      import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
+      import('./pages/analityka/analityka.component').then((m) => m.AnalitykaComponent),
   },
   {
     path: 'raportowanie',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'raportowanie' },
     loadComponent: () =>
-      import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent),
+      import('./pages/raportowanie/raportowanie.component').then((m) => m.RaportowanieComponent),
   },
   {
     path: 'awaria',

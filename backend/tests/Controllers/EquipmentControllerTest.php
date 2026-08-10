@@ -41,7 +41,7 @@ afterEach(function (): void {
 // --- LIST (index) ---
 
 it('index returns paginated list', function (): void {
-    $filters = ['nazwa' => '', 'kategoria' => '', 'employee_id' => '', 'terminal_id' => '', 'is_active' => '', 'sort' => 'id', 'direction' => 'asc'];
+    $filters = ['nazwa' => '', 'kategoria' => '', 'numer_seryjny' => '', 'ostatni_przebieg' => '', 'employee_id' => '', 'terminal_id' => '', 'is_active' => '', 'sort' => 'id', 'direction' => 'asc'];
     $this->equipmentRepository->shouldReceive('search')
         ->with($filters, 25, 0, 'id', 'asc')
         ->andReturn([
@@ -60,7 +60,7 @@ it('index returns paginated list', function (): void {
 });
 
 it('index applies filters from query string', function (): void {
-    $filters = ['nazwa' => 'Ford', 'kategoria' => 'pojazd', 'employee_id' => '', 'terminal_id' => '', 'is_active' => '1', 'sort' => 'id', 'direction' => 'asc'];
+    $filters = ['nazwa' => 'Ford', 'kategoria' => 'pojazd', 'numer_seryjny' => '', 'ostatni_przebieg' => '', 'employee_id' => '', 'terminal_id' => '', 'is_active' => '1', 'sort' => 'id', 'direction' => 'asc'];
     $this->equipmentRepository->shouldReceive('search')->with($filters, 10, 0, 'id', 'asc')->andReturn([]);
     $this->equipmentRepository->shouldReceive('countSearch')->with($filters)->andReturn(0);
 

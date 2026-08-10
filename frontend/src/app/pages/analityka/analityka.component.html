@@ -1,0 +1,158 @@
+<!-- Nagłówek sekcji -->
+<div>
+  <h1 class="text-2xl font-bold text-gray-900">{{ 'analityka.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600">{{ 'analityka.subtitle' | translate }}</p>
+</div>
+
+<!-- Selektor okresu -->
+<div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div class="flex items-center gap-2 text-sm">
+    <span class="text-gray-500">{{ 'analityka.filters.period' | translate }}:</span>
+    <div class="inline-flex rounded-xl border border-gray-200 bg-white p-0.5">
+      @for (preset of presets; track preset.key) {
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-lg font-medium transition-colors"
+          [class.bg-pbs-primary]="activePreset() === preset.key"
+          [class.text-white]="activePreset() === preset.key"
+          [class.text-gray-500]="activePreset() !== preset.key"
+          (click)="setPreset(preset.key)"
+        >
+          {{ preset.label | translate }}
+        </button>
+      }
+    </div>
+  </div>
+  @if (loading()) {
+    <span class="text-sm text-gray-400">{{ 'analityka.loading' | translate }}</span>
+  }
+</div>
+
+@if (error()) {
+  <div class="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+}
+
+<!-- Karty KPI -->
+<div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+  @for (kpi of kpis(); track kpi.label) {
+    <app-kpi-card [label]="kpi.label" [value]="kpi.value" [icon]="kpi.icon" [tone]="kpi.tone" />
+  }
+</div>
+
+<!-- Wykresy -->
+<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+  <div class="rounded-2xl border border-gray-200 bg-white p-4">
+    <h3 class="font-semibold text-gray-800">{{ 'analityka.charts.terminal_load' | translate }}</h3>
+    <p class="mb-4 text-xs text-gray-500">{{ 'analityka.charts.terminal_load_desc' | translate }}</p>
+    <apx-chart
+      [chart]="terminalBar().chart"
+      [series]="terminalBar().series"
+      [xaxis]="terminalBar().xaxis"
+      [yaxis]="terminalBar().yaxis"
+      [plotOptions]="terminalBar().plotOptions"
+      [colors]="terminalBar().colors"
+      [grid]="terminalBar().grid"
+      [dataLabels]="terminalBar().dataLabels"
+      [tooltip]="terminalBar().tooltip"
+      [legend]="terminalBar().legend"
+    />
+  </div>
+
+  <div class="rounded-2xl border border-gray-200 bg-white p-4">
+    <h3 class="font-semibold text-gray-800">{{ 'analityka.charts.equipment_distribution' | translate }}</h3>
+    <p class="mb-4 text-xs text-gray-500">{{ 'analityka.charts.equipment_distribution_desc' | translate }}</p>
+    <apx-chart
+      [chart]="equipmentDonut().chart"
+      [series]="equipmentDonut().series"
+      [labels]="equipmentDonut().labels"
+      [colors]="equipmentDonut().colors"
+      [legend]="equipmentDonut().legend"
+      [plotOptions]="equipmentDonut().plotOptions"
+      [dataLabels]="equipmentDonut().dataLabels"
+      [stroke]="equipmentDonut().stroke"
+      [tooltip]="equipmentDonut().tooltip"
+      [responsive]="equipmentDonut().responsive"
+    />
+  </div>
+
+  <div class="rounded-2xl border border-gray-200 bg-white p-4 lg:col-span-2">
+    <h3 class="font-semibold text-gray-800">{{ 'analityka.charts.orders_over_time' | translate }}</h3>
+    <p class="mb-4 text-xs text-gray-500">{{ 'analityka.charts.orders_over_time_desc' | translate }}</p>
+    <apx-chart
+      [chart]="ordersLine().chart"
+      [series]="ordersLine().series"
+      [xaxis]="ordersLine().xaxis"
+      [yaxis]="ordersLine().yaxis"
+      [stroke]="ordersLine().stroke"
+      [fill]="ordersLine().fill"
+      [grid]="ordersLine().grid"
+      [dataLabels]="ordersLine().dataLabels"
+      [tooltip]="ordersLine().tooltip"
+      [legend]="ordersLine().legend"
+      [colors]="ordersLine().colors"
+    />
+  </div>
+</div>
+
+<!-- Statystyki pracowników -->
+<div class="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
+  <h3 class="font-semibold text-gray-800">{{ 'analityka.stats.employees' | translate }}</h3>
+  <p class="mb-4 text-xs text-gray-500">{{ 'analityka.stats.employees_desc' | translate }}</p>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
+          <th class="px-3 py-2 font-medium">{{ 'analityka.table.employee' | translate }}</th>
+          <th class="px-3 py-2 text-right font-medium">{{ 'analityka.table.hours' | translate }}</th>
+          <th class="px-3 py-2 text-right font-medium">{{ 'analityka.table.wages' | translate }}</th>
+          <th class="px-3 py-2 font-medium">{{ 'analityka.table.role' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (emp of employees(); track emp.employee_id) {
+          <tr class="border-b border-gray-100">
+            <td class="px-3 py-2 font-medium">{{ employeeName(emp) }}</td>
+            <td class="px-3 py-2 text-right">{{ emp.total_hours }} h</td>
+            <td class="px-3 py-2 text-right font-semibold text-emerald-700">{{ fmtWages(emp.total_wages) }} zł</td>
+            <td class="px-3 py-2">
+              @if (emp.rola) {
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{{ emp.rola }}</span>
+              } @else {
+                <span class="text-gray-400">—</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="px-3 py-4 text-center text-gray-400">{{ 'analityka.empty' | translate }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Relacje: najczęściej przypisywani pracownicy -->
+<div class="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
+  <h3 class="font-semibold text-gray-800">{{ 'analityka.stats.relations' | translate }}</h3>
+  <p class="mb-4 text-xs text-gray-500">{{ 'analityka.stats.relations_desc' | translate }}</p>
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    @for (rel of relations(); track rel.employee_id) {
+      <div class="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+        <span class="grid h-9 w-9 place-items-center rounded-full bg-pbs-primary text-xs font-semibold text-white">
+          {{ initials(relationName(rel)) }}
+        </span>
+        <div class="flex-1">
+          <p class="text-sm font-medium">{{ relationName(rel) }}</p>
+          <p class="text-xs text-gray-500">
+            {{ rel.assignment_count }} {{ 'analityka.stats.assignments' | translate }}
+            @if (rel.terminal_nazwa) { · {{ rel.terminal_nazwa }} }
+            @if (rel.equipment_nazwa) { · {{ rel.equipment_nazwa }} }
+            · {{ rel.total_hours }} h
+          </p>
+        </div>
+      </div>
+    } @empty {
+      <div class="col-span-full py-4 text-center text-gray-400">{{ 'analityka.empty' | translate }}</div>
+    }
+  </div>
+</div>
+
