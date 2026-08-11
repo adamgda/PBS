@@ -19,6 +19,8 @@ import { FilterBarComponent, FilterConfig } from '../../components/filter-bar/fi
 import { DataTableComponent, DataTableColumn, DataTableSortEvent, SortDirection } from '../../components/data-table/data-table.component';
 
 import { User, UserListParams, UserRole, Permissions, PERMISSION_SECTIONS, PermissionSection } from '../../models/user.model';
+import { AlertConfigsService } from '../../services/alert-configs.service';
+import { ALERT_TYPES, AlertType, AlertConfig, AlertConfigPayload } from '../../models/alert-config.model';
 
 type ModalMode = 'create' | 'permissions' | null;
 
@@ -40,6 +42,7 @@ export class SettingsComponent {
   private readonly toastService = inject(ToastService);
   private readonly confirmService = inject(ConfirmService);
   private readonly translate = inject(TranslateService);
+  private readonly alertConfigsService = inject(AlertConfigsService);
 
   readonly activeTab = signal<'users' | 'alerts'>('users');
   readonly sections = PERMISSION_SECTIONS;
@@ -48,6 +51,26 @@ export class SettingsComponent {
     { value: 'admin', labelKey: 'ustawienia.roles.admin' },
     { value: 'user', labelKey: 'ustawienia.roles.user' },
   ];
+
+  // --- Stan tabu Alerty (Etap 14) ---
+  readonly alertTypes = ALERT_TYPES;
+  readonly alertTypeOptions: { value: AlertType; labelKey: string }[] = ALERT_TYPES.map((t) => ({
+    value: t,
+    labelKey: `ustawienia.alerts.types.${t}`,
+  }));
+
+  private readonly _alertConfigs = signal<AlertConfig[]>([]);
+  private readonly _alertsLoading = signal<boolean>(false);
+  readonly alertConfigs = this._alertConfigs.asReadonly();
+  readonly alertsLoading = this._alertsLoading.asReadonly();
+
+  readonly alertModalOpen = signal<boolean>(false);
+  readonly editingAlertId = signal<number | null>(null);
+  readonly alertEmail = signal<string>('');
+  readonly alertType = signal<AlertType>('certyfikat_wygasa');
+  readonly alertActive = signal<boolean>(true);
+  readonly alertSendTime = signal<string>('');
+  readonly alertSaving = signal<boolean>(false);
 
   private readonly _users = signal<User[]>([]);
   private readonly _total = signal<number>(0);
@@ -124,7 +147,10 @@ export class SettingsComponent {
   onSort(event: DataTableSortEvent): void { this._sortKey.set(event.key); this._sortDirection.set(event.direction); this.load(); }
   onPageChange(p: number): void { this._page.set(p); this.load(); }
   onPerPageChange(pp: number): void { this._perPage.set(pp); this._page.set(1); this.load(); }
-  setTab(tab: 'users' | 'alerts'): void { this.activeTab.set(tab); }
+  setTab(tab: 'users' | 'alerts'): void {
+    this.activeTab.set(tab);
+    if (tab === 'alerts') this.loadAlerts();
+  }
 
   // --- Modal: create ---
 
@@ -230,6 +256,119 @@ export class SettingsComponent {
       next: () => {
         this.toastService.success(this.t('ustawienia.messages.user_deleted'));
         this.load();
+      },
+      error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
+    });
+  }
+
+  // --- Tab Alerty: konfiguracje (Etap 14) ---
+
+  loadAlerts(): void {
+    this._alertsLoading.set(true);
+    this.alertConfigsService.list().subscribe({
+      next: (res) => {
+        this._alertConfigs.set(res.data);
+        this._alertsLoading.set(false);
+      },
+      error: () => {
+        this._alertsLoading.set(false);
+        this.toastService.error(this.t('ustawienia.alerts.messages.load_error'));
+      },
+    });
+  }
+
+  openAlertCreate(): void {
+    this.editingAlertId.set(null);
+    this.alertEmail.set('');
+    this.alertType.set('certyfikat_wygasa');
+    this.alertActive.set(true);
+    this.alertSendTime.set('');
+    this.alertModalOpen.set(true);
+  }
+
+  openAlertEdit(config: AlertConfig): void {
+    this.editingAlertId.set(config.id);
+    this.alertEmail.set(config.email_odbiorcy);
+    this.alertType.set(config.typ_alertu);
+    this.alertActive.set(config.czy_aktywny);
+    this.alertSendTime.set(config.czas_wysylki?.slice(0, 5) ?? '');
+    this.alertModalOpen.set(true);
+  }
+
+  closeAlertModal(): void {
+    if (this.alertSaving()) return;
+    this.alertModalOpen.set(false);
+    this.editingAlertId.set(null);
+  }
+
+  alertTypeLabel(type: string): string {
+    return this.t(`ustawienia.alerts.types.${type}`);
+  }
+
+  formatSendTime(config: AlertConfig): string {
+    if (!config.czas_wysylki) return '-';
+    return config.czas_wysylki.slice(0, 5);
+  }
+
+  isMissingOc(type: AlertType): boolean {
+    return type === 'brak_raportu_oc';
+  }
+
+  toggleAlertActive(event: Event): void {
+    this.alertActive.set((event.target as HTMLInputElement).checked);
+  }
+
+  saveAlert(): void {
+    const email = this.alertEmail().trim();
+    const type = this.alertType();
+    const time = this.alertSendTime().trim();
+
+    if (!email) { this.toastService.error(this.t('ustawienia.alerts.messages.email_required')); return; }
+    if (!this.isValidEmail(email)) { this.toastService.error(this.t('ustawienia.alerts.messages.email_invalid')); return; }
+    if (this.isMissingOc(type) && !time) { this.toastService.error(this.t('ustawienia.alerts.messages.time_required')); return; }
+
+    const payload: AlertConfigPayload = {
+      email_odbiorcy: email,
+      typ_alertu: type,
+      czy_aktywny: this.alertActive(),
+      czas_wysylki: time ? `${time}:00` : null,
+    };
+
+    const editingId = this.editingAlertId();
+    this.alertSaving.set(true);
+
+    const request$ = editingId === null
+      ? this.alertConfigsService.create(payload)
+      : this.alertConfigsService.update(editingId, payload);
+
+    request$.subscribe({
+      next: () => {
+        this.alertSaving.set(false);
+        this.closeAlertModal();
+        this.toastService.success(this.t(editingId === null
+          ? 'ustawienia.alerts.messages.config_created'
+          : 'ustawienia.alerts.messages.config_updated'));
+        this.loadAlerts();
+      },
+      error: (err) => {
+        this.alertSaving.set(false);
+        this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
+      },
+    });
+  }
+
+  async deleteAlert(config: AlertConfig): Promise<void> {
+    const confirmed = await this.confirmService.confirm({
+      title: this.t('ustawienia.alerts.messages.delete_confirm_title'),
+      message: this.t('ustawienia.alerts.messages.delete_confirm_message', { email: config.email_odbiorcy }),
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    this.alertConfigsService.delete(config.id).subscribe({
+      next: () => {
+        this.toastService.success(this.t('ustawienia.alerts.messages.config_deleted'));
+        this.loadAlerts();
       },
       error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
     });

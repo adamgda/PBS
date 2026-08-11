@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Config;
 
 use App\Controllers\AuthController;
+use App\Controllers\AlertSettingsController;
 use App\Controllers\AnalyticsController;
 use App\Controllers\DashboardController;
 use App\Controllers\EmployeeController;
@@ -12,6 +13,7 @@ use App\Controllers\EquipmentController;
 use App\Controllers\HealthController;
 use App\Controllers\IncidentController;
 use App\Controllers\InvoiceController;
+use App\Controllers\NoteController;
 use App\Controllers\OrderController;
 use App\Controllers\ReportController;
 use App\Controllers\TerminalController;
@@ -23,6 +25,9 @@ use App\Middleware\CorsMiddleware;
 use App\Middleware\MiddlewarePipeline;
 use App\Middleware\PermissionMiddleware;
 use App\Middleware\RateLimiterMiddleware;
+use App\Repository\AlertConfigRepository;
+use App\Repository\AlertNotificationRepository;
+use App\Repository\AlertSourceRepository;
 use App\Repository\AuditLogRepository;
 use App\Repository\AnalyticsRepository;
 use App\Repository\DashboardRepository;
@@ -42,8 +47,10 @@ use App\Repository\RefreshTokenRepository;
 use App\Repository\ServicePlanRepository;
 use App\Repository\TerminalRepository;
 use App\Repository\UserRepository;
+use App\Repository\UserNoteRepository;
 use App\Repository\VehicleDetailsRepository;
 use App\Router\Router;
+use App\Services\AlertSettingsService;
 use App\Services\AuthService;
 use App\Services\AnalyticsService;
 use App\Services\ClamAvScanner;
@@ -57,6 +64,7 @@ use App\Services\OrderService;
 use App\Services\ReportService;
 use App\Services\JwtService;
 use App\Services\MailService;
+use App\Services\NoteService;
 use App\Services\PasswordPolicyService;
 use App\Services\TerminalService;
 use App\Services\UserService;
@@ -79,6 +87,7 @@ final class App
 
         // === Repozytoria ===
         $userRepository = new UserRepository($pdo);
+        $userNoteRepository = new UserNoteRepository($pdo);
         $refreshTokenRepository = new RefreshTokenRepository($pdo);
         $passwordResetRepository = new PasswordResetRepository($pdo);
         $auditLogRepository = new AuditLogRepository($pdo);
@@ -98,6 +107,9 @@ final class App
         $dailyVehicleReportRepository = new DailyVehicleReportRepository($pdo);
         $analyticsRepository = new AnalyticsRepository($pdo);
         $dashboardRepository = new DashboardRepository($pdo);
+        $alertConfigRepository = new AlertConfigRepository($pdo);
+        $alertNotificationRepository = new AlertNotificationRepository($pdo);
+        $alertSourceRepository = new AlertSourceRepository($pdo);
 
         // === Serwisy ===
         $jwtSecret = $config->get('JWT_SECRET', 'dev-secret-key-change-in-production') ?? 'dev-secret-key-change-in-production';
@@ -133,7 +145,12 @@ final class App
             $appDebug,
         );
         $userController = new UserController($userService);
-        $terminalService = new TerminalService($terminalRepository, $auditLogRepository);
+        $terminalService = new TerminalService(
+            $terminalRepository,
+            $auditLogRepository,
+            $orderRepository,
+            $employeeRateRepository,
+        );
         $terminalController = new TerminalController($terminalService);
 
         // === Serwis uploadu plików + skaner antywirusowy (Etap 7) ===
@@ -187,6 +204,10 @@ final class App
         $invoiceService = new InvoiceService($invoiceRepository, $auditLogRepository);
         $invoiceController = new InvoiceController($invoiceService);
 
+        // === Serwis szybkich notatek to-do (Etap 19) ===
+        $noteService = new NoteService($userNoteRepository);
+        $noteController = new NoteController($noteService);
+
         // === Serwis raportowania (Etap 11) ===
         $reportService = new ReportService(
             $dailyTerminalReportRepository,
@@ -205,6 +226,10 @@ final class App
         // === Serwis dashboardu (Etap 13) ===
         $dashboardService = new DashboardService($dashboardRepository);
         $dashboardController = new DashboardController($dashboardService);
+
+        // === Serwis konfiguracji alertów (Etap 14) ===
+        $alertSettingsService = new AlertSettingsService($alertConfigRepository, $auditLogRepository);
+        $alertSettingsController = new AlertSettingsController($alertSettingsService);
 
         // === Guard uprawnień per-route ===
         // Opakowuje handler kontrolera sprawdzaniem PermissionMiddleware dla wskazanych sekcji.
@@ -325,6 +350,14 @@ final class App
             ['method' => 'POST', 'path' => '/api/v1/auth/forgot-password', 'handler' => [$authController, 'forgotPassword']],
             ['method' => 'POST', 'path' => '/api/v1/auth/set-password', 'handler' => [$authController, 'setPassword']],
 
+            // Szybkie notatki to-do (Etap 19) — globalny widget, wymaga logowania (bez uprawnienia sekcji)
+            ['method' => 'GET', 'path' => '/api/v1/notes', 'handler' => [$noteController, 'index']],
+            ['method' => 'POST', 'path' => '/api/v1/notes', 'handler' => [$noteController, 'store']],
+            ['method' => 'PATCH', 'path' => '/api/v1/notes/{id}', 'handler' => [$noteController, 'update']],
+            ['method' => 'PATCH', 'path' => '/api/v1/notes/{id}/done', 'handler' => [$noteController, 'toggleDone']],
+            ['method' => 'DELETE', 'path' => '/api/v1/notes/{id}', 'handler' => [$noteController, 'destroy']],
+            ['method' => 'DELETE', 'path' => '/api/v1/notes', 'handler' => [$noteController, 'clear']],
+
             // Sekcja Ustawienia → Użytkownicy (Etap 5) — wymagane uprawnienie `ustawienia`
             ['method' => 'GET', 'path' => '/api/v1/users', 'handler' => $ustawieniaGuard([$userController, 'index'])],
             ['method' => 'POST', 'path' => '/api/v1/users', 'handler' => $ustawieniaGuard([$userController, 'store'])],
@@ -333,9 +366,16 @@ final class App
             ['method' => 'PATCH', 'path' => '/api/v1/users/{id}/permissions', 'handler' => $ustawieniaGuard([$userController, 'permissions'])],
             ['method' => 'DELETE', 'path' => '/api/v1/users/{id}', 'handler' => $ustawieniaGuard([$userController, 'destroy'])],
 
+            // Sekcja Ustawienia → Alerty (Etap 14) — wymagane uprawnienie `ustawienia`
+            ['method' => 'GET', 'path' => '/api/v1/settings/alert-configs', 'handler' => $ustawieniaGuard([$alertSettingsController, 'index'])],
+            ['method' => 'POST', 'path' => '/api/v1/settings/alert-configs', 'handler' => $ustawieniaGuard([$alertSettingsController, 'store'])],
+            ['method' => 'PUT', 'path' => '/api/v1/settings/alert-configs/{id}', 'handler' => $ustawieniaGuard([$alertSettingsController, 'update'])],
+            ['method' => 'DELETE', 'path' => '/api/v1/settings/alert-configs/{id}', 'handler' => $ustawieniaGuard([$alertSettingsController, 'destroy'])],
+
             // Sekcja Terminale (Etap 6) — wymagane uprawnienie `terminale`
             ['method' => 'GET', 'path' => '/api/v1/terminals', 'handler' => $terminaleGuard([$terminalController, 'index'])],
             ['method' => 'POST', 'path' => '/api/v1/terminals', 'handler' => $terminaleGuard([$terminalController, 'store'])],
+            ['method' => 'GET', 'path' => '/api/v1/terminals/hours-summary', 'handler' => $terminaleGuard([$terminalController, 'hoursSummary'])],
             ['method' => 'GET', 'path' => '/api/v1/terminals/{id}', 'handler' => $terminaleGuard([$terminalController, 'show'])],
             ['method' => 'PUT', 'path' => '/api/v1/terminals/{id}', 'handler' => $terminaleGuard([$terminalController, 'update'])],
             ['method' => 'DELETE', 'path' => '/api/v1/terminals/{id}', 'handler' => $terminaleGuard([$terminalController, 'destroy'])],

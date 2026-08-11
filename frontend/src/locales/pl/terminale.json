@@ -48,6 +48,12 @@
     "active": "Aktywny",
     "inactive": "Nieaktywny"
   },
+  "hours": {
+    "title": "Suma godzin per port",
+    "subtitle": "Godziny z danego portu sumują się osobno",
+    "total": "Razem (wszystkie porty)",
+    "empty": "Brak danych godzin dla wybranego okresu"
+  },
   "messages": {
     "deleted": {
       "success": "Usunięto terminal {{name}}"

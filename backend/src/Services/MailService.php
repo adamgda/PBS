@@ -74,23 +74,38 @@ class MailService
     }
 
     /**
+     * Wysyła e-mail alertowy (powiadomienie operacyjne — Etap 14).
+     *
+     * Zwraca `true`, gdy wiadomość została wysłana (lub zalogowana w trybie dev),
+     * `false` przy błędzie SMTP. W trybie dev (pusty SMTP_HOST) zawsze zwraca `true`.
+     */
+    public function sendAlert(string $to, string $subject, string $body): bool
+    {
+        return $this->send($to, $subject, $body);
+    }
+
+    /**
      * @param string $to Adres odbiorcy
      * @param string $subject Temat wiadomości
      * @param string $body Treść wiadomości
      */
-    private function send(string $to, string $subject, string $body): void
+    private function send(string $to, string $subject, string $body): bool
     {
         if (!$this->enabled) {
             // Dev mode — logowanie pełnej treści (z linkiem resetującym) zamiast wysyłki.
             error_log("[MAIL] (dev) To: {$to}, Subject: {$subject}, Body: {$body}");
-            return;
+            return true;
         }
 
         try {
             $this->sendViaSmtp($to, $subject, $body);
+
+            return true;
         } catch (\Throwable $e) {
             // Awaria SMTP — logujemy błąd (nie przerywamy flow użytkownika).
             error_log("[MAIL] SMTP error: {$e->getMessage()}");
+
+            return false;
         }
     }
 

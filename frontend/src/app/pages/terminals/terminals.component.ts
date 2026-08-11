@@ -23,7 +23,7 @@ import {
   SortDirection,
 } from '../../components/data-table/data-table.component';
 
-import { Terminal, TerminalListParams, CreateTerminalRequest } from '../../models/terminal.model';
+import { Terminal, TerminalHoursRow, TerminalListParams, CreateTerminalRequest } from '../../models/terminal.model';
 
 type ModalMode = 'create' | 'edit' | null;
 
@@ -86,6 +86,13 @@ export class TerminalsComponent {
   readonly modalEmail = signal<string>('');
   readonly modalIsActive = signal<boolean>(true);
 
+  // Sekcja „Suma godzin per port" (pod tabelą)
+  readonly hoursSummary = signal<TerminalHoursRow[]>([]);
+  readonly hoursLoading = signal<boolean>(false);
+  readonly hoursMonth = signal<string>('');
+  readonly hoursPorts = computed(() => this.hoursSummary().filter((r) => r.terminal_id !== null));
+  readonly hoursTotalRow = computed(() => this.hoursSummary().find((r) => r.terminal_id === null));
+
   private readonly statusOptions = [
     { value: '1', labelKey: 'terminale.status.active' },
     { value: '0', labelKey: 'terminale.status.inactive' },
@@ -108,6 +115,7 @@ export class TerminalsComponent {
 
   constructor() {
     this.load();
+    this.loadHoursSummary();
   }
 
   // --- Ładowanie listy ---
@@ -276,6 +284,58 @@ export class TerminalsComponent {
 
   statusLabel(terminal: Terminal): string {
     return this.t(terminal.is_active ? 'terminale.status.active' : 'terminale.status.inactive');
+  }
+
+  // --- Sekcja „Suma godzin per port" ---
+
+  private readonly MONTH_NAMES = [
+    'styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec',
+    'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień',
+  ];
+
+  private loadHoursSummary(): void {
+    this.hoursLoading.set(true);
+    const now = new Date();
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    this.hoursMonth.set(month);
+    this.terminalsService.hoursSummary(month, 'all').subscribe({
+      next: (res) => {
+        this.hoursSummary.set(res.data ?? []);
+        this.hoursLoading.set(false);
+      },
+      error: () => {
+        this.hoursLoading.set(false);
+        this.hoursSummary.set([]);
+      },
+    });
+  }
+
+  /** Etykieta miesiąca, np. „czerwiec 2026". */
+  hoursMonthLabel(): string {
+    const parts = this.hoursMonth().split('-');
+    if (parts.length === 2) {
+      const idx = parseInt(parts[1], 10) - 1;
+      const name = this.MONTH_NAMES[idx];
+      if (name) {
+        return `${name} ${parts[0]}`;
+      }
+    }
+    return this.hoursMonth();
+  }
+
+  /** Szerokość paska postępu (0–100) względem max godzin wśród portów. */
+  hoursBarWidth(hours: number): number {
+    const max = this.hoursPorts().reduce((m, r) => Math.max(m, r.suma_godzin), 0);
+    if (max <= 0) {
+      return 0;
+    }
+    return Math.round((hours / max) * 100);
+  }
+
+  /** Kolor paska per port (cykl po kolorach). */
+  hoursBarColor(i: number): string {
+    const colors = ['bg-cyan-500', 'bg-indigo-500', 'bg-slate-400', 'bg-emerald-500', 'bg-amber-500'];
+    return colors[i % colors.length];
   }
 
   private t(key: string, params?: Record<string, string | number>): string {

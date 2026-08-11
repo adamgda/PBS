@@ -372,6 +372,41 @@ export class IncidentsComponent {
     return `${hours} h`;
   }
 
+  // --- Szybkie akcje (lifecycle) ---
+
+  readonly lifecycleSteps = [
+    { status: 'zgloszona' as IncidentStatus, labelKey: 'awaria.lifecycle.reported' },
+    { status: 'w_trakcie_naprawy' as IncidentStatus, labelKey: 'awaria.lifecycle.under_repair' },
+    { status: 'naprawiona' as IncidentStatus, labelKey: 'awaria.lifecycle.repaired' },
+    { status: 'zamknieta' as IncidentStatus, labelKey: 'awaria.lifecycle.closed' },
+  ];
+
+  private readonly STATUS_ORDER: IncidentStatus[] = ['zgloszona', 'w_trakcie_naprawy', 'naprawiona', 'zamknieta'];
+
+  lifecycleIndex(status: IncidentStatus): number {
+    return this.STATUS_ORDER.indexOf(status);
+  }
+
+  lifecycleIcon(status: IncidentStatus): string {
+    const map: Record<IncidentStatus, string> = {
+      zgloszona: 'check',
+      w_trakcie_naprawy: 'wrench',
+      naprawiona: 'check',
+      zamknieta: 'close',
+    };
+    return map[status];
+  }
+
+  /** Skrót: ustawia status (np. „naprawiona" / „zamknieta") przez changeStatus(). */
+  setStatus(status: IncidentStatus): void {
+    const inc = this.detailsIncident();
+    if (!inc || inc.status === status) {
+      return;
+    }
+    this.newStatus.set(status);
+    this.changeStatus();
+  }
+
   private loadOptions(): void {
     this.equipmentService.list({ per_page: 100 }).subscribe({
       next: (res) => {

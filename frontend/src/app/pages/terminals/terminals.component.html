@@ -67,6 +67,56 @@
   </ng-template>
 </div>
 
+<!-- ===== Suma godzin per port (pod tabelą) ===== -->
+<section class="mt-6 overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4">
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-600">
+        <app-svg-icon name="chart" size="sm" />
+      </span>
+      <div class="min-w-0">
+        <h3 class="truncate font-semibold text-gray-900">{{ 'terminale.hours.title' | translate }}</h3>
+        <p class="text-xs text-gray-500">{{ 'terminale.hours.subtitle' | translate }}</p>
+      </div>
+    </div>
+    <span class="text-xs font-medium text-gray-500">{{ hoursMonthLabel() }}</span>
+  </div>
+  <div class="p-4">
+    @if (hoursLoading()) {
+      <div class="flex items-center justify-center gap-3 p-8 text-gray-400">
+        <app-svg-icon name="spinner" size="md" class="animate-spin text-pbs-secondary" />
+        <span class="text-sm">{{ 'common.table.loading' | translate }}</span>
+      </div>
+    } @else if (hoursPorts().length === 0) {
+      <p class="text-sm text-gray-400">{{ 'terminale.hours.empty' | translate }}</p>
+    } @else {
+      <div class="space-y-4">
+        @for (row of hoursPorts(); track row.terminal_id; let i = $index) {
+          <div>
+            <div class="mb-1 flex items-center justify-between text-sm">
+              <span class="font-medium text-gray-800">{{ row.terminal_nazwa }} — {{ row.suma_godzin }} h</span>
+              <span class="text-gray-500">{{ row.suma_wynagrodzen | number: '1.0-0' }} zł</span>
+            </div>
+            <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+              <div
+                class="h-full rounded-full transition-all"
+                [class]="hoursBarColor(i)"
+                [style.width.%]="hoursBarWidth(row.suma_godzin)"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+  @if (hoursTotalRow(); as total) {
+    <div class="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-sm font-semibold text-gray-800">
+      <span>{{ 'terminale.hours.total' | translate }}</span>
+      <span class="text-emerald-700">{{ total.suma_godzin }} h · {{ total.suma_wynagrodzen | number: '1.0-0' }} zł</span>
+    </div>
+  }
+</section>
+
 <!-- ===== Modal: dodawanie / edycja terminala ===== -->
 @if (modalMode() === 'create' || modalMode() === 'edit') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">

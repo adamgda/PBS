@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Http\Request;
 use App\Repository\AuditLogRepository;
+use App\Repository\EmployeeRateRepository;
+use App\Repository\OrderRepository;
 use App\Repository\TerminalRepository;
 
 /**
@@ -30,6 +32,8 @@ final class TerminalService
     public function __construct(
         private readonly TerminalRepository $terminalRepository,
         private readonly AuditLogRepository $auditLogRepository,
+        private readonly OrderRepository $orderRepository,
+        private readonly EmployeeRateRepository $employeeRateRepository,
     ) {}
 
     /**
@@ -71,6 +75,100 @@ final class TerminalService
         }
 
         return $this->toDto($terminal);
+    }
+
+    /**
+     * Suma godzin i wynagrodzeń per port/terminal + wiersz „Razem".
+     *
+     * GET /api/v1/terminals/hours-summary?month=&period=
+     * Godziny pobierane są z przypisań pracowników do zleceń (`order_employees.godziny`),
+     * wynagrodzenie liczone po stawce godzinowej pracownika obowiązującej w dacie zlecenia.
+     * Terminale bez zleceń w okresie zwracane są z zerami.
+     *
+     * @return array{month: string, period: string, data: array<int, array<string, mixed>>}
+     */
+    public function hoursSummary(string $month, string $period): array
+    {
+        $month = $this->normalizeMonth($month);
+        $period = $this->normalizePeriod($period);
+
+        $detail = $this->orderRepository->settlementDetail($month, $period);
+        $employeeIds = array_values(array_unique(array_map(fn (array $r): int => $this->toInt($r['employee_id'] ?? 0), $detail)));
+        $allRates = $this->employeeRateRepository->findAllByEmployeeIds($employeeIds);
+
+        // Mapa terminal_id => nazwa (wszystkie aktywne terminale — nawet bez godzin).
+        $terminals = [];
+        foreach ($this->terminalRepository->findAll(['is_active' => 1], 1000, 0) as $t) {
+            $terminals[$this->toInt($t['id'] ?? 0)] = is_string($t['nazwa'] ?? null) ? $t['nazwa'] : '';
+        }
+
+        $ports = [];
+        $portEmployees = [];
+        $totalGodziny = 0.0;
+        $totalWynagrodzenie = 0.0;
+
+        foreach ($detail as $row) {
+            $termId = $this->toInt($row['terminal_id'] ?? 0);
+            $empId = $this->toInt($row['employee_id'] ?? 0);
+            $date = is_string($row['data_zlecenia'] ?? null) ? $row['data_zlecenia'] : $month . '-01';
+            $godziny = $this->toFloat($row['godziny'] ?? null);
+            $stawka = $this->rateAt($allRates[$empId] ?? [], $date);
+            $wage = round($godziny * $stawka, 2);
+
+            if (!array_key_exists($termId, $ports)) {
+                $ports[$termId] = [
+                    'terminal_id' => $termId,
+                    'terminal_nazwa' => $terminals[$termId] ?? null,
+                    'liczba_pracownikow' => 0,
+                    'suma_godzin' => 0.0,
+                    'suma_wynagrodzen' => 0.0,
+                ];
+                $portEmployees[$termId] = [];
+            }
+            $ports[$termId]['suma_godzin'] += $godziny;
+            $ports[$termId]['suma_wynagrodzen'] += $wage;
+            $portEmployees[$termId][$empId] = true;
+
+            $totalGodziny += $godziny;
+            $totalWynagrodzenie += $wage;
+        }
+
+        // Terminale bez zleceń w okresie — dodaj z zerami (jak w mocku).
+        foreach ($terminals as $termId => $nazwa) {
+            if (!array_key_exists($termId, $ports)) {
+                $ports[$termId] = [
+                    'terminal_id' => $termId,
+                    'terminal_nazwa' => $nazwa,
+                    'liczba_pracownikow' => 0,
+                    'suma_godzin' => 0.0,
+                    'suma_wynagrodzen' => 0.0,
+                ];
+                $portEmployees[$termId] = [];
+            }
+        }
+
+        foreach (array_keys($ports) as $termId) {
+            $ports[$termId]['liczba_pracownikow'] = count($portEmployees[$termId] ?? []);
+            $ports[$termId]['suma_godzin'] = round($ports[$termId]['suma_godzin'], 2);
+            $ports[$termId]['suma_wynagrodzen'] = round($ports[$termId]['suma_wynagrodzen'], 2);
+        }
+
+        $rows = array_values($ports);
+        usort($rows, static fn (array $a, array $b): int => strcmp((string) $a['terminal_nazwa'], (string) $b['terminal_nazwa']));
+
+        $rows[] = [
+            'terminal_id' => null,
+            'terminal_nazwa' => 'Razem (wszystkie porty)',
+            'liczba_pracownikow' => count($employeeIds),
+            'suma_godzin' => round($totalGodziny, 2),
+            'suma_wynagrodzen' => round($totalWynagrodzenie, 2),
+        ];
+
+        return [
+            'month' => $month,
+            'period' => $period,
+            'data' => $rows,
+        ];
     }
 
     /**
@@ -271,6 +369,51 @@ final class TerminalService
             'created_at' => is_string($row['created_at'] ?? null) ? $row['created_at'] : null,
             'updated_at' => is_string($row['updated_at'] ?? null) ? $row['updated_at'] : null,
         ];
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $rates
+     */
+    private function rateAt(array $rates, string $date): float
+    {
+        foreach ($rates as $rate) {
+            $dataOd = is_string($rate['data_od'] ?? null) ? $rate['data_od'] : null;
+            if ($dataOd !== null && $dataOd <= $date) {
+                return $this->toFloat($rate['stawka_godzinowa'] ?? null);
+            }
+        }
+
+        return 0.0;
+    }
+
+    private function normalizeMonth(string $month): string
+    {
+        $trimmed = trim($month);
+        if ($trimmed !== '' && strtotime($trimmed . '-01') !== false) {
+            return $trimmed;
+        }
+
+        return date('Y-m');
+    }
+
+    private function normalizePeriod(string $period): string
+    {
+        return in_array($period, ['all', '1-15', '15-23'], true) ? $period : 'all';
+    }
+
+    private function toFloat(mixed $value): float
+    {
+        if ($value === null) {
+            return 0.0;
+        }
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (float) $value;
+        }
+
+        return 0.0;
     }
 
     private function toInt(mixed $value): int

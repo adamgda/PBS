@@ -35,9 +35,18 @@ describe('TerminalsComponent', () => {
 
   function flushList() {
     const req = httpMock.expectOne(
-      (r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/terminals`),
+      (r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/terminals`) && !r.url.includes('hours-summary'),
     );
     req.flush({ data: [], total: 0, page: 1, per_page: 25 });
+    flushHours();
+  }
+
+  /** Obsługuje żądanie sumy godzin per port (GET /terminals/hours-summary). */
+  function flushHours(data: unknown[] = []) {
+    const req = httpMock.expectOne(
+      (r) => r.method === 'GET' && r.url.includes('/terminals/hours-summary'),
+    );
+    req.flush({ month: '2026-06', period: 'all', data });
   }
 
   it('powinien utworzyć komponent i pobrać listę terminali', () => {
@@ -107,7 +116,7 @@ describe('TerminalsComponent', () => {
     });
 
     // Po sukcesie lista przeładowana (GET /terminals)
-    const reload = httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/terminals`));
+    const reload = httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/terminals`) && !r.url.includes('hours-summary'));
     reload.flush({ data: [], total: 0, page: 1, per_page: 25 });
 
     expect(comp.modalMode()).toBeNull();
@@ -129,5 +138,32 @@ describe('TerminalsComponent', () => {
     } as never;
     expect(comp.statusLabel(active)).toBe('terminale.status.active');
     expect(comp.statusLabel(inactive)).toBe('terminale.status.inactive');
+  });
+
+  it('powinien pobrać sumę godzin per port do sekcji pod tabelą', () => {
+    const fixture = TestBed.createComponent(TerminalsComponent);
+    fixture.detectChanges();
+
+    const listReq = httpMock.expectOne(
+      (r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/terminals`) && !r.url.includes('hours-summary'),
+    );
+    listReq.flush({ data: [], total: 0, page: 1, per_page: 25 });
+
+    const hoursReq = httpMock.expectOne((r) => r.method === 'GET' && r.url.includes('/terminals/hours-summary'));
+    hoursReq.flush({
+      month: '2026-06',
+      period: 'all',
+      data: [
+        { terminal_id: 1, terminal_nazwa: 'BCT', liczba_pracownikow: 12, suma_godzin: 192, suma_wynagrodzen: 8640 },
+        { terminal_id: 2, terminal_nazwa: 'DCT', liczba_pracownikow: 8, suma_godzin: 160, suma_wynagrodzen: 6720 },
+        { terminal_id: null, terminal_nazwa: 'Razem (wszystkie porty)', liczba_pracownikow: 20, suma_godzin: 352, suma_wynagrodzen: 15360 },
+      ],
+    });
+
+    const comp = fixture.componentInstance;
+    expect(comp.hoursPorts().length).toBe(2);
+    expect(comp.hoursTotalRow()?.suma_godzin).toBe(352);
+    expect(comp.hoursBarWidth(192)).toBe(100);
+    expect(comp.hoursBarWidth(160)).toBe(83);
   });
 });

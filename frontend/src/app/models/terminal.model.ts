@@ -41,3 +41,17 @@ export interface CreateTerminalRequest {
 }
 
 export interface UpdateTerminalRequest extends CreateTerminalRequest {}
+
+export interface TerminalHoursRow {
+  terminal_id: number | null;
+  terminal_nazwa: string | null;
+  liczba_pracownikow: number;
+  suma_godzin: number;
+  suma_wynagrodzen: number;
+}
+
+export interface TerminalHoursSummary {
+  month: string;
+  period: string;
+  data: TerminalHoursRow[];
+}

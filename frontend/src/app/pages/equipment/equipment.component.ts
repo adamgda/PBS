@@ -13,7 +13,7 @@ import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
 import { AddButtonComponent } from '../../components/add-button/add-button.component';
 import { ButtonComponent } from '../../components/button/button.component';
 import { IconButtonComponent } from '../../components/icon-button/icon-button.component';
-import { StatusBadgeComponent } from '../../components/status-badge/status-badge.component';
+import { StatusBadgeComponent, StatusTone } from '../../components/status-badge/status-badge.component';
 import { FormInputComponent } from '../../components/form-input/form-input.component';
 import { DatepickerComponent } from '../../components/datepicker/datepicker.component';
 import { SelectComponent } from '../../components/select/select.component';
@@ -40,6 +40,13 @@ import {
 
 type ModalMode = 'create' | 'edit' | 'assign' | 'details' | null;
 type PlanModalMode = 'create' | 'edit' | null;
+
+/** Konfiguracja badge'a statusu planu przeglądu (status + ton + klucz etykiety). */
+interface PlanStatusConfig {
+  status: string;
+  tone: StatusTone;
+  labelKey: string;
+}
 
 /**
  * Sekcja Sprzęt (Etap 8).
@@ -135,10 +142,17 @@ export class EquipmentComponent {
   readonly detailsTimeline = signal<TimelineEvent[]>([]);
   readonly detailsPlans = signal<ServicePlan[]>([]);
 
+  // Sekcje pod tabelą — wybrany sprzęt (oś czasu + planowanie przeglądów)
+  readonly selectedEquipment = signal<Equipment | null>(null);
+  readonly selectedTimeline = signal<TimelineEvent[]>([]);
+  readonly selectedPlans = signal<ServicePlan[]>([]);
+  readonly selectedLoading = signal<boolean>(false);
+
   // Modal planu przeglądu
   readonly planModalMode = signal<PlanModalMode>(null);
   readonly planSaving = signal<boolean>(false);
   readonly planEditingId = signal<number | null>(null);
+  readonly planEquipmentId = signal<number | null>(null);
   readonly planTyp = signal<string>('');
   readonly planInterwalKm = signal<string>('');
   readonly planInterwalDni = signal<string>('');
@@ -432,9 +446,71 @@ export class EquipmentComponent {
     });
   }
 
+  // --- Sekcje pod tabelą: historia + planowanie przeglądów (wybrany sprzęt) ---
+
+  /** Zaznacza sprzęt i ładuje jego oś czasu oraz plany przeglądów pod tabelą. */
+  selectEquipment(eq: Equipment): void {
+    this.selectedEquipment.set(eq);
+    this.loadSelectedDetails(eq.id);
+  }
+
+  /** Zamyka sekcje pod tabelą (czyści wybór sprzętu). */
+  clearSelection(): void {
+    this.selectedEquipment.set(null);
+    this.selectedTimeline.set([]);
+    this.selectedPlans.set([]);
+    this.planModalMode.set(null);
+  }
+
+  private loadSelectedDetails(id: number): void {
+    this.selectedLoading.set(true);
+    this.equipmentService.get(id).subscribe({
+      next: (eq) => {
+        this.selectedEquipment.set(eq);
+        this.selectedTimeline.set((eq.timeline ?? []).map(this.historyToTimelineEvent));
+        this.selectedPlans.set(eq.service_plans ?? []);
+        this.selectedLoading.set(false);
+      },
+      error: (err) => {
+        this.selectedLoading.set(false);
+        this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
+      },
+    });
+  }
+
+  /** Odświeża dane sprzętu w widoku, który go aktualnie pokazuje (sekcja i/lub modal). */
+  private refreshForEquipment(id: number): void {
+    if (this.selectedEquipment()?.id === id) {
+      this.loadSelectedDetails(id);
+    }
+    if (this.detailsEquipment()?.id === id) {
+      this.loadDetails(id);
+    }
+  }
+
+  /** Cykl przeglądu jako tekst, np. „co 500 km / 90 dni". */
+  planCycle(plan: ServicePlan): string {
+    const parts: string[] = [];
+    if (plan.interwal_km !== null && plan.interwal_km !== undefined) parts.push(`${plan.interwal_km} km`);
+    if (plan.interwal_dni !== null && plan.interwal_dni !== undefined) parts.push(`${plan.interwal_dni} dni`);
+    return parts.length ? `co ${parts.join(' / ')}` : '—';
+  }
+
+  /** Konfiguracja statusu planu przeglądu (badge) — zgodna z mockiem: wkrótce / zaplanowano / nieaktywny. */
+  planStatus(plan: ServicePlan): PlanStatusConfig {
+    if (plan.needs_service) {
+      return { status: 'reported', tone: 'warning', labelKey: 'sprzet.service_plans.status_upcoming' };
+    }
+    if (!plan.is_active) {
+      return { status: 'inactive', tone: 'neutral', labelKey: 'sprzet.service_plans.status_inactive' };
+    }
+    return { status: 'completed', tone: 'success', labelKey: 'sprzet.service_plans.status_scheduled' };
+  }
+
   // --- Modal: plan przeglądu (w ramach szczegółów) ---
 
   openPlanCreate(): void {
+    this.planEquipmentId.set((this.selectedEquipment() ?? this.detailsEquipment())?.id ?? null);
     this.planModalMode.set('create');
     this.planEditingId.set(null);
     this.planTyp.set('');
@@ -446,6 +522,7 @@ export class EquipmentComponent {
   }
 
   openPlanEdit(plan: ServicePlan): void {
+    this.planEquipmentId.set(plan.equipment_id);
     this.planModalMode.set('edit');
     this.planEditingId.set(plan.id);
     this.planTyp.set(plan.typ_przegladu);
@@ -463,8 +540,8 @@ export class EquipmentComponent {
   }
 
   savePlan(): void {
-    const eq = this.detailsEquipment();
-    if (!eq) return;
+    const equipmentId = this.planEquipmentId();
+    if (equipmentId == null) return;
 
     const typ = this.planTyp().trim();
     if (!typ) {
@@ -487,7 +564,7 @@ export class EquipmentComponent {
     const done = () => {
       this.planSaving.set(false);
       this.closePlanModal();
-      this.loadDetails(eq.id);
+      this.refreshForEquipment(equipmentId);
     };
     const fail = (err: unknown): void => {
       this.planSaving.set(false);
@@ -506,7 +583,7 @@ export class EquipmentComponent {
       return;
     }
 
-    this.equipmentService.createServicePlan(eq.id, payload).subscribe({
+    this.equipmentService.createServicePlan(equipmentId, payload).subscribe({
       next: () => {
         this.toastService.success(this.t('sprzet.messages.plan_created.success', { type: typ }));
         done();
@@ -516,8 +593,6 @@ export class EquipmentComponent {
   }
 
   async deletePlan(plan: ServicePlan): Promise<void> {
-    const eq = this.detailsEquipment();
-    if (!eq) return;
     const confirmed = await this.confirmService.confirm({
       title: this.t('sprzet.messages.delete_plan_confirm_title'),
       message: this.t('sprzet.messages.delete_plan_confirm_message'),
@@ -528,7 +603,7 @@ export class EquipmentComponent {
     this.equipmentService.deleteServicePlan(plan.id).subscribe({
       next: () => {
         this.toastService.success(this.t('sprzet.messages.plan_deleted.success'));
-        this.loadDetails(eq.id);
+        this.refreshForEquipment(plan.equipment_id);
       },
       error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
     });

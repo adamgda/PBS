@@ -51,6 +51,8 @@
   },
   "timeline": {
     "title": "Oś czasu sprzętu",
+    "section_title": "Historia sprzętu — {{name}}",
+    "section_subtitle": "Widok timeline",
     "type_mileage": "Przebieg",
     "type_service": "Serwis",
     "type_incident": "Awaria",
@@ -59,6 +61,17 @@
   },
   "service_plans": {
     "title": "Planowanie przeglądów",
+    "section_title": "Planowanie przeglądów — {{name}}",
+    "section_subtitle": "Harmonogram serwisów i przeglądów technicznych",
+    "new_term": "Nowy termin",
+    "col_type": "Typ",
+    "col_cycle": "Cykl",
+    "col_last": "Ostatni",
+    "col_next": "Następny",
+    "col_status": "Status",
+    "status_upcoming": "wkrótce",
+    "status_scheduled": "zaplanowano",
+    "status_inactive": "nieaktywny",
     "inspection_type": "Typ przeglądu",
     "inspection_type_placeholder": "np. Serwis olejowy",
     "interval_km": "Interwał (km)",
@@ -83,6 +96,9 @@
   "status": {
     "active": "Aktywny",
     "inactive": "Nieaktywny"
+  },
+  "details": {
+    "select_hint": "Wybierz sprzęt z listy, aby zobaczyć historię i planowanie przeglądów"
   },
   "messages": {
     "deleted": {

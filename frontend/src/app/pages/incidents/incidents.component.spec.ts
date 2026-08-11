@@ -5,6 +5,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 
 import { IncidentsComponent } from './incidents.component';
+import { Incident } from '../../models/incidents.model';
 import { TranslateService } from '../../services/translate.service';
 import { environment } from '../../../environments/environment';
 
@@ -137,5 +138,48 @@ describe('IncidentsComponent', () => {
     const other = { id: 2, typ: 'inne', equipment_id: null, equipment_nazwa: null, opis: '', status: 'zgloszona', data_zgloszenia: null, data_zakonczenia: null, zgloszona_przez: 1, zgloszona_przez_email: null, created_at: null, updated_at: null } as never;
     expect(comp.typeLabel(eq)).toBe('awaria.list.type_equipment');
     expect(comp.typeLabel(other)).toBe('awaria.list.type_other');
+  });
+
+  it('lifecycleIndex odwzorowuje kolejność statusów', () => {
+    const fixture = TestBed.createComponent(IncidentsComponent);
+    fixture.detectChanges();
+    flushIncidents();
+    flushEquipment();
+
+    const comp = fixture.componentInstance;
+    expect(comp.lifecycleIndex('zgloszona')).toBe(0);
+    expect(comp.lifecycleIndex('w_trakcie_naprawy')).toBe(1);
+    expect(comp.lifecycleIndex('naprawiona')).toBe(2);
+    expect(comp.lifecycleIndex('zamknieta')).toBe(3);
+  });
+
+  it('setStatus ustawia status i wysyła PATCH /incidents/{id}/status', () => {
+    const fixture = TestBed.createComponent(IncidentsComponent);
+    fixture.detectChanges();
+    flushIncidents();
+    flushEquipment();
+
+    const comp = fixture.componentInstance;
+    const inc: Incident = {
+      id: 5, typ: 'sprzet', equipment_id: 1, equipment_nazwa: 'RS-02', opis: 'test', status: 'zgloszona',
+      data_zgloszenia: null, data_zakonczenia: null, zgloszona_przez: 1, zgloszona_przez_email: 'a@b.pl',
+      created_at: null, updated_at: null,
+    };
+    comp.openDetails(inc);
+
+    const detailsReq = httpMock.expectOne(`${environment.apiUrl}/incidents/5`);
+    detailsReq.flush({ ...inc, comments: [], status_history: [] });
+
+    comp.setStatus('naprawiona');
+    expect(comp.newStatus()).toBe('naprawiona');
+
+    const patchReq = httpMock.expectOne(`${environment.apiUrl}/incidents/5/status`);
+    expect(patchReq.request.method).toBe('PATCH');
+    expect(patchReq.request.body.status).toBe('naprawiona');
+    patchReq.flush({ ...inc, status: 'naprawiona', comments: [], status_history: [] });
+
+    // Po sukcesie changeStatus przeładowuje szczegóły (GET /incidents/5)
+    const reload = httpMock.expectOne(`${environment.apiUrl}/incidents/5`);
+    reload.flush({ ...inc, status: 'naprawiona', comments: [], status_history: [] });
   });
 });

@@ -80,7 +80,11 @@ export interface DataTableSortEvent {
           </thead>
           <tbody class="divide-y divide-gray-100 text-sm text-gray-800">
             @for (row of data(); track row) {
-              <tr class="transition-colors hover:bg-pbs-navy-50/60">
+              <tr
+                class="transition-colors hover:bg-pbs-navy-50/60"
+                [class.cursor-pointer]="rowClickable"
+                (click)="rowClickable && rowClick.emit(row)"
+              >
                 @for (col of columns(); track col.key) {
                   <td class="px-4 py-3">
                     @if (cellTemplates[col.key]; as tpl) {
@@ -94,7 +98,7 @@ export interface DataTableSortEvent {
                   </td>
                 }
                 @if (actionsTemplate) {
-                  <td class="px-4 py-3 text-right">
+                  <td class="px-4 py-3 text-right" (click)="$event.stopPropagation()">
                     <ng-container [ngTemplateOutlet]="actionsTemplate" [ngTemplateOutletContext]="{ $implicit: row }"></ng-container>
                   </td>
                 }
@@ -107,7 +111,11 @@ export interface DataTableSortEvent {
         <!-- Mobile: karty (brak przewijania poziomego) -->
         <div class="block space-y-3 p-3 md:hidden">
           @for (row of data(); track row) {
-            <div class="rounded-lg bg-white p-4 ring-1 ring-gray-100">
+            <div
+              class="rounded-lg bg-white p-4 ring-1 ring-gray-100"
+              [class.cursor-pointer]="rowClickable"
+              (click)="rowClickable && rowClick.emit(row)"
+            >
               @if (hasTitleColumn()) {
                 <!-- Nagłówek karty: tytuł + akcje (akcje jednoznacznie powiązane z rekordem) -->
                 <div class="mb-2 flex items-start justify-between gap-3">
@@ -128,7 +136,7 @@ export interface DataTableSortEvent {
                     }
                   </div>
                   @if (actionsTemplate) {
-                    <div class="flex shrink-0 gap-1">
+                    <div class="flex shrink-0 gap-1" (click)="$event.stopPropagation()">
                       <ng-container
                         [ngTemplateOutlet]="actionsTemplate"
                         [ngTemplateOutletContext]="{ $implicit: row }"
@@ -177,7 +185,7 @@ export interface DataTableSortEvent {
                     <span class="text-xs font-medium uppercase tracking-wide text-gray-400">
                       {{ 'common.table.actions' | translate }}
                     </span>
-                    <div class="flex gap-1">
+                    <div class="flex gap-1" (click)="$event.stopPropagation()">
                       <ng-container
                         [ngTemplateOutlet]="actionsTemplate"
                         [ngTemplateOutletContext]="{ $implicit: row }"
@@ -260,10 +268,14 @@ export class DataTableComponent<T extends object> {
   /** Opcjonalne szablony komórek per kolumna (klucz = column.key). Umożliwiają render
    *  komponentów (np. StatusBadgeComponent) wewnątrz komórki zamiast tekstu/formattera. */
   @Input() cellTemplates: Record<string, TemplateRef<{ $implicit: T; value: unknown }>> = {};
+  /** Czy cały wiersz/karta jest klikalny (emisja rowClick). Domyślnie wyłączone. */
+  @Input() rowClickable = false;
 
   @Output() sortChange = new EventEmitter<DataTableSortEvent>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() perPageChange = new EventEmitter<number>();
+  /** Emitowany po kliknięciu wiersza (gdy rowClickable === true). */
+  @Output() rowClick = new EventEmitter<T>();
 
   /** Opcje wyboru rozmiaru strony (perPage). */
   readonly perPageOptions: SelectOption[] = [

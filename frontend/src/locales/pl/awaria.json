@@ -50,7 +50,9 @@
     "equipment": "Sprzęt",
     "downtime": "Czas przestoju",
     "no_comments": "Brak komentarzy",
-    "no_history": "Brak historii zmian"
+    "no_history": "Brak historii zmian",
+    "mark_fixed": "Oznacz jako naprawiona",
+    "close_report": "Zamknij zgłoszenie"
   },
   "lifecycle": {
     "reported": "Zgłoszona",

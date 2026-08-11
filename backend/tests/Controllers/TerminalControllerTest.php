@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Controllers\TerminalController;
 use App\Http\Request;
 use App\Repository\AuditLogRepository;
+use App\Repository\EmployeeRateRepository;
+use App\Repository\OrderRepository;
 use App\Repository\TerminalRepository;
 use App\Services\TerminalService;
 use PDO;
@@ -16,10 +18,14 @@ beforeEach(function (): void {
     $this->terminalRepository = m::mock(TerminalRepository::class, [$pdo]);
     $this->auditLogRepository = m::mock(AuditLogRepository::class, [$pdo]);
     $this->auditLogRepository->shouldReceive('logFromRequest')->byDefault();
+    $this->orderRepository = m::mock(OrderRepository::class, [$pdo]);
+    $this->employeeRateRepository = m::mock(EmployeeRateRepository::class, [$pdo]);
 
     $this->terminalService = new TerminalService(
         $this->terminalRepository,
         $this->auditLogRepository,
+        $this->orderRepository,
+        $this->employeeRateRepository,
     );
     $this->terminalController = new TerminalController($this->terminalService);
 });
@@ -192,4 +198,70 @@ it('delete removes terminal and returns success', function (): void {
     $response = $this->terminalController->destroy($request, ['id' => '1']);
     expect($response->statusCode())->toBe(200);
     expect($response->data()['success'])->toBeTrue();
+});
+
+// --- HOURS SUMMARY ---
+
+it('hoursSummary returns per-port hours and wages with total row', function (): void {
+    $this->orderRepository->shouldReceive('settlementDetail')->with('2026-06', 'all')->andReturn([
+        ['employee_id' => 1, 'data_zlecenia' => '2026-06-05', 'godziny' => 8, 'terminal_id' => 1, 'rola' => 'operator'],
+        ['employee_id' => 2, 'data_zlecenia' => '2026-06-06', 'godziny' => 7, 'terminal_id' => 1, 'rola' => 'operator'],
+        ['employee_id' => 3, 'data_zlecenia' => '2026-06-10', 'godziny' => 10, 'terminal_id' => 2, 'rola' => 'brygadzista'],
+    ]);
+    $this->employeeRateRepository->shouldReceive('findAllByEmployeeIds')->with([1, 2, 3])->andReturn([
+        1 => [['data_od' => '2026-01-01', 'stawka_godzinowa' => '45']],
+        2 => [['data_od' => '2026-01-01', 'stawka_godzinowa' => '45']],
+        3 => [['data_od' => '2026-01-01', 'stawka_godzinowa' => '40']],
+    ]);
+    $this->terminalRepository->shouldReceive('findAll')->with(['is_active' => 1], 1000, 0)->andReturn([
+        ['id' => 1, 'nazwa' => 'BCT'],
+        ['id' => 2, 'nazwa' => 'DCT'],
+        ['id' => 3, 'nazwa' => 'GCT'],
+    ]);
+
+    $request = new Request(query: ['month' => '2026-06', 'period' => 'all'], body: [], headers: []);
+    $response = $this->terminalController->hoursSummary($request);
+
+    expect($response->statusCode())->toBe(200);
+    $data = $response->data()['data'];
+
+    // BCT: 15 h (8 + 7), 675 zł (360 + 315)
+    $bct = null;
+    foreach ($data as $row) {
+        if (($row['terminal_id'] ?? null) === 1) {
+            $bct = $row;
+        }
+    }
+    expect($bct['suma_godzin'])->toBe(15.0);
+    expect($bct['suma_wynagrodzen'])->toBe(675.0);
+
+    // GCT bez zleceń — zera
+    $gct = null;
+    foreach ($data as $row) {
+        if (($row['terminal_id'] ?? null) === 3) {
+            $gct = $row;
+        }
+    }
+    expect($gct['suma_godzin'])->toBe(0.0);
+
+    // Wiersz „Razem"
+    $total = end($data);
+    expect($total['terminal_nazwa'])->toBe('Razem (wszystkie porty)');
+    expect($total['suma_godzin'])->toBe(25.0);
+    expect($total['suma_wynagrodzen'])->toBe(1075.0);
+});
+
+it('hoursSummary defaults to current month and all period', function (): void {
+    $currentMonth = date('Y-m');
+    $this->orderRepository->shouldReceive('settlementDetail')->with($currentMonth, 'all')->andReturn([]);
+    $this->employeeRateRepository->shouldReceive('findAllByEmployeeIds')->with([])->andReturn([]);
+    $this->terminalRepository->shouldReceive('findAll')->with(['is_active' => 1], 1000, 0)->andReturn([]);
+
+    $request = new Request(query: [], body: [], headers: []);
+    $response = $this->terminalController->hoursSummary($request);
+
+    expect($response->statusCode())->toBe(200);
+    expect($response->data()['month'])->toBe($currentMonth);
+    expect($response->data()['period'])->toBe('all');
+    expect($response->data()['data'])->toHaveCount(1); // tylko wiersz „Razem"
 });

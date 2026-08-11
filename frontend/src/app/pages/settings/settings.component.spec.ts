@@ -154,4 +154,91 @@ describe('SettingsComponent', () => {
     expect(component.isInvited(invited)).toBe(true);
     expect(component.isBlocked(blocked)).toBe(true);
   });
+
+  // --- Tab Alerty (Etap 14) ---
+
+  function flushAlerts() {
+    const req = httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/settings/alert-configs`));
+    req.flush({
+      data: [
+        { id: 1, email_odbiorcy: 'ops@pbs.pl', typ_alertu: 'brak_raportu_oc', czy_aktywny: true, czas_wysylki: '10:00:00', created_at: null, updated_at: null },
+      ],
+    });
+  }
+
+  it('przełączenie na tab Alerty pobiera konfiguracje', () => {
+    const { component } = create();
+    flushList();
+    component.setTab('alerts');
+    flushAlerts();
+    expect(component.alertConfigs().length).toBe(1);
+    expect(component.alertConfigs()[0].email_odbiorcy).toBe('ops@pbs.pl');
+  });
+
+  it('openAlertCreate resetuje stan formularza', () => {
+    const { component } = create();
+    flushList();
+    component.openAlertCreate();
+    expect(component.alertModalOpen()).toBeTrue();
+    expect(component.editingAlertId()).toBeNull();
+    expect(component.alertEmail()).toBe('');
+    expect(component.alertType()).toBe('certyfikat_wygasa');
+  });
+
+  it('saveAlert wymaga godziny wysyłki dla alertu braku raportu OC', () => {
+    const { component } = create();
+    flushList();
+    component.openAlertCreate();
+    component.alertEmail.set('ops@pbs.pl');
+    component.alertType.set('brak_raportu_oc');
+    component.saveAlert();
+    expect(TestBed.inject(ToastService).error).toHaveBeenCalled();
+    const postReqs = httpMock.match((r) => r.method === 'POST' && r.url.includes('/settings/alert-configs'));
+    expect(postReqs.length).toBe(0);
+  });
+
+  it('saveAlert tworzy konfigurację (POST /settings/alert-configs) z znormalizowanym czasem', () => {
+    const { fixture, component } = create();
+    flushList();
+    component.openAlertCreate();
+    component.alertEmail.set('ops@pbs.pl');
+    component.alertType.set('brak_raportu_oc');
+    component.alertSendTime.set('10:00');
+    component.saveAlert();
+    fixture.detectChanges();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/settings/alert-configs`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      email_odbiorcy: 'ops@pbs.pl',
+      typ_alertu: 'brak_raportu_oc',
+      czy_aktywny: true,
+      czas_wysylki: '10:00:00',
+    });
+    req.flush({ id: 9, email_odbiorcy: 'ops@pbs.pl', typ_alertu: 'brak_raportu_oc', czy_aktywny: true, czas_wysylki: '10:00:00', created_at: null, updated_at: null });
+
+    // Po sukcesie lista przeładowana (GET /settings/alert-configs)
+    const reload = httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/settings/alert-configs`));
+    reload.flush({ data: [] });
+
+    expect(component.alertModalOpen()).toBeFalse();
+    expect(TestBed.inject(ToastService).success).toHaveBeenCalled();
+  });
+
+  it('deleteAlert usuwa konfigurację (DELETE /settings/alert-configs/{id})', async () => {
+    const { component } = create();
+    flushList();
+    component.setTab('alerts');
+    flushAlerts();
+
+    const config = component.alertConfigs()[0];
+    await component.deleteAlert(config);
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/settings/alert-configs/${config.id}`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ success: true });
+
+    const reload = httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/settings/alert-configs`));
+    reload.flush({ data: [] });
+  });
 });

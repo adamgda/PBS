@@ -5,6 +5,7 @@
 <app-confirm-dialog />
 
 @if (isLoggedIn()) {
+  <app-quick-notes-widget #notesWidget />
   <!-- ===== Współdzielona lista nawigacji (używana w drawerze i w sidebarze) ===== -->
   <ng-template #navList>
     <nav class="flex flex-col gap-1 px-3" aria-label="Główna nawigacja">
@@ -131,7 +132,7 @@
         >
           <app-svg-icon name="menu" />
         </button>
-        <span class="text-base font-semibold tracking-tight md:text-lg">
+        <span class="text-base font-semibold tracking-tight md:text-lg pl-4">
           @if (activeTitle()) {
             {{ activeTitle() | translate }}
           } @else {
@@ -140,10 +141,27 @@
         </span>
       </div>
 
-      <!-- Po prawej: awatar + wyloguj (mobile) -->
-      <div class="flex items-center gap-2 md:hidden">
+      <!-- Po prawej: przycisk Notatki + awatar (mobile) -->
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          (click)="notesWidget.togglePanel()"
+          [attr.aria-expanded]="notesWidget.open()"
+          [attr.aria-label]="'notatki.actions.open' | translate"
+          class="relative inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/15"
+        >
+          <app-svg-icon name="notes" size="sm" />
+          <span class="hidden sm:inline">{{ 'notatki.button' | translate }}</span>
+          @if (notesWidget.pendingCount() > 0) {
+            <span
+              class="grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+            >
+              {{ notesWidget.pendingCount() }}
+            </span>
+          }
+        </button>
         <span
-          class="grid h-8 w-8 place-items-center rounded-full bg-pbs-secondary text-sm font-semibold text-white"
+          class="grid h-8 w-8 place-items-center rounded-full bg-pbs-secondary text-sm font-semibold text-white md:hidden"
         >{{ userInitial() }}</span>
       </div>
     </div>

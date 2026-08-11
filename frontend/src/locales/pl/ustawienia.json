@@ -53,14 +53,34 @@
   },
   "alerts": {
     "title": "Konfiguracja alertów",
+    "subtitle": "Wybierz e-mail docelowy i rodzaj powiadomień operacyjnych",
     "recipients": "Odbiorcy e-mail",
     "alert_types": "Typy alertów",
-    "cert_expiry": "Certyfikat wygasa",
-    "inspection_due": "Przegląd pojazdu wymagany",
-    "missing_oc_report": "Brak raportu OC",
-    "incident_reported": "Awaria zgłoszona",
     "send_time": "Czas wysyłki",
+    "send_time_label": "Godzina wysyłki (HH:MM)",
+    "oc_time_hint": "Alert „brak raportu OC” zostanie wysłany po tej godzinie, jeśli raport nie wpłynie",
     "is_active": "Aktywny",
-    "add": "Dodaj konfigurację alertu"
+    "active": "Aktywny",
+    "inactive": "Nieaktywny",
+    "add": "Dodaj konfigurację alertu",
+    "edit": "Edytuj konfigurację alertu",
+    "no_configs": "Brak skonfigurowanych alertów. Dodaj pierwszą konfigurację.",
+    "types": {
+      "certyfikat_wygasa": "Certyfikat wygasa (≤ 30 dni)",
+      "przeglad_wymagany": "Przegląd pojazdu wymagany (≤ 30 dni)",
+      "brak_raportu_oc": "Brak raportu OC",
+      "awaria_zgloszona": "Awaria zgłoszona"
+    },
+    "messages": {
+      "load_error": "Nie udało się pobrać konfiguracji alertów",
+      "email_required": "E-mail jest wymagany",
+      "email_invalid": "Nieprawidłowy adres e-mail",
+      "time_required": "Godzina wysyłki jest wymagana dla alertu „brak raportu OC”",
+      "config_created": "Utworzono konfigurację alertu",
+      "config_updated": "Zaktualizowano konfigurację alertu",
+      "config_deleted": "Usunięto konfigurację alertu",
+      "delete_confirm_title": "Usuwanie konfiguracji alertu",
+      "delete_confirm_message": "Czy na pewno chcesz usunąć konfigurację alertu dla {{email}}?"
+    }
   }
 }

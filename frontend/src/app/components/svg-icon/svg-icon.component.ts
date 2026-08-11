@@ -164,6 +164,26 @@ import { CommonModule } from '@angular/common';
           <circle cx="12" cy="12" r="1.6" />
           <circle cx="12" cy="19" r="1.6" />
         }
+        @case ('history') {
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+          <path d="M3 3v5h5" />
+          <path d="M12 7v5l3 2" />
+        }
+        @case ('wrench') {
+          <path d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6L14 13l-3-3 3.7-3.7z" />
+        }
+        @case ('chart') {
+          <path d="M3 3v18h18" />
+          <path d="M7 15v-4M12 15V8M17 15v-6" />
+        }
+        @case ('notes') {
+          <rect x="6" y="3" width="12" height="18" rx="2" />
+          <path d="M9 8h6M9 12h6M9 16h4" />
+        }
+        @case ('pencil') {
+          <path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+          <path d="m15 5 4 4" />
+        }
         @default {
           <circle cx="12" cy="12" r="9" />
         }

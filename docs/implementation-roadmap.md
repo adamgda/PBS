@@ -261,13 +261,13 @@ Legenda statusów:
 
 ## Etap 14 — Alerty i powiadomienia
 
-- [ ] Backend: `GET/POST /api/v1/settings/alert-configs`
-- [ ] Backend: `PUT/DELETE /api/v1/settings/alert-configs/{id}`
-- [ ] Frontend: sekcja Ustawienia → Alerty (lista odbiorców, typy, harmonogram)
-- [ ] Backend: mechanizm sprawdzania warunków alertów (cron/queue)
-- [ ] Backend: wysyłka e-mail (SMTP) — certyfikaty, przeglądy, brak raportu OC, awarie
-- [ ] Testy: scenariusze alertów (wygaśnięcie 30 dni, brak raportu do 10:00)
-- [ ] Lokalizacje: komunikaty alertów w `ustawienia.json` / `common.json`
+- [x] Backend: `GET/POST /api/v1/settings/alert-configs`
+- [x] Backend: `PUT/DELETE /api/v1/settings/alert-configs/{id}`
+- [x] Frontend: sekcja Ustawienia → Alerty (lista odbiorców, typy, harmonogram)
+- [x] Backend: mechanizm sprawdzania warunków alertów (cron/queue)
+- [x] Backend: wysyłka e-mail (SMTP) — certyfikaty, przeglądy, brak raportu OC, awarie
+- [x] Testy: scenariusze alertów (wygaśnięcie 30 dni, brak raportu do 10:00)
+- [x] Lokalizacje: komunikaty alertów w `ustawienia.json` / `common.json`
 
 ## Etap 15 — Bezpieczeństwo i hardening
 
@@ -369,27 +369,27 @@ Legenda statusów:
 
 > Widget w formie wysuwającego się z boku ekranu panelu, dostępny z poziomu każdej podstrony i wersji mobilnej. Notatki to-do są prywatne, przypisane do zalogowanego konta (`user_id` z JWT).
 
-- [ ] Migracja: `user_notes` (`id`, `user_id` FK → users.id, `tresc` VARCHAR(500), `is_done` BOOLEAN, `kolejnosc` INT, `created_at`, `updated_at`)
-- [ ] Indeksy DB: `INDEX(user_id)`, `INDEX(user_id, is_done)`, `INDEX(user_id, kolejnosc)`
-- [ ] Backend: `GET /api/v1/notes` (lista notatek zalogowanego użytkownika, filtry `?is_done=`, sortowanie)
-- [ ] Backend: `POST /api/v1/notes` (walidacja `tresc` max 500 znaków, `user_id` z JWT)
-- [ ] Backend: `PATCH /api/v1/notes/{id}` (edycja treści)
-- [ ] Backend: `PATCH /api/v1/notes/{id}/done` (odznaczanie / cofnięcie `is_done`)
-- [ ] Backend: `DELETE /api/v1/notes/{id}` (usuwanie pojedynczej notatki)
-- [ ] Backend: `DELETE /api/v1/notes` (czyszczenie całej listy; opcja `?is_done=1` — tylko wykonane)
-- [ ] Backend: IDOR protection — każda operacja weryfikuje `user_notes.user_id` = ID zalogowanego użytkownika
-- [ ] Backend: kaskadowe usuwanie notatek przy usuwaniu użytkownika (lub anonimizacja wg polityki retencji)
-- [ ] Frontend: komponent `QuickNotesWidgetComponent` (współdzielony, renderowany w `AppComponent` / layout)
-- [ ] Frontend: przycisk-uchwyt na krawędzi ekranu + wysuwany panel (`translate-x`, Tailwind CSS), licznik nieodznaczonych notatek
-- [ ] Frontend: dodawanie, odznaczanie jako wykonane, usuwanie pojedynczej notatki
-- [ ] Frontend: czyszczenie całej listy z `ConfirmDialogComponent`
-- [ ] Frontend: dostęp z poziomu każdej podstrony i wersji mobilnej (responsywność ≥ 320px)
-- [ ] Frontend: dostępność klawiatury (Esc zamyka panel, focus trap wewnątrz)
-- [ ] Frontend: offline-first — kolejkowanie żądań przez background sync, lokalny store w `IndexedDB`
-- [ ] Serwis `NotesService` (CRUD, synchronizacja offline, sygnalizacja stanu przez Signals)
-- [ ] Lokalizacje: `notatki.json` w `locales/pl/` (etykiety, przyciski, komunikaty, placeholder, potwierdzenia)
-- [ ] Testy: backend — CRUD notatek, IDOR (próba dostępu do notatki innego użytkownika → 403/404), walidacja `tresc`
-- [ ] Testy: frontend — `QuickNotesWidgetComponent` (dodawanie, odznaczanie, usuwanie, czyszczenie, stan offline)
+- [x] Migracja: `user_notes` (`id`, `user_id` FK → users.id, `tresc` VARCHAR(500), `is_done` BOOLEAN, `kolejnosc` INT, `created_at`, `updated_at`)
+- [x] Indeksy DB: `INDEX(user_id)`, `INDEX(user_id, is_done)`, `INDEX(user_id, kolejnosc)`
+- [x] Backend: `GET /api/v1/notes` (lista notatek zalogowanego użytkownika, filtry `?is_done=`, sortowanie)
+- [x] Backend: `POST /api/v1/notes` (walidacja `tresc` max 500 znaków, `user_id` z JWT)
+- [x] Backend: `PATCH /api/v1/notes/{id}` (edycja treści)
+- [x] Backend: `PATCH /api/v1/notes/{id}/done` (odznaczanie / cofnięcie `is_done`)
+- [x] Backend: `DELETE /api/v1/notes/{id}` (usuwanie pojedynczej notatki)
+- [x] Backend: `DELETE /api/v1/notes` (czyszczenie całej listy; opcja `?is_done=1` — tylko wykonane)
+- [x] Backend: IDOR protection — każda operacja weryfikuje `user_notes.user_id` = ID zalogowanego użytkownika
+- [x] Backend: kaskadowe usuwanie notatek przy usuwaniu użytkownika (lub anonimizacja wg polityki retencji)
+- [x] Frontend: komponent `QuickNotesWidgetComponent` (współdzielony, renderowany w `AppComponent` / layout)
+- [x] Frontend: przycisk-uchwyt na krawędzi ekranu + wysuwany panel (`translate-x`, Tailwind CSS), licznik nieodznaczonych notatek
+- [x] Frontend: dodawanie, odznaczanie jako wykonane, usuwanie pojedynczej notatki
+- [x] Frontend: czyszczenie całej listy z `ConfirmDialogComponent`
+- [x] Frontend: dostęp z poziomu każdej podstrony i wersji mobilnej (responsywność ≥ 320px)
+- [x] Frontend: dostępność klawiatury (Esc zamyka panel, focus trap wewnątrz)
+- [x] Frontend: offline-first — kolejkowanie żądań przez background sync, lokalny store w `IndexedDB`
+- [x] Serwis `NotesService` (CRUD, synchronizacja offline, sygnalizacja stanu przez Signals)
+- [x] Lokalizacje: `notatki.json` w `locales/pl/` (etykiety, przyciski, komunikaty, placeholder, potwierdzenia)
+- [x] Testy: backend — CRUD notatek, IDOR (próba dostępu do notatki innego użytkownika → 403/404), walidacja `tresc`
+- [x] Testy: frontend — `QuickNotesWidgetComponent` (dodawanie, odznaczanie, usuwanie, czyszczenie, stan offline)
 
 ## Etap 20 — Kody QR dla maszyn (zgłaszanie awarii / raportowanie obsługi)
 

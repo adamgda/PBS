@@ -1,0 +1,185 @@
+<!-- ===== Panel wysuwany z prawej (otwierany przyciskiem w nagłówku) ===== -->
+@if (open()) {
+  <!-- Backdrop (mobile) -->
+  <div
+    class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden"
+    (click)="closePanel()"
+    role="presentation"
+  ></div>
+
+  <aside
+    #panel
+    class="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col bg-white shadow-2xl"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'notatki.title' | translate"
+    (keydown)="onPanelKeydown($event)"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+      <div>
+        <h2 class="text-base font-semibold text-gray-900">{{ 'notatki.title' | translate }}</h2>
+        <p class="text-xs text-gray-500">
+          @if (pendingCount() > 0) {
+            {{ 'notatki.counter' | translate: { count: pendingCount() } }}
+          } @else {
+            {{ 'notatki.empty_done' | translate }}
+          }
+        </p>
+      </div>
+      <button
+        #firstFocus
+        type="button"
+        class="grid h-9 w-9 place-items-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+        (click)="closePanel()"
+        [attr.aria-label]="'notatki.actions.close' | translate"
+      >
+        <app-svg-icon name="close" />
+      </button>
+    </div>
+
+    <!-- Formularz dodawania -->
+    <div class="flex gap-2 border-b border-gray-100 px-4 py-3">
+      <input
+        type="text"
+        class="min-w-0 flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+        [placeholder]="'notatki.placeholder' | translate"
+        [maxlength]="500"
+        [ngModel]="newNote()"
+        (ngModelChange)="newNote.set($event)"
+        (keydown.enter)="addNote()"
+      />
+      <button
+        type="button"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-pbs-primary text-white transition-colors hover:bg-pbs-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+        (click)="addNote()"
+        [disabled]="newNote().trim() === ''"
+        [attr.aria-label]="'notatki.actions.add' | translate"
+      >
+        <app-svg-icon name="plus" size="sm" />
+      </button>
+    </div>
+
+    <!-- Lista notatek -->
+    <div class="flex-1 overflow-y-auto px-4 py-3">
+      @if (loading()) {
+        <p class="py-8 text-center text-sm text-gray-400">{{ 'common.table.loading' | translate }}</p>
+      } @else if (isEmpty()) {
+        <div class="py-8 text-center">
+          <p class="text-sm text-gray-400">{{ 'notatki.empty' | translate }}</p>
+          <p class="mt-1 text-xs text-gray-400">{{ 'notatki.empty_hint' | translate }}</p>
+        </div>
+      } @else {
+        <ul class="space-y-2">
+          @for (note of notes(); track note.id) {
+            <li
+              class="group flex items-start gap-2 rounded-lg border border-gray-100 p-2"
+              [class.bg-gray-50]="note.is_done"
+            >
+              <!-- Przełącznik wykonania -->
+              <button
+                type="button"
+                class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded border transition-colors"
+                [class.border-gray-300]="!note.is_done"
+                [class.border-pbs-primary]="note.is_done"
+                [class.bg-pbs-primary]="note.is_done"
+                [attr.aria-label]="note.is_done ? ('notatki.actions.toggle_undone' | translate) : ('notatki.actions.toggle_done' | translate)"
+                (click)="toggle(note)"
+              >
+                @if (note.is_done) {
+                  <app-svg-icon name="check" size="sm" />
+                }
+              </button>
+
+              <!-- Treść / edycja -->
+              @if (editingId() === note.id) {
+                <input
+                  type="text"
+                  class="min-w-0 flex-1 rounded border border-gray-200 px-2 py-1 text-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+                  [maxlength]="500"
+                  [ngModel]="editText()"
+                  (ngModelChange)="editText.set($event)"
+                  (keydown.enter)="saveEdit(note)"
+                  (keydown.escape)="cancelEdit()"
+                />
+              } @else {
+                <span
+                  class="min-w-0 flex-1 break-words text-sm text-gray-800"
+                  [class.text-gray-400]="note.is_done"
+                  [class.line-through]="note.is_done"
+                >{{ note.tresc }}</span>
+              }
+
+              <!-- Akcje -->
+              @if (editingId() === note.id) {
+                <button
+                  type="button"
+                  class="grid h-7 w-7 shrink-0 place-items-center rounded-md text-emerald-600 hover:bg-emerald-50"
+                  (click)="saveEdit(note)"
+                  [attr.aria-label]="'notatki.actions.save_edit' | translate"
+                >
+                  <app-svg-icon name="check" size="sm" />
+                </button>
+                <button
+                  type="button"
+                  class="grid h-7 w-7 shrink-0 place-items-center rounded-md text-gray-500 hover:bg-gray-100"
+                  (click)="cancelEdit()"
+                  [attr.aria-label]="'notatki.actions.cancel_edit' | translate"
+                >
+                  <app-svg-icon name="close" size="sm" />
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="grid h-7 w-7 shrink-0 place-items-center rounded-md text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-700 group-hover:opacity-100"
+                  (click)="startEdit(note)"
+                  [attr.aria-label]="'notatki.actions.edit' | translate"
+                >
+                  <app-svg-icon name="pencil" size="sm" />
+                </button>
+                <button
+                  type="button"
+                  class="grid h-7 w-7 shrink-0 place-items-center rounded-md text-gray-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                  (click)="deleteNote(note)"
+                  [attr.aria-label]="'notatki.actions.delete' | translate"
+                >
+                  <app-svg-icon name="trash" size="sm" />
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      @if (syncing()) {
+        <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-amber-600">
+          <app-svg-icon name="spinner" size="sm" />
+          {{ 'notatki.messages.offline_saved' | translate }}
+        </p>
+      }
+    </div>
+
+    <!-- Stopka -->
+    @if (!isEmpty()) {
+      <div class="flex items-center justify-end gap-2 border-t border-gray-100 px-4 py-3">
+        @if (hasDone()) {
+          <button
+            type="button"
+            class="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100"
+            (click)="clearDone()"
+          >
+            {{ 'notatki.actions.clear_done' | translate }}
+          </button>
+        }
+        <button
+          type="button"
+          class="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+          (click)="clearAll()"
+        >
+          {{ 'notatki.actions.clear' | translate }}
+        </button>
+      </div>
+    }
+  </aside>
+}
+

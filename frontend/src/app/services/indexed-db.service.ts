@@ -35,6 +35,10 @@ export class IndexedDbService {
         if (!database.objectStoreNames.contains('critical_data')) {
           database.createObjectStore('critical_data', { keyPath: 'key' });
         }
+        // Store dla szybkich notatek to-do (Etap 19, offline-first)
+        if (!database.objectStoreNames.contains('user_notes')) {
+          database.createObjectStore('user_notes', { keyPath: 'id' });
+        }
       };
     });
   }

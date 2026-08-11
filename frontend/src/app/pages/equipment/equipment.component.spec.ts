@@ -196,4 +196,65 @@ describe('EquipmentComponent', () => {
     expect(comp.detailsTimeline().length).toBe(1);
     expect(comp.detailsEquipment()?.vehicle_details?.ostatni_przebieg).toBe(1000);
   });
+
+  it('powinien zaznaczyć sprzęt i pobrać oś czasu + plany do sekcji pod tabelą', () => {
+    const fixture = TestBed.createComponent(EquipmentComponent);
+    fixture.detectChanges();
+    flushList();
+
+    const comp = fixture.componentInstance;
+    const eq = {
+      id: 1, kategoria: 'pojazd', nazwa: 'Ford', numer_seryjny: 'FT-1',
+      current_employee_id: null, employee_name: null, current_terminal_id: null, terminal_nazwa: null,
+      ostatni_przebieg: null, is_active: true, created_at: null, updated_at: null,
+    } as never;
+    comp.selectEquipment(eq);
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/equipment/1`);
+    req.flush({
+      id: 1, kategoria: 'pojazd', nazwa: 'Ford', numer_seryjny: 'FT-1',
+      current_employee_id: null, employee_name: null, current_terminal_id: null, terminal_nazwa: null,
+      ostatni_przebieg: 1000, is_active: true,
+      vehicle_details: { equipment_id: 1, ostatni_przebieg: 1000, ostatni_serwis_olejowy: null, ostatnia_awaria: null, data_ostatniej_oc: null, wynik_ostatniej_oc: null },
+      service_plans: [{ id: 3, equipment_id: 1, typ_przegladu: 'olejowy', interwal_km: 500, interwal_dni: 90, data_ostatniego_wykonania: null, data_nastepnego_planowanego: null, is_active: true, needs_service: true }],
+      timeline: [{ id: 1, equipment_id: 1, typ: 'przypisanie', opis: 'Utworzono', data: '2026-01-01', created_by: null }],
+      created_at: null, updated_at: null,
+    });
+
+    expect(comp.selectedEquipment()?.id).toBe(1);
+    expect(comp.selectedPlans().length).toBe(1);
+    expect(comp.selectedTimeline().length).toBe(1);
+    expect(comp.planCycle(comp.selectedPlans()[0])).toBe('co 500 km / 90 dni');
+    expect(comp.planStatus(comp.selectedPlans()[0]).labelKey).toBe('sprzet.service_plans.status_upcoming');
+
+    comp.clearSelection();
+    expect(comp.selectedEquipment()).toBeNull();
+  });
+
+  it('planStatus rozróżnia statusy planów przeglądu', () => {
+    const fixture = TestBed.createComponent(EquipmentComponent);
+    fixture.detectChanges();
+    flushList();
+
+    const comp = fixture.componentInstance;
+    const needsService = {
+      id: 1, equipment_id: 1, typ_przegladu: 'olejowy', interwal_km: 500, interwal_dni: 90,
+      data_ostatniego_wykonania: null, data_nastepnego_planowanego: null, is_active: true, needs_service: true,
+    } as never;
+    const scheduled = {
+      id: 2, equipment_id: 1, typ_przegladu: 'UDT', interwal_km: null, interwal_dni: 365,
+      data_ostatniego_wykonania: null, data_nastepnego_planowanego: null, is_active: true, needs_service: false,
+    } as never;
+    const inactive = {
+      id: 3, equipment_id: 1, typ_przegladu: 'techniczny', interwal_km: null, interwal_dni: null,
+      data_ostatniego_wykonania: null, data_nastepnego_planowanego: null, is_active: false, needs_service: false,
+    } as never;
+
+    expect(comp.planStatus(needsService).labelKey).toBe('sprzet.service_plans.status_upcoming');
+    expect(comp.planStatus(needsService).tone).toBe('warning');
+    expect(comp.planStatus(scheduled).labelKey).toBe('sprzet.service_plans.status_scheduled');
+    expect(comp.planStatus(scheduled).tone).toBe('success');
+    expect(comp.planStatus(inactive).labelKey).toBe('sprzet.service_plans.status_inactive');
+    expect(comp.planStatus(inactive).tone).toBe('neutral');
+  });
 });

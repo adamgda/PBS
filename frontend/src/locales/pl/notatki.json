@@ -1,0 +1,43 @@
+{
+  "title": "Szybkie notatki",
+  "button": "Notatki",
+  "subtitle": "Twoja prywatna lista to-do",
+  "handle": "Notatki",
+  "counter": "{{count}} do zrobienia",
+  "placeholder": "Nowa notatka...",
+  "add": "Dodaj notatkę",
+  "empty": "Brak notatek",
+  "empty_hint": "Dodaj pierwszą notatkę powyżej.",
+  "empty_done": "Wszystkie wykonane! 🎉",
+  "actions": {
+    "toggle_done": "Oznacz jako wykonaną",
+    "toggle_undone": "Cofnij wykonanie",
+    "edit": "Edytuj notatkę",
+    "delete": "Usuń notatkę",
+    "save_edit": "Zapisz",
+    "cancel_edit": "Anuluj",
+    "clear": "Wyczyść listę",
+    "clear_done": "Usuń wykonane",
+    "open": "Otwórz notatki",
+    "close": "Zamknij notatki"
+  },
+  "confirm": {
+    "clear_all_title": "Wyczyścić listę?",
+    "clear_all_message": "Czy na pewno chcesz usunąć wszystkie notatki? Tej operacji nie można cofnąć.",
+    "clear_done_title": "Usunąć wykonane?",
+    "clear_done_message": "Czy na pewno chcesz usunąć wszystkie wykonane notatki?",
+    "delete_title": "Usunąć notatkę?",
+    "delete_message": "Czy na pewno chcesz usunąć tę notatkę?",
+    "confirm": "Usuń",
+    "cancel": "Anuluj"
+  },
+  "messages": {
+    "added": "Dodano notatkę",
+    "updated": "Zaktualizowano notatkę",
+    "deleted": "Usunięto notatkę",
+    "cleared": "Wyczyszczono notatki",
+    "error": "Nie udało się zapisać notatki",
+    "offline_saved": "Zapisano lokalnie — zsynchronizuje się po przywróceniu połączenia",
+    "validation_max": "Notatka może mieć maksymalnie 500 znaków"
+  }
+}

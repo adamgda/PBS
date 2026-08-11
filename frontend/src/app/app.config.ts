@@ -25,6 +25,7 @@ import analitykaPl from '../locales/pl/analityka.json';
 import ustawieniaPl from '../locales/pl/ustawienia.json';
 import awariaPl from '../locales/pl/awaria.json';
 import raportowaniePl from '../locales/pl/raportowanie.json';
+import notatkiPl from '../locales/pl/notatki.json';
 
 /**
  * Factory do inicjalizacji tłumaczeń i IndexedDB przy starcie aplikacji.
@@ -45,6 +46,7 @@ function initializeApp(): () => Promise<void> {
       ustawienia: ustawieniaPl,
       awaria: awariaPl,
       raportowanie: raportowaniePl,
+      notatki: notatkiPl,
     });
     await indexedDb.init();
   };

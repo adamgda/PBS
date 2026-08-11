@@ -10,6 +10,7 @@ import { ToastNotificationComponent } from './components/toast-notification/toas
 import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
 import { OfflineBannerComponent } from './components/offline-banner/offline-banner.component';
 import { SvgIconComponent } from './components/svg-icon/svg-icon.component';
+import { QuickNotesWidgetComponent } from './components/quick-notes-widget/quick-notes-widget.component';
 
 /**
  * Główny komponent aplikacji PORTBS.
@@ -30,6 +31,7 @@ import { SvgIconComponent } from './components/svg-icon/svg-icon.component';
     ConfirmDialogComponent,
     OfflineBannerComponent,
     SvgIconComponent,
+    QuickNotesWidgetComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',

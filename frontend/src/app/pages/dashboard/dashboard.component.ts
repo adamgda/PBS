@@ -113,10 +113,10 @@ export class DashboardComponent {
   kpis(): KpiDatum[] {
     const s = this._summary();
     return [
-      { label: 'dashboard.kpi.active_employees', value: s?.active_employees ?? 0, icon: 'pracownicy', tone: 'primary', trend: null, subtitle: 'dashboard.kpi.active_employees_sub' },
-      { label: 'dashboard.kpi.active_terminals', value: s?.active_terminals ?? 0, icon: 'terminale', tone: 'info', trend: null, subtitle: 'dashboard.kpi.active_terminals_sub' },
-      { label: 'dashboard.kpi.vehicles_in_use', value: s?.vehicles_in_use ?? 0, icon: 'sprzet', tone: 'success', trend: null, subtitle: 'dashboard.kpi.vehicles_in_use_sub' },
-      { label: 'dashboard.kpi.active_incidents', value: s?.active_incidents ?? 0, icon: 'awaria', tone: 'danger', trend: null, subtitle: 'dashboard.kpi.active_incidents_sub' },
+      { label: 'dashboard.kpi.active_employees', value: s?.active_employees ?? 0, icon: 'pracownicy', tone: 'primary', trend: null },
+      { label: 'dashboard.kpi.active_terminals', value: s?.active_terminals ?? 0, icon: 'terminale', tone: 'info', trend: null },
+      { label: 'dashboard.kpi.vehicles_in_use', value: s?.vehicles_in_use ?? 0, icon: 'sprzet', tone: 'success', trend: null },
+      { label: 'dashboard.kpi.active_incidents', value: s?.active_incidents ?? 0, icon: 'awaria', tone: 'danger', trend: null },
     ];
   }
 

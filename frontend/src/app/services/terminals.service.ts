@@ -9,6 +9,7 @@ import {
   TerminalListParams,
   CreateTerminalRequest,
   UpdateTerminalRequest,
+  TerminalHoursSummary,
 } from '../models/terminal.model';
 import { invalidateCache } from './http.interceptor';
 
@@ -53,5 +54,17 @@ export class TerminalsService {
     return this.http
       .delete<{ success: boolean }>(`${this.apiUrl}/terminals/${id}`)
       .pipe(tap(() => invalidateCache('/terminals')));
+  }
+
+  /** Suma godzin i wynagrodzeń per port/terminal (+ wiersz „Razem"). */
+  hoursSummary(month = '', period = ''): Observable<TerminalHoursSummary> {
+    let httpParams = new HttpParams();
+    if (month) {
+      httpParams = httpParams.set('month', month);
+    }
+    if (period) {
+      httpParams = httpParams.set('period', period);
+    }
+    return this.http.get<TerminalHoursSummary>(`${this.apiUrl}/terminals/hours-summary`, { params: httpParams });
   }
 }

@@ -50,6 +50,20 @@ final class TerminalController extends Controller
     }
 
     /**
+     * GET /api/v1/terminals/hours-summary — suma godzin i wynagrodzeń per port/terminal.
+     *
+     * @param array<string, string> $params
+     */
+    public function hoursSummary(Request $request, array $params = []): Response
+    {
+        $query = $request->query();
+        $month = is_string($query['month'] ?? null) ? (string) $query['month'] : '';
+        $period = is_string($query['period'] ?? null) ? (string) $query['period'] : '';
+
+        return $this->json($this->terminalService->hoursSummary($month, $period), 200);
+    }
+
+    /**
      * POST /api/v1/terminals — utworzenie terminala.
      *
      * @param array<string, string> $params

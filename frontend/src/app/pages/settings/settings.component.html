@@ -91,10 +91,116 @@
   </div>
 }
 
-<!-- Tab: Alerty (placeholder — Etap 14) -->
+<!-- Tab: Alerty (Etap 14) -->
 @if (activeTab() === 'alerts') {
-  <div class="mt-5 rounded-lg bg-white p-8 text-center text-gray-500 shadow">
-    {{ 'ustawienia.alerts.title' | translate }} — implementacja w Etapie 14
+  <div class="mt-5">
+    <div class="mb-1 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900">{{ 'ustawienia.alerts.title' | translate }}</h2>
+      <app-add-button [label]="'ustawienia.alerts.add'" (add)="openAlertCreate()" />
+    </div>
+    <p class="mb-4 text-sm text-gray-600">{{ 'ustawienia.alerts.subtitle' | translate }}</p>
+
+    @if (alertsLoading()) {
+      <div class="rounded-lg bg-white p-8 text-center text-gray-400 shadow">{{ 'common.table.loading' | translate }}</div>
+    } @else if (alertConfigs().length === 0) {
+      <div class="rounded-lg bg-white p-8 text-center text-gray-500 shadow">{{ 'ustawienia.alerts.no_configs' | translate }}</div>
+    } @else {
+      <div class="overflow-x-auto rounded-lg bg-white shadow">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium">{{ 'ustawienia.alerts.recipients' | translate }}</th>
+              <th class="px-4 py-3 text-left font-medium">{{ 'ustawienia.alerts.alert_types' | translate }}</th>
+              <th class="px-4 py-3 text-left font-medium">{{ 'ustawienia.alerts.send_time' | translate }}</th>
+              <th class="px-4 py-3 text-left font-medium">{{ 'ustawienia.alerts.is_active' | translate }}</th>
+              <th class="px-4 py-3 text-right font-medium">{{ 'common.table.actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (c of alertConfigs(); track c.id) {
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-medium text-gray-900">{{ c.email_odbiorcy }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ alertTypeLabel(c.typ_alertu) }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ formatSendTime(c) }}</td>
+                <td class="px-4 py-3">
+                  <app-status-badge
+                    [status]="c.czy_aktywny ? 'active' : 'inactive'"
+                    [label]="c.czy_aktywny ? ('ustawienia.alerts.active' | translate) : ('ustawienia.alerts.inactive' | translate)"
+                  />
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex justify-end gap-1">
+                    <app-icon-button icon="settings" tone="primary" [ariaLabel]="'common.buttons.edit' | translate" (clicked)="openAlertEdit(c)" />
+                    <app-icon-button icon="trash" tone="danger" [ariaLabel]="'common.buttons.delete' | translate" (clicked)="deleteAlert(c)" />
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}
+
+<!-- ===== Modal: konfiguracja alertu (Etap 14) ===== -->
+@if (alertModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ (editingAlertId() === null ? 'ustawienia.alerts.add' : 'ustawienia.alerts.edit') | translate }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAlertModal()" />
+      </div>
+
+      <app-form-input
+        type="email"
+        name="alertEmail"
+        icon="mail"
+        autocomplete="email"
+        labelKey="ustawienia.alerts.recipients"
+        placeholderKey="ustawienia.alerts.recipients"
+        [ngModel]="alertEmail()"
+        (ngModelChange)="alertEmail.set($event)"
+      />
+
+      <div class="mb-4">
+        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'ustawienia.alerts.alert_types' | translate }}</label>
+        <app-select [options]="alertTypeOptions" size="lg" [ngModel]="alertType()" (ngModelChange)="alertType.set($event)" />
+      </div>
+
+      @if (isMissingOc(alertType())) {
+        <div class="mb-4">
+          <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'ustawienia.alerts.send_time' | translate }}</label>
+          <app-form-input
+            type="text"
+            name="alertSendTime"
+            labelKey="ustawienia.alerts.send_time_label"
+            placeholder="10:00"
+            [ngModel]="alertSendTime()"
+            (ngModelChange)="alertSendTime.set($event)"
+          />
+          <p class="mt-1 text-xs text-gray-500">{{ 'ustawienia.alerts.oc_time_hint' | translate }}</p>
+        </div>
+      }
+
+      <div class="mb-4 flex items-center gap-2">
+        <input
+          id="alertActive"
+          type="checkbox"
+          class="h-4 w-4 rounded accent-pbs-primary"
+          [checked]="alertActive()"
+          (change)="toggleAlertActive($event)"
+        />
+        <label for="alertActive" class="text-sm font-medium text-gray-700">{{ 'ustawienia.alerts.is_active' | translate }}</label>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeAlertModal()" />
+        <app-button variant="primary" [label]="'common.buttons.save'" [disabled]="alertSaving()" (clicked)="saveAlert()" />
+      </div>
+    </div>
   </div>
 }
 
