@@ -107,6 +107,27 @@ final class Request
         return $_SERVER['REQUEST_METHOD'] ?? 'GET';
     }
 
+    /**
+     * Zwraca adres IP klienta. Uwzględnia X-Forwarded-For tylko gdy nagłówek
+     * jest wiarygodny (np. za zaufanym proxy). Dla bezpieczeństwa przyjmujemy
+     * pierwszy adres, a w produkcji limit XFF powinien być wymuszany na proxy.
+     */
+    public function ip(): string
+    {
+        $forwarded = $this->header('X-Forwarded-For');
+        if ($forwarded !== null && $forwarded !== '') {
+            $parts = explode(',', $forwarded);
+            $first = trim($parts[0]);
+            if ($first !== '' && filter_var($first, FILTER_VALIDATE_IP) !== false) {
+                return $first;
+            }
+        }
+
+        $remote = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+
+        return is_string($remote) ? $remote : '127.0.0.1';
+    }
+
     public function path(): string
     {
         $uri = $_SERVER['REQUEST_URI'] ?? '/';

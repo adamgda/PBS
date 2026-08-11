@@ -30,7 +30,7 @@
     "donut_title": "Struktura floty",
     "donut_subtitle": "Udział typów pojazdów",
     "bar_title": "Obrót per terminal",
-    "bar_subtitle": "Wartość obsługiwanych ładunków (tys. PLN)"
+    "bar_subtitle": "Wartość zleceń obsługiwanych w tym miesiącu (PLN)"
   },
   "alerts": {
     "title": "Alerty i uwagi",
@@ -47,10 +47,11 @@
   },
   "activity": {
     "title": "Ostatnia aktywność",
-    "item_new_employee": "Zarejestrowano nowego pracownika",
-    "item_incident_closed": "Zamknięto zgłoszenie awarii",
-    "item_invoice_paid": "Otrzymano płatność faktury",
-    "item_terminal_online": "Terminal wrócił do pracy",
+    "item_new_employee": "Zarejestrowano pracownika",
+    "item_incident_reported": "Zgłoszono awarię",
+    "item_invoice_paid": "Wystawiono fakturę",
+    "item_order_created": "Utworzono zlecenie",
+    "item_other": "Aktywność",
     "empty": "Brak ostatniej aktywności"
   }
 }

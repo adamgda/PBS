@@ -9,12 +9,14 @@ use App\Repository\AuditLogRepository;
 use App\Repository\PasswordResetRepository;
 use App\Repository\RefreshTokenRepository;
 use App\Repository\UserRepository;
+use App\Security\RateLimitStore;
 
 /**
  * Serwis autentykacji — logika biznesowa dla:
  * login, refresh, logout, set-password, forgot-password.
  *
  * Implementuje blokadę konta: 5 nieudanych prób → 15 min, 20 prób/24h → ręczne odblokowanie.
+ * Rate limiting (dokumentacja 9.3): login 5/min per IP + 10/h per konto, set-password 3/h per token.
  */
 final class AuthService
 {
@@ -23,6 +25,15 @@ final class AuthService
     private const int DAILY_FAILED_LIMIT = 20;
     private const int RESET_TOKEN_TTL_MINUTES = 60;
     private const int REMEMBER_REFRESH_TTL = 2592000; // 30 dni — sesja przy „zapamiętaj mnie"
+
+    private const int LOGIN_IP_MAX = 5;
+    private const int LOGIN_IP_WINDOW = 60; // 5 prób/min na IP
+    private const int LOGIN_ACCOUNT_MAX = 10;
+    private const int LOGIN_ACCOUNT_WINDOW = 3600; // 10 prób/h na konto
+    private const int SET_PASSWORD_MAX = 3;
+    private const int SET_PASSWORD_WINDOW = 3600; // 3 próby/h na token
+
+    private readonly RateLimitStore $rateLimitStore;
 
     public function __construct(
         private readonly UserRepository $userRepository,
@@ -34,7 +45,10 @@ final class AuthService
         private readonly MailService $mailService,
         private readonly string $frontendBaseUrl = 'http://localhost:4200',
         private readonly bool $debug = false,
-    ) {}
+        ?RateLimitStore $rateLimitStore = null,
+    ) {
+        $this->rateLimitStore = $rateLimitStore ?? new RateLimitStore();
+    }
 
     /**
      * Logowanie użytkownika.
@@ -43,6 +57,14 @@ final class AuthService
      */
     public function login(string $email, string $password, Request $request, bool $remember = false): array
     {
+        // Rate limit per IP (5 prób/min) — ochrona przed brute-force/enumeracją.
+        $ipResult = $this->rateLimitStore->hit('login:ip:' . $request->ip(), self::LOGIN_IP_MAX, self::LOGIN_IP_WINDOW);
+        if (!$ipResult['allowed']) {
+            $this->auditLogRepository->logFromRequest(null, 'login_rate_limited', $request, null, null, ['reason' => 'ip_limit']);
+
+            return ['error' => 'Too many login attempts', 'code' => 429];
+        }
+
         $user = $this->userRepository->findByEmail($email);
 
         if ($user === null) {
@@ -52,6 +74,14 @@ final class AuthService
         }
 
         $userId = $this->toInt($user['id'] ?? 0);
+
+        // Rate limit per konto (10 prób/h).
+        $accountResult = $this->rateLimitStore->hit('login:account:' . $userId, self::LOGIN_ACCOUNT_MAX, self::LOGIN_ACCOUNT_WINDOW);
+        if (!$accountResult['allowed']) {
+            $this->auditLogRepository->logFromRequest($userId, 'login_rate_limited', $request, 'user', $userId, ['reason' => 'account_limit']);
+
+            return ['error' => 'Too many login attempts for this account', 'code' => 429];
+        }
 
         // Sprawdzenie czy konto jest aktywne
         $isActive = (bool) ($user['is_active'] ?? false);
@@ -231,6 +261,13 @@ final class AuthService
     public function setPassword(string $token, string $newPassword, Request $request): array
     {
         $tokenHash = hash('sha256', $token);
+
+        // Rate limit per token (3 próby/h) — ochrona przed przejęciem linku.
+        $tokenResult = $this->rateLimitStore->hit('setpassword:token:' . $tokenHash, self::SET_PASSWORD_MAX, self::SET_PASSWORD_WINDOW);
+        if (!$tokenResult['allowed']) {
+            return ['error' => 'Too many attempts. Try again later.', 'code' => 429];
+        }
+
         $tokenRecord = $this->passwordResetRepository->findByHash($tokenHash);
 
         if ($tokenRecord === null) {

@@ -271,24 +271,24 @@ Legenda statusów:
 
 ## Etap 15 — Bezpieczeństwo i hardening
 
-- [ ] HTTPS/TLS 1.3 na wszystkich środowiskach (przekierowanie HTTP → HTTPS)
-- [ ] CORS whitelist z `.env` (`CORS_ALLOWED_ORIGINS`), brak wildcard `*` na produkcji
-- [ ] Rate limiting (100 req/min IP, 1000 req/min user) + logowanie 5/min, set-password 3/h
-- [ ] CSRF tokeny (`X-CSRF-Token`) dla mutate endpoints + walidacja `Origin` header
-- [ ] Nagłówki bezpieczeństwa: HSTS, X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, Permissions-Policy
-- [ ] `Cache-Control: no-store` dla odpowiedzi z danymi osobowymi, `X-Robots-Tag: noindex`
-- [ ] Walidacja i sanitization wejścia (kontroler + serwis) + mass assignment protection (DTO whitelist)
-- [ ] Prepared statements (PDO) — weryfikacja braku SQL injection (brak łączenia stringów)
-- [ ] Szyfrowanie danych wrażliwych at-rest: AES-256-GCM z `APP_KEY` w `.env`
-- [ ] Hash haseł: Argon2id (preferowany) lub bcrypt cost ≥ 12
-- [ ] JWT RS256 na produkcji (HS256 tylko dev) + krótki TTL (15 min) + single-use refresh z rotacją
-- [ ] Denylist refresh tokenów (`revoked_refresh_tokens`) sprawdzana przy każdym `/auth/refresh`
-- [ ] Audit log (`audit_log`): logowanie, uprawnienia, dostęp do danych osobowych, zmiana statusu awarii
-- [ ] IDOR protection: autoryzacja per zasób — sprawdzanie dostępu do konkretnego `{id}`
-- [ ] Zarządzanie sekretami: `.env` nie commitowane, Docker Secrets/Vault na produkcji, rotacja co 90 dni
-- [ ] Skanowanie sekretów w repozytorium (pre-commit hook + `gitleaks`)
-- [ ] `display_errors=Off` na produkcji, stack trace tylko w logach
-- [ ] RODO: anonimizacja danych przy usunięciu, retencja (2 lata archiwizacja, 5 lat usuwanie)
+- [ ] HTTPS/TLS 1.3 na wszystkich środowiskach (przekierowanie HTTP → HTTPS) — konfig. w `backend/deploy/nginx-https.conf`, wdrożenie infra
+- [x] CORS whitelist z `.env` (`CORS_ALLOWED_ORIGINS`), brak wildcard `*` na produkcji (guard w `App`)
+- [x] Rate limiting (100 req/min IP, 1000 req/min user) + logowanie 5/min, set-password 3/h (`RateLimitStore` + `AuthService`)
+- [x] CSRF tokeny (`X-CSRF-Token`) dla mutate endpoints + walidacja `Origin` header (`CsrfMiddleware` + `GET /auth/csrf`)
+- [x] Nagłówki bezpieczeństwa: HSTS, X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, Permissions-Policy (`SecurityHeadersMiddleware`)
+- [x] `Cache-Control: no-store` dla odpowiedzi z danymi osobowymi, `X-Robots-Tag: noindex`
+- [x] Walidacja i sanitization wejścia (kontroler + serwis) + mass assignment protection (DTO whitelist) — wzorzec w serwisach, wzmocnione endpointy auth
+- [x] Prepared statements (PDO) — weryfikacja braku SQL injection (brak łączenia stringów, `EMULATE_PREPARES=false`)
+- [x] Szyfrowanie danych wrażliwych at-rest: AES-256-GCM z `APP_KEY` w `.env` (`CryptoService`)
+- [x] Hash haseł: Argon2id (preferowany) lub bcrypt cost ≥ 12 (`PasswordPolicyService`)
+- [x] JWT RS256 na produkcji (HS256 tylko dev) + krótki TTL (15 min) + single-use refresh z rotacją (`JwtService`/`AuthMiddleware`)
+- [x] Denylist refresh tokenów (`revoked_refresh_tokens`) sprawdzana przy każdym `/auth/refresh`
+- [x] Audit log (`audit_log`): logowanie, uprawnienia, dostęp do danych osobowych, zmiana statusu awarii
+- [x] IDOR protection: autoryzacja per zasób — sprawdzanie dostępu do konkretnego `{id}`
+- [x] Zarządzanie sekretami: `.env` nie commitowane, Docker Secrets/Vault na produkcji, rotacja co 90 dni (procedura w `docs/security-hardening.md`)
+- [x] Skanowanie sekretów w repozytorium (pre-commit hook + `gitleaks`) — `.gitleaks.toml` + `scripts/pre-commit-secret-scan.sh`
+- [x] `display_errors=Off` na produkcji, stack trace tylko w logach (`public/index.php`)
+- [ ] RODO: anonimizacja danych przy usunięciu, retencja (2 lata archiwizacja, 5 lat usuwanie) — procedura udokumentowana, cron do wdrożenia
 - [ ] Audyt bezpieczeństwa / penetration test (zewnętrzny)
 
 ## Etap 15a — Wydajność i optymalizacja

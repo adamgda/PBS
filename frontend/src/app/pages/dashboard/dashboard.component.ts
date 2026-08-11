@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -23,16 +23,14 @@ import { DashboardService } from '../../services/dashboard.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
 import { KpiCardComponent, KpiTone } from '../../components/kpi-card/kpi-card.component';
-import { DashboardSummary, DashboardAlerts } from '../../models/dashboard.model';
+import { DashboardSummary, DashboardAlerts, DashboardCharts } from '../../models/dashboard.model';
 
 interface KpiDatum {
   label: string;
   value: string | number;
   icon: string;
   tone: KpiTone;
-  trend: number | null;
   subtitle?: string;
-  sparkline?: number[];
 }
 
 interface HeroStat {
@@ -55,17 +53,69 @@ interface ShortcutDatum {
 
 interface ActivityDatum {
   titleKey: string;
+  title: string;
   time: string;
   badge: string;
 }
+
+interface AreaChartConfig {
+  chart: ApexChart;
+  series: ApexAxisChartSeries;
+  xaxis: ApexXAxis;
+  yaxis: ApexYAxis;
+  stroke: ApexStroke;
+  fill: ApexFill;
+  grid: ApexGrid;
+  dataLabels: ApexDataLabels;
+  tooltip: ApexTooltip;
+  legend: ApexLegend;
+  colors: string[];
+}
+
+interface DonutChartConfig {
+  chart: ApexChart;
+  series: ApexNonAxisChartSeries;
+  labels: string[];
+  colors: string[];
+  legend: ApexLegend;
+  plotOptions: ApexPlotOptions;
+  dataLabels: ApexDataLabels;
+  stroke: ApexStroke;
+  tooltip: ApexTooltip;
+  responsive: ApexResponsive[];
+}
+
+interface BarChartConfig {
+  chart: ApexChart;
+  series: ApexAxisChartSeries;
+  xaxis: ApexXAxis;
+  yaxis: ApexYAxis;
+  plotOptions: ApexPlotOptions;
+  colors: string[];
+  fill: ApexFill;
+  grid: ApexGrid;
+  dataLabels: ApexDataLabels;
+  tooltip: ApexTooltip;
+  legend: ApexLegend;
+}
+
+/** Mapuje typ aktywności z API na klucz tłumaczenia i kolor kropki na osi czasu. */
+const ACTIVITY_META: Record<string, { label: string; badge: string }> = {
+  order: { label: 'dashboard.activity.item_order_created', badge: 'bg-blue-500' },
+  incident: { label: 'dashboard.activity.item_incident_reported', badge: 'bg-red-500' },
+  invoice: { label: 'dashboard.activity.item_invoice_paid', badge: 'bg-emerald-500' },
+  employee: { label: 'dashboard.activity.item_new_employee', badge: 'bg-amber-500' },
+  other: { label: 'dashboard.activity.item_other', badge: 'bg-gray-400' },
+};
 
 /**
  * Dashboard (Etap 13) — profesjonalny widok startowy po zalogowaniu.
  * Zawiera karty KPI, interaktywne wykresy (ApexCharts), alerty,
  * oś czasu aktywności i szybkie akcje.
  *
- * Karty KPI i alerty pobierane są z API (`/api/v1/dashboard/summary` oraz
- * `/api/v1/dashboard/alerts`). Wykresy pozostają reprezentacyjne (mock).
+ * Wszystkie dane (KPI, alerty, wykresy, aktywność) pobierane są z API:
+ * `/api/v1/dashboard/summary`, `/api/v1/dashboard/alerts` oraz
+ * `/api/v1/dashboard/charts`. Brak danych statycznych/mocków.
  */
 @Component({
   selector: 'app-dashboard',
@@ -95,9 +145,11 @@ export class DashboardComponent {
 
   private readonly _summary = signal<DashboardSummary | null>(null);
   private readonly _alerts = signal<DashboardAlerts | null>(null);
+  private readonly _charts = signal<DashboardCharts | null>(null);
 
   readonly summary = this._summary.asReadonly();
   readonly alertsData = this._alerts.asReadonly();
+  readonly charts = this._charts.asReadonly();
 
   constructor() {
     this.load();
@@ -114,7 +166,7 @@ export class DashboardComponent {
   }
 
   areaTrend(): number {
-    return 12.4;
+    return this._charts()?.orders_trend.trend_pct ?? 0;
   }
 
   kpis(): KpiDatum[] {
@@ -125,36 +177,28 @@ export class DashboardComponent {
         value: s?.active_employees ?? 0,
         icon: 'pracownicy',
         tone: 'primary',
-        trend: 8.2,
         subtitle: 'dashboard.kpi.active_employees_sub',
-        sparkline: [12, 15, 13, 18, 16, 21, 24],
       },
       {
         label: 'dashboard.kpi.active_terminals',
         value: s?.active_terminals ?? 0,
         icon: 'terminale',
         tone: 'info',
-        trend: 3.1,
         subtitle: 'dashboard.kpi.active_terminals_sub',
-        sparkline: [8, 9, 8, 11, 12, 11, 13],
       },
       {
         label: 'dashboard.kpi.vehicles_in_use',
         value: s?.vehicles_in_use ?? 0,
         icon: 'sprzet',
         tone: 'success',
-        trend: -1.4,
         subtitle: 'dashboard.kpi.vehicles_in_use_sub',
-        sparkline: [20, 18, 19, 17, 18, 16, 15],
       },
       {
         label: 'dashboard.kpi.active_incidents',
         value: s?.active_incidents ?? 0,
         icon: 'awaria',
         tone: 'danger',
-        trend: -12.0,
         subtitle: 'dashboard.kpi.active_incidents_sub',
-        sparkline: [5, 4, 6, 3, 4, 2, 2],
       },
     ];
   }
@@ -196,12 +240,39 @@ export class DashboardComponent {
   }
 
   activity(): ActivityDatum[] {
-    return [
-      { titleKey: 'dashboard.activity.item_new_employee', time: '12 min temu', badge: 'bg-blue-500' },
-      { titleKey: 'dashboard.activity.item_invoice_paid', time: '1 godz. temu', badge: 'bg-emerald-500' },
-      { titleKey: 'dashboard.activity.item_terminal_online', time: '3 godz. temu', badge: 'bg-amber-500' },
-      { titleKey: 'dashboard.activity.item_incident_closed', time: '5 godz. temu', badge: 'bg-red-500' },
-    ];
+    const items = this._charts()?.activity ?? [];
+    return items.slice(0, 5).map((item) => {
+      const meta = ACTIVITY_META[item.type] ?? ACTIVITY_META['other'];
+      return {
+        titleKey: meta.label,
+        title: item.title,
+        time: this.relativeTime(item.time),
+        badge: meta.badge,
+      };
+    });
+  }
+
+  private relativeTime(value: string | null): string {
+    if (!value) {
+      return '';
+    }
+    const ts = new Date(value.includes('T') ? value : value.replace(' ', 'T')).getTime();
+    if (Number.isNaN(ts)) {
+      return '';
+    }
+    const diff = Math.max(0, Date.now() - ts);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) {
+      return 'przed chwilą';
+    }
+    if (mins < 60) {
+      return `${mins} min temu`;
+    }
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) {
+      return `${hours} godz. temu`;
+    }
+    return `${Math.floor(hours / 24)} dni temu`;
   }
 
   alertBadgeClass(tone: AlertDatum['tone']): string {
@@ -233,137 +304,111 @@ export class DashboardComponent {
       error: () => this.error.set('dashboard.error'),
     });
 
-    // Oba żądania są niezależne — kończymy ładowanie po ich wystartowaniu.
+    this.dashboardService.charts().subscribe({
+      next: (charts) => this._charts.set(charts),
+      error: () => this.error.set('dashboard.error'),
+    });
+
+    // Żądania są niezależne — kończymy ładowanie po ich wystartowaniu.
     this.loading.set(false);
   }
 
-  // ===== Wykres: operacje (area) =====
-  readonly area: {
-    chart: ApexChart;
-    series: ApexAxisChartSeries;
-    xaxis: ApexXAxis;
-    yaxis: ApexYAxis;
-    stroke: ApexStroke;
-    fill: ApexFill;
-    grid: ApexGrid;
-    dataLabels: ApexDataLabels;
-    tooltip: ApexTooltip;
-    legend: ApexLegend;
-    colors: string[];
-  } = {
-    chart: {
-      type: 'area',
-      height: 300,
-      fontFamily: 'Inter, sans-serif',
-      toolbar: { show: false },
-      zoom: { enabled: false },
-      parentHeightOffset: 0,
-    },
-    series: [
-      {
-        name: 'Zlecenia',
-        data: [42, 48, 45, 58, 62, 55, 68, 72, 65, 78, 74, 82, 88, 92],
+  // ===== Wykres: operacje (area) — realne dane z `/dashboard/charts` =====
+  readonly area = computed<AreaChartConfig>(() => {
+    const trend = this._charts()?.orders_trend;
+    return {
+      chart: {
+        type: 'area',
+        height: 300,
+        fontFamily: 'Inter, sans-serif',
+        toolbar: { show: false },
+        zoom: { enabled: false },
+        parentHeightOffset: 0,
       },
-    ],
-    xaxis: {
-      categories: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14'],
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
-    },
-    yaxis: {
-      labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
-    },
-    stroke: { curve: 'smooth', width: 2.5 },
-    fill: {
-      type: 'gradient',
-      gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.03, stops: [0, 90, 100] },
-    },
-    grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } },
-    dataLabels: { enabled: false },
-    tooltip: { theme: 'light', marker: { show: true } },
-    legend: { show: false },
-    colors: ['#1e3a5f'],
-  };
+      series: [{ name: 'Zlecenia', data: trend?.series ?? [] }],
+      xaxis: {
+        categories: trend?.categories ?? [],
+        axisBorder: { show: false },
+        axisTicks: { show: false },
+        labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
+      },
+      yaxis: {
+        labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
+      },
+      stroke: { curve: 'smooth', width: 2.5 },
+      fill: {
+        type: 'gradient',
+        gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.03, stops: [0, 90, 100] },
+      },
+      grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } },
+      dataLabels: { enabled: false },
+      tooltip: { theme: 'light', marker: { show: true } },
+      legend: { show: false },
+      colors: ['#1e3a5f'],
+    };
+  });
 
-  // ===== Wykres: struktura floty (donut) =====
-  readonly donut: {
-    chart: ApexChart;
-    series: ApexNonAxisChartSeries;
-    labels: string[];
-    colors: string[];
-    legend: ApexLegend;
-    plotOptions: ApexPlotOptions;
-    dataLabels: ApexDataLabels;
-    stroke: ApexStroke;
-    tooltip: ApexTooltip;
-    responsive: ApexResponsive[];
-  } = {
-    chart: { type: 'donut', height: 300, fontFamily: 'Inter, sans-serif' },
-    series: [42, 28, 18, 12],
-    labels: ['Terminale', 'Pojazdy', 'Pracownicy', 'Inne'],
-    colors: ['#1e3a5f', '#3b82f6', '#f59e0b', '#22c55e'],
-    legend: { position: 'bottom', fontFamily: 'Inter, sans-serif', labels: { colors: '#475569' } },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '74%',
-          labels: {
-            show: true,
-            name: { show: false },
-            value: { show: true, fontSize: '24px', fontWeight: '700', color: '#172d49' },
-            total: { show: true, label: 'Szt.', color: '#64748b', fontSize: '12px' },
+  // ===== Wykres: struktura floty (donut) — realne dane z `/dashboard/charts` =====
+  readonly donut = computed<DonutChartConfig>(() => {
+    const fleet = this._charts()?.fleet_structure;
+    return {
+      chart: { type: 'donut', height: 300, fontFamily: 'Inter, sans-serif' },
+      series: fleet?.series ?? [],
+      labels: fleet?.labels ?? [],
+      colors: ['#f43f5e', '#3b82f6', '#f59e0b', '#22c55e'],
+      legend: { position: 'bottom', fontFamily: 'Inter, sans-serif', labels: { colors: '#475569' } },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '74%',
+            labels: {
+              show: true,
+              name: { show: false },
+              value: { show: true, fontSize: '24px', fontWeight: '700', color: '#172d49' },
+              total: { show: true, label: 'Szt.', color: '#64748b', fontSize: '12px' },
+            },
           },
         },
       },
-    },
-    dataLabels: { enabled: false },
-    stroke: { width: 3, colors: ['#ffffff'] },
-    tooltip: { theme: 'light' },
-    responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }],
-  };
+      dataLabels: { enabled: false },
+      stroke: { width: 3, colors: ['#ffffff'] },
+      tooltip: { theme: 'light' },
+      responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }],
+    };
+  });
 
-  // ===== Wykres: obrót per terminal (bar) =====
-  readonly bar: {
-    chart: ApexChart;
-    series: ApexAxisChartSeries;
-    xaxis: ApexXAxis;
-    yaxis: ApexYAxis;
-    plotOptions: ApexPlotOptions;
-    colors: string[];
-    fill: ApexFill;
-    grid: ApexGrid;
-    dataLabels: ApexDataLabels;
-    tooltip: ApexTooltip;
-    legend: ApexLegend;
-  } = {
-    chart: {
-      type: 'bar',
-      height: 300,
-      fontFamily: 'Inter, sans-serif',
-      toolbar: { show: false },
-      parentHeightOffset: 0,
-    },
-    series: [{ name: 'Wartość (tys. PLN)', data: [320, 460, 275, 540, 380, 410] }],
-    xaxis: {
-      categories: ['Terminal A', 'Terminal B', 'Terminal C', 'Terminal D', 'Terminal E', 'Terminal F'],
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
-    },
-    yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } },
-    plotOptions: {
-      bar: { borderRadius: 8, columnWidth: '55%', distributed: false },
-    },
-    colors: ['#1e3a5f'],
-    fill: {
-      type: 'gradient',
-      gradient: { shade: 'dark', type: 'vertical', shadeIntensity: 0.4, gradientToColors: ['#3b82f6'], opacityFrom: 1, opacityTo: 0.9, stops: [0, 100] },
-    },
-    grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } },
-    dataLabels: { enabled: false },
-    tooltip: { theme: 'light' },
-    legend: { show: false },
-  };
+  // ===== Wykres: obrót per terminal (bar) — realne dane z `/dashboard/charts` =====
+  readonly bar = computed<BarChartConfig>(() => {
+    const turnover = this._charts()?.terminal_turnover;
+    return {
+      chart: {
+        type: 'bar',
+        height: 300,
+        fontFamily: 'Inter, sans-serif',
+        toolbar: { show: false },
+        parentHeightOffset: 0,
+      },
+      series: [{ name: 'Wartość (PLN)', data: turnover?.series ?? [] }],
+      xaxis: {
+        categories: turnover?.categories ?? [],
+        axisBorder: { show: false },
+        axisTicks: { show: false },
+        labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
+      },
+      yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } },
+      plotOptions: {
+        bar: { borderRadius: 8, columnWidth: '55%', distributed: false },
+      },
+      colors: ['#1e3a5f'],
+      fill: {
+        type: 'gradient',
+        gradient: { shade: 'dark', type: 'vertical', shadeIntensity: 0.4, gradientToColors: ['#3b82f6'], opacityFrom: 1, opacityTo: 0.9, stops: [0, 100] },
+      },
+      grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } },
+      dataLabels: { enabled: false },
+      tooltip: { theme: 'light' },
+      legend: { show: false },
+    };
+  });
 
 }

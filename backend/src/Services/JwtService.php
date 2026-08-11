@@ -11,16 +11,37 @@ use Firebase\JWT\Key;
  * Serwis JWT — generacja i walidacja tokenów access oraz refresh.
  *
  * Claims: sub (user ID), role, permissions, iat, exp, jti, typ (access|refresh).
- * Algorytm: HS256 (dev) — docelowo RS256 na produkcji (Etap 15).
+ *
+ * Algorytm (dokumentacja sekcja 9.4):
+ *  - HS256 — środowisko developerskie (klucz symetryczny `JWT_SECRET`),
+ *  - RS256 — produkcja (asymetryczna para RSA 2048-bit; klucz prywatny w .env,
+ *    publiczny dystrybuowany).
  */
 final class JwtService
 {
+    private const array ALLOWED_ALGORITHMS = ['HS256', 'RS256'];
+
     private readonly string $secret;
     private readonly int $accessTtl;
     private readonly int $refreshTtl;
 
-    public function __construct(string $jwtSecret, int $accessTtl = 900, int $refreshTtl = 604800)
-    {
+    public function __construct(
+        string $jwtSecret,
+        int $accessTtl = 900,
+        int $refreshTtl = 604800,
+        private readonly string $algorithm = 'HS256',
+        private readonly ?string $privateKey = null,
+        private readonly ?string $publicKey = null,
+        private readonly string $issuer = 'pbs-backend',
+    ) {
+        if (!in_array($algorithm, self::ALLOWED_ALGORITHMS, true)) {
+            throw new \InvalidArgumentException("Unsupported JWT algorithm: {$algorithm}");
+        }
+
+        if ($algorithm === 'RS256' && ($privateKey === null || $publicKey === null)) {
+            throw new \InvalidArgumentException('RS256 requires both JWT_PRIVATE_KEY and JWT_PUBLIC_KEY');
+        }
+
         $this->secret = $jwtSecret;
         $this->accessTtl = $accessTtl;
         $this->refreshTtl = $refreshTtl;
@@ -36,7 +57,7 @@ final class JwtService
         $jti = $this->generateJti();
 
         $payload = [
-            'iss' => 'pbs-backend',
+            'iss' => $this->issuer,
             'sub' => $userId,
             'role' => $role,
             'permissions' => $permissions,
@@ -46,7 +67,7 @@ final class JwtService
             'typ' => 'access',
         ];
 
-        $token = JWT::encode($payload, $this->secret, 'HS256');
+        $token = JWT::encode($payload, $this->signingKey(), $this->algorithm);
 
         return [
             'token' => $token,
@@ -68,7 +89,7 @@ final class JwtService
         $tokenTtl = $ttl ?? $this->refreshTtl;
 
         $payload = [
-            'iss' => 'pbs-backend',
+            'iss' => $this->issuer,
             'sub' => $userId,
             'iat' => $now,
             'exp' => $now + $tokenTtl,
@@ -76,7 +97,7 @@ final class JwtService
             'typ' => 'refresh',
         ];
 
-        $token = JWT::encode($payload, $this->secret, 'HS256');
+        $token = JWT::encode($payload, $this->signingKey(), $this->algorithm);
 
         return [
             'token' => $token,
@@ -86,18 +107,23 @@ final class JwtService
     }
 
     /**
-     * @return object{sub?: int|string, role?: string, permissions?: array<string,bool>, jti?: string, typ?: string, exp?: int}|null
+     * @return object{sub?: int|string, role?: string, permissions?: array<string,bool>, jti?: string, typ?: string, exp?: int, iss?: string}|null
      */
     public function validateToken(string $token, string $expectedType = 'access'): ?object
     {
         try {
-            $decoded = JWT::decode($token, new Key($this->secret, 'HS256'));
+            $decoded = JWT::decode($token, new Key($this->verificationKey(), $this->algorithm));
         } catch (\Throwable) {
             return null;
         }
 
         /** @var object{typ?: string} $decoded */
         if (!isset($decoded->typ) || $decoded->typ !== $expectedType) {
+            return null;
+        }
+
+        /** @var object{iss?: string} $decoded */
+        if (isset($decoded->iss) && $decoded->iss !== $this->issuer) {
             return null;
         }
 
@@ -112,6 +138,40 @@ final class JwtService
     public function refreshTtl(): int
     {
         return $this->refreshTtl;
+    }
+
+    public function algorithm(): string
+    {
+        return $this->algorithm;
+    }
+
+    public function issuer(): string
+    {
+        return $this->issuer;
+    }
+
+    /**
+     * Klucz używany do podpisywania tokenów.
+     */
+    private function signingKey(): string
+    {
+        if ($this->algorithm === 'RS256') {
+            return $this->privateKey ?? '';
+        }
+
+        return $this->secret;
+    }
+
+    /**
+     * Klucz używany do weryfikacji podpisu.
+     */
+    private function verificationKey(): string
+    {
+        if ($this->algorithm === 'RS256') {
+            return $this->publicKey ?? '';
+        }
+
+        return $this->secret;
     }
 
     private function generateJti(): string

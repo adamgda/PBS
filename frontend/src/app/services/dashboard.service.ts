@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { DashboardSummary, DashboardAlerts } from '../models/dashboard.model';
+import { DashboardSummary, DashboardAlerts, DashboardCharts } from '../models/dashboard.model';
 
 /**
  * Serwis sekcji Dashboard (Etap 13).
- * Endpointy read-only: summary (KPI) oraz alerts (lista alertów).
+ * Endpointy read-only: summary (KPI), alerts (lista alertów) oraz
+ * charts (dane wykresów i aktywności).
  */
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
@@ -20,5 +21,9 @@ export class DashboardService {
 
   alerts(): Observable<DashboardAlerts> {
     return this.http.get<DashboardAlerts>(`${this.apiUrl}/dashboard/alerts`);
+  }
+
+  charts(): Observable<DashboardCharts> {
+    return this.http.get<DashboardCharts>(`${this.apiUrl}/dashboard/charts`);
   }
 }

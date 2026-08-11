@@ -22,9 +22,11 @@ use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\CorsMiddleware;
+use App\Middleware\CsrfMiddleware;
 use App\Middleware\MiddlewarePipeline;
 use App\Middleware\PermissionMiddleware;
 use App\Middleware\RateLimiterMiddleware;
+use App\Middleware\SecurityHeadersMiddleware;
 use App\Repository\AlertConfigRepository;
 use App\Repository\AlertNotificationRepository;
 use App\Repository\AlertSourceRepository;
@@ -50,10 +52,12 @@ use App\Repository\UserRepository;
 use App\Repository\UserNoteRepository;
 use App\Repository\VehicleDetailsRepository;
 use App\Router\Router;
+use App\Security\RateLimitStore;
 use App\Services\AlertSettingsService;
 use App\Services\AuthService;
 use App\Services\AnalyticsService;
 use App\Services\ClamAvScanner;
+use App\Services\CryptoService;
 use App\Services\DashboardService;
 use App\Services\EmployeeService;
 use App\Services\EquipmentService;
@@ -112,15 +116,52 @@ final class App
         $alertSourceRepository = new AlertSourceRepository($pdo);
 
         // === Serwisy ===
+        $isProduction = $config->isProduction();
+        $appDebug = $config->getBool('APP_DEBUG', false);
+
+        // === Bezpieczeństwo: walidacja konfiguracji produkcji (Etap 15) ===
+        if ($isProduction && $appDebug) {
+            throw new \RuntimeException('APP_DEBUG must be false in production');
+        }
+
         $jwtSecret = $config->get('JWT_SECRET', 'dev-secret-key-change-in-production') ?? 'dev-secret-key-change-in-production';
+        if ($isProduction && (strlen($jwtSecret) < 32 || $jwtSecret === 'dev-secret-key-change-in-production')) {
+            throw new \RuntimeException('JWT_SECRET must be at least 32 chars and not the dev default in production');
+        }
+
         $accessTtl = (int) ($config->get('JWT_ACCESS_TTL', '900') ?? '900');
         $refreshTtl = (int) ($config->get('JWT_REFRESH_TTL', '604800') ?? '604800');
 
-        $jwtService = new JwtService($jwtSecret, $accessTtl, $refreshTtl);
+        // === JWT algorithm: RS256 na produkcji, HS256 w dev (dokumentacja 9.4) ===
+        $jwtAlgorithm = $config->get('JWT_ALGORITHM', $isProduction ? 'RS256' : 'HS256') ?? ($isProduction ? 'RS256' : 'HS256');
+        $jwtPrivateKey = $config->get('JWT_PRIVATE_KEY');
+        $jwtPublicKey = $config->get('JWT_PUBLIC_KEY');
+
+        $jwtService = new JwtService($jwtSecret, $accessTtl, $refreshTtl, $jwtAlgorithm, $jwtPrivateKey, $jwtPublicKey);
+
+        // === Usługi bezpieczeństwa (Etap 15) ===
+        $cryptoService = new CryptoService($config->get('APP_KEY', '') ?? '');
+        $rateLimitStore = new RateLimitStore();
+
+        // === CORS whitelist z .env (dokumentacja 9.3) ===
+        $allowedOrigins = array_filter(
+            array_map('trim', explode(',', $config->get('CORS_ALLOWED_ORIGINS', 'http://localhost:4200') ?? 'http://localhost:4200')),
+            static fn (string $origin): bool => $origin !== '',
+        );
+
+        // Produkcja: wildcard '*' w CORS jest zabroniony.
+        if ($isProduction && in_array('*', $allowedOrigins, true)) {
+            throw new \RuntimeException('Wildcard CORS origin "*" is not allowed in production');
+        }
+
+        $csrfSigningKey = $config->get('APP_KEY', '') ?? '';
+        $csrfEnforce = $config->getBool('CSRF_ENFORCE', false);
+        $csrfMiddleware = new CsrfMiddleware($allowedOrigins, $csrfSigningKey !== '' ? $csrfSigningKey : $jwtSecret, $csrfEnforce);
+        $securityHeadersMiddleware = new SecurityHeadersMiddleware($isProduction);
+
         $passwordPolicyService = new PasswordPolicyService();
         $mailService = new MailService($config);
         $frontendBaseUrl = $config->get('FRONTEND_BASE_URL', 'http://localhost:4200') ?? 'http://localhost:4200';
-        $appDebug = filter_var($config->get('APP_DEBUG', 'false'), FILTER_VALIDATE_BOOL);
         $authService = new AuthService(
             $userRepository,
             $refreshTokenRepository,
@@ -131,11 +172,12 @@ final class App
             $mailService,
             $frontendBaseUrl,
             $appDebug,
+            $rateLimitStore,
         );
 
         // === Kontrolery ===
         $healthController = new HealthController();
-        $authController = new AuthController($authService, $appDebug);
+        $authController = new AuthController($authService, $appDebug, $csrfMiddleware);
         $userService = new UserService(
             $userRepository,
             $passwordResetRepository,
@@ -349,6 +391,7 @@ final class App
             ['method' => 'POST', 'path' => '/api/v1/auth/logout', 'handler' => [$authController, 'logout']],
             ['method' => 'POST', 'path' => '/api/v1/auth/forgot-password', 'handler' => [$authController, 'forgotPassword']],
             ['method' => 'POST', 'path' => '/api/v1/auth/set-password', 'handler' => [$authController, 'setPassword']],
+            ['method' => 'GET', 'path' => '/api/v1/auth/csrf', 'handler' => [$authController, 'csrf']],
 
             // Szybkie notatki to-do (Etap 19) — globalny widget, wymaga logowania (bez uprawnienia sekcji)
             ['method' => 'GET', 'path' => '/api/v1/notes', 'handler' => [$noteController, 'index']],
@@ -465,23 +508,16 @@ final class App
             // Sekcja Dashboard (Etap 13) — wymagane uprawnienie `dashboard`
             ['method' => 'GET', 'path' => '/api/v1/dashboard/summary', 'handler' => $dashboardGuard([$dashboardController, 'summary'])],
             ['method' => 'GET', 'path' => '/api/v1/dashboard/alerts', 'handler' => $dashboardGuard([$dashboardController, 'alerts'])],
+            ['method' => 'GET', 'path' => '/api/v1/dashboard/charts', 'handler' => $dashboardGuard([$dashboardController, 'charts'])],
 
         ];
 
         $this->router = new Router($routes);
 
-        // === Middleware ===
-        $allowedOrigins = array_filter(
-            array_map('trim', explode(',', $this->config->get('CORS_ALLOWED_ORIGINS', 'http://localhost:4200') ?? 'http://localhost:4200')),
-            static fn (string $origin): bool => $origin !== '',
-        );
-
+        // === Middleware (kolejność: CORS → SecurityHeaders → Auth → Csrf → RateLimiter → Router) ===
         $middleware = [
             new CorsMiddleware($allowedOrigins),
-            new RateLimiterMiddleware(
-                maxRequests: 100,
-                windowSeconds: 60,
-            ),
+            $securityHeadersMiddleware,
             new AuthMiddleware(
                 jwtSecret: $jwtSecret,
                 publicRoutes: [
@@ -491,6 +527,14 @@ final class App
                     '/api/v1/auth/forgot-password',
                     '/api/v1/auth/set-password',
                 ],
+                algorithm: $jwtAlgorithm,
+                publicKey: $jwtPublicKey,
+            ),
+            $csrfMiddleware,
+            new RateLimiterMiddleware(
+                maxIpRequests: 100,
+                maxUserRequests: 1000,
+                windowSeconds: 60,
             ),
         ];
 

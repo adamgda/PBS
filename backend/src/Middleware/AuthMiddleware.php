@@ -16,11 +16,14 @@ use UnexpectedValueException;
  * Middleware Auth — weryfikuje token JWT (access) w nagłówku Authorization.
  * Poprawny token ładuje claims do atrybutów requesta: user_id, role, permissions.
  *
- * Algorytm: HS256 (dev) — docelowo RS256 na produkcji (Etap 15).
+ * Algorytm (dokumentacja 9.4): HS256 w dev, RS256 na produkcji — jawnie wskazany,
+ * z walidacją issuera.
  */
 final class AuthMiddleware implements MiddlewareInterface
 {
     private readonly string $secret;
+    private readonly string $algorithm;
+    private readonly string $issuer;
 
     /**
      * @param array<int, string> $publicRoutes ścieżki niewymagające autoryzacji
@@ -28,8 +31,13 @@ final class AuthMiddleware implements MiddlewareInterface
     public function __construct(
         string $jwtSecret,
         private readonly array $publicRoutes = [],
+        string $algorithm = 'HS256',
+        private readonly ?string $publicKey = null,
+        string $issuer = 'pbs-backend',
     ) {
         $this->secret = $jwtSecret;
+        $this->algorithm = $algorithm;
+        $this->issuer = $issuer;
     }
 
     public function process(Request $request, callable $next): Response
@@ -52,7 +60,7 @@ final class AuthMiddleware implements MiddlewareInterface
         }
 
         try {
-            $decoded = JWT::decode($token, new Key($this->secret, 'HS256'));
+            $decoded = JWT::decode($token, new Key($this->verificationKey(), $this->algorithm));
         } catch (ExpiredException) {
             return Response::error(401, 'Token expired');
         } catch (SignatureInvalidException) {
@@ -65,6 +73,12 @@ final class AuthMiddleware implements MiddlewareInterface
         /** @var object{typ?: string} $decoded */
         if (!isset($decoded->typ) || $decoded->typ !== 'access') {
             return Response::error(401, 'Invalid token type');
+        }
+
+        // Walidacja issuera
+        /** @var object{iss?: string} $decoded */
+        if (isset($decoded->iss) && $decoded->iss !== $this->issuer) {
+            return Response::error(401, 'Invalid token issuer');
         }
 
         /** @var object{sub?: int|string, role?: string, permissions?: array<string,bool>} $decoded */
@@ -81,5 +95,17 @@ final class AuthMiddleware implements MiddlewareInterface
         $request->setAttribute('permissions', $permissions);
 
         return $next($request);
+    }
+
+    /**
+     * Klucz używany do weryfikacji podpisu.
+     */
+    private function verificationKey(): string
+    {
+        if ($this->algorithm === 'RS256') {
+            return $this->publicKey ?? '';
+        }
+
+        return $this->secret;
     }
 }

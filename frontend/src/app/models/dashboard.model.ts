@@ -28,3 +28,32 @@ export interface DashboardAlerts {
   unresolved_incidents: DashboardAlertGroup;
   returning_from_leave: DashboardAlertGroup;
 }
+
+export interface DashboardOrdersTrend {
+  categories: string[];
+  series: number[];
+  trend_pct: number;
+}
+
+export interface DashboardFleetStructure {
+  labels: string[];
+  series: number[];
+}
+
+export interface DashboardTerminalTurnover {
+  categories: string[];
+  series: number[];
+}
+
+export interface DashboardActivityItem {
+  type: string;
+  title: string;
+  time: string | null;
+}
+
+export interface DashboardCharts {
+  orders_trend: DashboardOrdersTrend;
+  fleet_structure: DashboardFleetStructure;
+  terminal_turnover: DashboardTerminalTurnover;
+  activity: DashboardActivityItem[];
+}

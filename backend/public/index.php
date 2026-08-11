@@ -15,6 +15,10 @@ $appDebug = filter_var($_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG') ?: 'false', FIL
 $apiBaseUrl = $_ENV['API_BASE_URL'] ?? getenv('API_BASE_URL') ?: 'http://localhost:8080';
 $isProduction = !str_contains($apiBaseUrl, 'localhost');
 
+// display_errors — tylko w dev; stack trace wyłącznie w logach (dokumentacja 14.5).
+ini_set('display_errors', $appDebug ? '1' : '0');
+ini_set('display_startup_errors', $appDebug ? '1' : '0');
+
 if ($isProduction && $appDebug) {
     http_response_code(500);
     header('Content-Type: application/json');

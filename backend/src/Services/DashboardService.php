@@ -56,6 +56,63 @@ final class DashboardService
     }
 
     /**
+     * Dane wykresów, aktywności i trendu area dla dashboardu.
+     *
+     * @return array<string, mixed>
+     */
+    public function charts(): array
+    {
+        $trend = $this->dashboardRepository->ordersTrend(14);
+        $fleet = $this->dashboardRepository->fleetStructure();
+        $turnover = $this->dashboardRepository->terminalTurnover(
+            date('Y-m-01') . ' 00:00:00',
+            date('Y-m-t') . ' 23:59:59',
+        );
+        $activity = $this->dashboardRepository->recentActivity(8);
+
+        return [
+            'orders_trend' => [
+                'categories' => array_values(array_map(
+                    static fn (mixed $v): string => is_string($v) ? $v : '',
+                    $trend['categories'] ?? [],
+                )),
+                'series' => array_map(
+                    fn (mixed $v): int => $this->toInt($v),
+                    $trend['series'] ?? [],
+                ),
+                'trend_pct' => $this->toFloat($trend['trend_pct'] ?? 0),
+            ],
+            'fleet_structure' => [
+                'labels' => ['Terminale', 'Pojazdy', 'Pracownicy', 'Inny sprzęt'],
+                'series' => [
+                    $this->toInt($fleet['terminals'] ?? 0),
+                    $this->toInt($fleet['vehicles'] ?? 0),
+                    $this->toInt($fleet['employees'] ?? 0),
+                    $this->toInt($fleet['other_equipment'] ?? 0),
+                ],
+            ],
+            'terminal_turnover' => [
+                'categories' => array_map(
+                    fn (array $row): string => $this->nullableString($row['nazwa'] ?? null) ?? '',
+                    $turnover,
+                ),
+                'series' => array_map(
+                    fn (array $row): float => $this->toFloat($row['turnover'] ?? 0),
+                    $turnover,
+                ),
+            ],
+            'activity' => array_map(
+                fn (array $row): array => [
+                    'type' => is_string($row['type'] ?? null) ? $row['type'] : 'other',
+                    'title' => $this->nullableString($row['title'] ?? null) ?? '',
+                    'time' => is_string($row['ts'] ?? null) ? $row['ts'] : null,
+                ],
+                $activity,
+            ),
+        ];
+    }
+
+    /**
      * Normalizuje grupę alertów (licznik + lista pozycji).
      *
      * @param array<string, mixed> $group
@@ -85,6 +142,16 @@ final class DashboardService
         }
 
         return 0;
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     private function toFloat(mixed $value): float

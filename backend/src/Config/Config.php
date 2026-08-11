@@ -30,6 +30,26 @@ final class Config
         return $this->values[$key] ?? $default;
     }
 
+    public function getBool(string $key, bool $default = false): bool
+    {
+        $value = $this->values[$key] ?? null;
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOL);
+    }
+
+    /**
+     * Uznajemy środowisko za produkcyjne, gdy domena API nie wskazuje na localhost.
+     */
+    public function isProduction(): bool
+    {
+        $apiBaseUrl = $this->get('API_BASE_URL', 'http://localhost:8080') ?? 'http://localhost:8080';
+
+        return !str_contains($apiBaseUrl, 'localhost');
+    }
+
     public function getRequired(string $key): string
     {
         $value = $this->values[$key] ?? null;

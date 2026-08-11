@@ -92,3 +92,36 @@ it('alerts normalizes missing groups to empty', function (): void {
     expect($response->data()['expiring_certs']['items'])->toBe([]);
     expect($response->data()['returning_from_leave']['count'])->toBe(0);
 });
+
+it('charts returns chart and activity data', function (): void {
+    $this->dashboardRepository->shouldReceive('ordersTrend')->once()->andReturn([
+        'categories' => ['10.08', '11.08'],
+        'series' => [2, 4],
+        'trend_pct' => 33.3,
+    ]);
+    $this->dashboardRepository->shouldReceive('fleetStructure')->once()->andReturn([
+        'terminals' => 3,
+        'vehicles' => 3,
+        'employees' => 5,
+        'other_equipment' => 3,
+    ]);
+    $this->dashboardRepository->shouldReceive('terminalTurnover')->once()->andReturn([
+        ['nazwa' => 'Terminal Gdańsk', 'turnover' => '5000.00'],
+        ['nazwa' => 'Terminal Gdynia', 'turnover' => '7500.00'],
+    ]);
+    $this->dashboardRepository->shouldReceive('recentActivity')->once()->andReturn([
+        ['type' => 'order', 'title' => 'ZL-2026-001 · Baltic Operator Sp. z o.o.', 'ts' => '2026-08-11 08:00:00'],
+        ['type' => 'incident', 'title' => 'Nieszczelny układ hydrauliczny', 'ts' => '2026-08-11 09:00:00'],
+    ]);
+
+    $response = $this->dashboardController->charts(dashboardRequest());
+    expect($response->statusCode())->toBe(200);
+    expect($response->data()['orders_trend']['categories'])->toBe(['10.08', '11.08']);
+    expect($response->data()['orders_trend']['series'])->toBe([2, 4]);
+    expect($response->data()['orders_trend']['trend_pct'])->toBe(33.3);
+    expect($response->data()['fleet_structure']['series'])->toBe([3, 3, 5, 3]);
+    expect($response->data()['terminal_turnover']['categories'])->toBe(['Terminal Gdańsk', 'Terminal Gdynia']);
+    expect($response->data()['terminal_turnover']['series'])->toBe([5000.0, 7500.0]);
+    expect($response->data()['activity'][0]['type'])->toBe('order');
+    expect($response->data()['activity'][1]['title'])->toBe('Nieszczelny układ hydrauliczny');
+});

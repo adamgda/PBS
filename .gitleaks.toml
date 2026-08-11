@@ -1,0 +1,23 @@
+# Gitleaks — konfiguracja skanowania sekretów (dokumentacja 9.6).
+# Uruchomienie: gitleaks detect --source . -c .gitleaks.toml
+
+[extend]
+useDefault = true
+
+# Wyklucz katalogi vendor/build — nie zawierają sekretów projektu
+[allowlist]
+description = "Globalne wykluczenia"
+paths = [
+    "backend/vendor/",
+    "frontend/node_modules/",
+    "frontend/dist/",
+    ".git/",
+]
+
+# Jawne sekrety testowe / placeholdery dozwolone w kodzie
+[[rules]]
+id = "pbs-dev-placeholders"
+description = "Wartości zastępcze używane tylko w dev"
+regex = '''dev-secret-key-change-in-production|ZMIEN_NA|TEST_'''
+secretGroup = 1
+allowlist = []

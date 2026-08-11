@@ -40,4 +40,14 @@ final class DashboardController extends Controller
     {
         return $this->json($this->dashboardService->alerts(), 200);
     }
+
+    /**
+     * GET /api/v1/dashboard/charts — dane wykresów i aktywności.
+     *
+     * @param array<string, string> $params
+     */
+    public function charts(Request $request, array $params = []): Response
+    {
+        return $this->json($this->dashboardService->charts(), 200);
+    }
 }

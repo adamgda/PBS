@@ -59,6 +59,17 @@ describe('DashboardComponent', () => {
       unresolved_incidents: { count: 3, items: [] },
       returning_from_leave: { count: 5, items: [] },
     });
+
+    const chartsReq = httpMock.expectOne(`${environment.apiUrl}/dashboard/charts`);
+    chartsReq.flush({
+      orders_trend: { categories: ['10.08', '11.08'], series: [2, 4], trend_pct: 33.3 },
+      fleet_structure: { labels: ['Terminale', 'Pojazdy', 'Pracownicy', 'Inny sprzęt'], series: [3, 3, 5, 3] },
+      terminal_turnover: { categories: ['Terminal Gdańsk', 'Terminal Gdynia'], series: [5000, 7500] },
+      activity: [
+        { type: 'order', title: 'ZL-2026-001 · Baltic Operator Sp. z o.o.', time: '2026-08-11 08:00:00' },
+        { type: 'incident', title: 'Nieszczelny układ hydrauliczny', time: '2026-08-11 09:00:00' },
+      ],
+    });
   }
 
   it('powinien utworzyć komponent i pobrać dane KPI oraz alerty', () => {
@@ -113,5 +124,59 @@ describe('DashboardComponent', () => {
     flushData();
 
     expect(fixture.componentInstance.userName()).toBe('Jan.kowalski');
+  });
+
+  it('charts() zapisuje dane wykresów i aktywności z API', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    flushData();
+
+    const comp = fixture.componentInstance;
+    expect(comp.charts()?.orders_trend.series).toEqual([2, 4]);
+    expect(comp.charts()?.orders_trend.trend_pct).toBe(33.3);
+    expect(comp.charts()?.fleet_structure.series).toEqual([3, 3, 5, 3]);
+    expect(comp.charts()?.terminal_turnover.categories).toEqual(['Terminal Gdańsk', 'Terminal Gdynia']);
+    expect(comp.charts()?.activity).toHaveSize(2);
+  });
+
+  it('area() buduje serie wykresu z realnych danych i areaTrend() zwraca trend', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    flushData();
+
+    const comp = fixture.componentInstance;
+    const area = comp.area();
+    expect(area.series[0]).toEqual({ name: 'Zlecenia', data: [2, 4] });
+    expect(area.xaxis.categories).toEqual(['10.08', '11.08']);
+    expect(comp.areaTrend()).toBe(33.3);
+  });
+
+  it('donut() i bar() używają realnych danych z API', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    flushData();
+
+    const comp = fixture.componentInstance;
+    expect(comp.donut().series).toEqual([3, 3, 5, 3]);
+    expect(comp.donut().labels).toEqual(['Terminale', 'Pojazdy', 'Pracownicy', 'Inny sprzęt']);
+    expect(comp.bar().series[0].data).toEqual([5000, 7500]);
+    expect(comp.bar().xaxis.categories).toEqual(['Terminal Gdańsk', 'Terminal Gdynia']);
+  });
+
+  it('activity() mapuje realne zdarzenia na oś czasu', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    flushData();
+
+    const activity = fixture.componentInstance.activity();
+    expect(activity).toHaveSize(2);
+    expect(activity[0].titleKey).toBe('dashboard.activity.item_order_created');
+    expect(activity[0].title).toBe('ZL-2026-001 · Baltic Operator Sp. z o.o.');
+    expect(activity[1].titleKey).toBe('dashboard.activity.item_incident_reported');
+  });
+
+  it('kpis() nie zawiera już statycznych trendów/sparklin', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    flushData();
+
+    const kpis = fixture.componentInstance.kpis();
+    expect(Object.keys(kpis[0])).not.toContain('trend');
+    expect(Object.keys(kpis[0])).not.toContain('sparkline');
   });
 });

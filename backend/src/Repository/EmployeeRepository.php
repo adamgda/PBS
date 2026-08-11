@@ -38,7 +38,7 @@ class EmployeeRepository extends BaseRepository
     /**
      * Wyszukiwanie pracowników z paginacją, filtrowaniem i sortowaniem.
      *
-     * @param array{imie?: string, nazwisko?: string, terminal_id?: string, sprzet_id?: string, is_active?: string} $filters
+     * @param array{q?: string, imie?: string, nazwisko?: string, terminal_id?: string, sprzet_id?: string, is_active?: string} $filters
      * @return array<int, array<string, mixed>>
      */
     public function search(array $filters, int $limit, int $offset, string $sort, string $direction): array
@@ -102,7 +102,7 @@ class EmployeeRepository extends BaseRepository
     }
 
     /**
-     * @param array{imie?: string, nazwisko?: string, terminal_id?: string, sprzet_id?: string, is_active?: string} $filters
+     * @param array{q?: string, imie?: string, nazwisko?: string, terminal_id?: string, sprzet_id?: string, is_active?: string} $filters
      */
     public function countSearch(array $filters): int
     {

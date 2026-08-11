@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Http\Request;
 use App\Http\Response;
+use App\Middleware\CsrfMiddleware;
 use App\Services\AuthService;
 
 /**
@@ -15,13 +16,33 @@ use App\Services\AuthService;
  * POST /api/v1/auth/logout
  * POST /api/v1/auth/forgot-password
  * POST /api/v1/auth/set-password
+ * GET  /api/v1/auth/csrf (wystawienie tokena CSRF)
  */
 final class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService,
         private readonly bool $debug = false,
+        private readonly ?CsrfMiddleware $csrfMiddleware = null,
     ) {}
+
+    /**
+     * Wystawia token CSRF dla zalogowanego użytkownika (Etap 15).
+     *
+     * @param array<string, string> $params
+     */
+    public function csrf(Request $request, array $params = []): Response
+    {
+        if ($this->csrfMiddleware === null) {
+            return $this->error(404, 'CSRF not configured');
+        }
+
+        $userId = $request->attribute('user_id');
+        $token = $this->csrfMiddleware->issueToken(is_int($userId) ? (string) $userId : '');
+
+        return $this->json(['csrf_token' => $token], 200);
+    }
+
 
     /**
      * @param array<string, string> $params

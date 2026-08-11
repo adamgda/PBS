@@ -77,4 +77,45 @@ describe('JwtService', function (): void {
         $decoded = $this->service->validateToken($result['token'], 'access');
         expect($decoded)->toBeNull();
     });
+
+    it('supports RS256 with an RSA key pair (production)', function (): void {
+        $res = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+        expect($res)->not->toBe(false);
+
+        /** @var \OpenSSLAsymmetricKey $res */
+        $privateKey = '';
+        expect(openssl_pkey_export($res, $privateKey))->toBeTrue();
+        $details = openssl_pkey_get_details($res);
+        expect($details)->not->toBe(false);
+        $publicKey = (string) $details['key'];
+
+        $rs256 = new JwtService('ignored-in-rs256', 900, 604800, 'RS256', $privateKey, $publicKey);
+
+        $token = $rs256->generateAccessToken(7, 'admin', ['dashboard' => true]);
+        $decoded = $rs256->validateToken($token['token'], 'access');
+
+        expect($decoded)->not->toBeNull();
+        expect((int) $decoded->sub)->toBe(7);
+        expect($decoded->typ)->toBe('access');
+    });
+
+    it('rejects token signed with a different issuer', function (): void {
+        $issuerA = new JwtService('test-secret-key-for-testing-only-32chars!', 900, 604800, issuer: 'pbs-backend');
+        $issuerB = new JwtService('test-secret-key-for-testing-only-32chars!', 900, 604800, issuer: 'attacker');
+
+        $token = $issuerA->generateAccessToken(1, 'user', []);
+        $decoded = $issuerB->validateToken($token['token'], 'access');
+
+        expect($decoded)->toBeNull();
+    });
+
+    it('throws for unsupported algorithm', function (): void {
+        expect(fn () => new JwtService('secret', 900, 604800, 'none'))
+            ->toThrow(InvalidArgumentException::class);
+    });
+
+    it('throws when RS256 is selected without keys', function (): void {
+        expect(fn () => new JwtService('secret', 900, 604800, 'RS256'))
+            ->toThrow(InvalidArgumentException::class);
+    });
 });

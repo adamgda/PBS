@@ -143,7 +143,7 @@ it('CORS middleware handles preflight OPTIONS with allowed origin and short-circ
 });
 
 it('RateLimiter allows requests within limit', function (): void {
-    $middleware = new RateLimiterMiddleware(maxRequests: 5, windowSeconds: 60);
+    $middleware = new RateLimiterMiddleware(maxIpRequests: 5, windowSeconds: 60);
 
     $request = new Request(query: [], body: [], headers: []);
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
@@ -157,7 +157,7 @@ it('RateLimiter allows requests within limit', function (): void {
 });
 
 it('RateLimiter blocks requests exceeding limit', function (): void {
-    $middleware = new RateLimiterMiddleware(maxRequests: 2, windowSeconds: 60);
+    $middleware = new RateLimiterMiddleware(maxIpRequests: 2, windowSeconds: 60);
 
     $request = new Request(query: [], body: [], headers: []);
     $_SERVER['REMOTE_ADDR'] = '127.0.0.2';
