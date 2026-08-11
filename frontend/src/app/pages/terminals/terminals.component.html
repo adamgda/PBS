@@ -1,13 +1,13 @@
 <!-- Nagłówek sekcji -->
 <div>
-  <h1 class="text-2xl font-bold text-gray-900">{{ 'terminale.title' | translate }}</h1>
-  <p class="mt-1 text-gray-600">{{ 'terminale.subtitle' | translate }}</p>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'terminale.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'terminale.subtitle' | translate }}</p>
 </div>
 
 <!-- Lista terminali -->
 <div class="mt-5">
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-gray-900">{{ 'terminale.list.all_terminals' | translate }}</h2>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'terminale.list.all_terminals' | translate }}</h2>
     <app-add-button [label]="'terminale.buttons.add'" (add)="openCreate()" />
   </div>
 
@@ -68,36 +68,36 @@
 </div>
 
 <!-- ===== Suma godzin per port (pod tabelą) ===== -->
-<section class="mt-6 overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100">
-  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4">
+<section class="mt-6 overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 dark:border-slate-800">
     <div class="flex min-w-0 items-center gap-3">
-      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-600">
+      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400">
         <app-svg-icon name="chart" size="sm" />
       </span>
       <div class="min-w-0">
-        <h3 class="truncate font-semibold text-gray-900">{{ 'terminale.hours.title' | translate }}</h3>
-        <p class="text-xs text-gray-500">{{ 'terminale.hours.subtitle' | translate }}</p>
+        <h3 class="truncate font-semibold text-gray-900 dark:text-white">{{ 'terminale.hours.title' | translate }}</h3>
+        <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'terminale.hours.subtitle' | translate }}</p>
       </div>
     </div>
-    <span class="text-xs font-medium text-gray-500">{{ hoursMonthLabel() }}</span>
+    <span class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ hoursMonthLabel() }}</span>
   </div>
   <div class="p-4">
     @if (hoursLoading()) {
-      <div class="flex items-center justify-center gap-3 p-8 text-gray-400">
+      <div class="flex items-center justify-center gap-3 p-8 text-gray-400 dark:text-slate-500">
         <app-svg-icon name="spinner" size="md" class="animate-spin text-pbs-secondary" />
         <span class="text-sm">{{ 'common.table.loading' | translate }}</span>
       </div>
     } @else if (hoursPorts().length === 0) {
-      <p class="text-sm text-gray-400">{{ 'terminale.hours.empty' | translate }}</p>
+      <p class="text-sm text-gray-400 dark:text-slate-500">{{ 'terminale.hours.empty' | translate }}</p>
     } @else {
       <div class="space-y-4">
         @for (row of hoursPorts(); track row.terminal_id; let i = $index) {
           <div>
             <div class="mb-1 flex items-center justify-between text-sm">
-              <span class="font-medium text-gray-800">{{ row.terminal_nazwa }} — {{ row.suma_godzin }} h</span>
-              <span class="text-gray-500">{{ row.suma_wynagrodzen | number: '1.0-0' }} zł</span>
+              <span class="font-medium text-gray-800 dark:text-slate-200">{{ row.terminal_nazwa }} — {{ row.suma_godzin }} h</span>
+              <span class="text-gray-500 dark:text-slate-400">{{ row.suma_wynagrodzen | number: '1.0-0' }} zł</span>
             </div>
-            <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+            <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-slate-800">
               <div
                 class="h-full rounded-full transition-all"
                 [class]="hoursBarColor(i)"
@@ -110,9 +110,9 @@
     }
   </div>
   @if (hoursTotalRow(); as total) {
-    <div class="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-sm font-semibold text-gray-800">
+    <div class="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 dark:border-slate-800 dark:text-slate-200">
       <span>{{ 'terminale.hours.total' | translate }}</span>
-      <span class="text-emerald-700">{{ total.suma_godzin }} h · {{ total.suma_wynagrodzen | number: '1.0-0' }} zł</span>
+      <span class="text-emerald-700 dark:text-emerald-400">{{ total.suma_godzin }} h · {{ total.suma_wynagrodzen | number: '1.0-0' }} zł</span>
     </div>
   }
 </section>
@@ -120,9 +120,9 @@
 <!-- ===== Modal: dodawanie / edycja terminala ===== -->
 @if (modalMode() === 'create' || modalMode() === 'edit') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ modalMode() === 'edit' ? ('terminale.form.edit_title' | translate) : ('terminale.form.add_title' | translate) }}
         </h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
@@ -174,7 +174,7 @@
       />
 
       <div class="mb-4 flex items-center gap-2">
-        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300">
           <input
             type="checkbox"
             class="h-4 w-4 rounded accent-pbs-primary"

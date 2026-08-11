@@ -3,6 +3,11 @@
   "welcome": "Dzień dobry",
   "welcome_suffix": "w systemie PORTBS",
   "last_update": "Dane na dzień",
+  "hero": {
+    "hours_today": "Przepracowane godziny dziś",
+    "employees_on_leave": "Pracownicy na urlopie",
+    "monthly_wages": "Suma wynagrodzeń (miesiąc)"
+  },
   "error": "Nie udało się pobrać danych dashboardu. Spróbuj ponownie później.",
   "kpi": {
     "active_employees": "Aktywni pracownicy",

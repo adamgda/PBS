@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { OrdersService } from '../../services/orders.service';
 import { TerminalsService } from '../../services/terminals.service';
@@ -101,6 +102,7 @@ export class OrdersComponent {
   private readonly toastService = inject(ToastService);
   private readonly confirmService = inject(ConfirmService);
   private readonly translate = inject(TranslateService);
+  private readonly router = inject(Router);
 
   private readonly _orders = signal<Order[]>([]);
   private readonly _loading = signal<boolean>(false);
@@ -268,6 +270,11 @@ export class OrdersComponent {
   constructor() {
     this.load();
     this.loadOptions();
+  }
+
+  /** Przejście do podstrony „Nowe zlecenie" (formularz poza modalem). */
+  goToNewOrder(): void {
+    this.router.navigate(['/harmonogram/nowe']);
   }
 
   // --- Lista ---
@@ -811,9 +818,9 @@ export class OrdersComponent {
   /** Klasy Tailwind dla karty zlecenia w siatce (wg statusu, jak na mocku). */
   cardColorClasses(status: OrderStatus): string {
     const map: Record<OrderStatus, string> = {
-      nowe: 'bg-cyan-50 border-cyan-500 text-cyan-800',
-      w_realizacji: 'bg-amber-50 border-amber-500 text-amber-800',
-      zakonczone: 'bg-emerald-50 border-emerald-500 text-emerald-800',
+      nowe: 'bg-cyan-50 border-cyan-500 text-cyan-800 dark:bg-cyan-500/20 dark:border-cyan-400 dark:text-cyan-100',
+      w_realizacji: 'bg-amber-50 border-amber-500 text-amber-800 dark:bg-amber-500/20 dark:border-amber-400 dark:text-amber-100',
+      zakonczone: 'bg-emerald-50 border-emerald-500 text-emerald-800 dark:bg-emerald-500/20 dark:border-emerald-400 dark:text-emerald-100',
     };
     return map[status] ?? map.nowe;
   }

@@ -1,0 +1,234 @@
+<!-- Nagłówek sekcji -->
+<div>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'reporting.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'reporting.subtitle' | translate }}</p>
+</div>
+
+<!-- Przełącznik typu raportu -->
+<div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+  <button
+    type="button"
+    class="rounded-2xl border-2 p-4 text-left transition-all dark:bg-slate-900"
+    [class.border-cyan-500]="activeTab() === 'terminal'"
+    [class.dark:border-cyan-400]="activeTab() === 'terminal'"
+    [class.ring-2]="activeTab() === 'terminal'"
+    [class.ring-cyan-100]="activeTab() === 'terminal'"
+    [class.dark:ring-cyan-500]="activeTab() === 'terminal'"
+    [class.border-slate-200]="activeTab() !== 'terminal'"
+    [class.dark:border-slate-700]="activeTab() !== 'terminal'"
+    (click)="setActiveTab('terminal')"
+  >
+    <div class="flex items-center gap-3">
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400">
+        <app-svg-icon name="reporting" />
+      </span>
+      <div>
+        <p class="font-semibold text-slate-800 dark:text-slate-200">{{ 'reporting.type.terminal_title' | translate }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ 'reporting.type.terminal_desc' | translate }}</p>
+      </div>
+    </div>
+  </button>
+  <button
+    type="button"
+    class="rounded-2xl border-2 p-4 text-left transition-all dark:bg-slate-900"
+    [class.border-amber-500]="activeTab() === 'vehicle'"
+    [class.dark:border-amber-400]="activeTab() === 'vehicle'"
+    [class.ring-2]="activeTab() === 'vehicle'"
+    [class.ring-amber-100]="activeTab() === 'vehicle'"
+    [class.dark:ring-amber-500]="activeTab() === 'vehicle'"
+    [class.border-slate-200]="activeTab() !== 'vehicle'"
+    [class.dark:border-slate-700]="activeTab() !== 'vehicle'"
+    (click)="setActiveTab('vehicle')"
+  >
+    <div class="flex items-center gap-3">
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
+        <app-svg-icon name="sprzet" />
+      </span>
+      <div>
+        <p class="font-semibold text-slate-800 dark:text-slate-200">{{ 'reporting.type.vehicle_title' | translate }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ 'reporting.type.vehicle_desc' | translate }}</p>
+      </div>
+    </div>
+  </button>
+</div>
+
+<!-- Lista raportów -->
+<div class="mt-5">
+  @if (activeTab() === 'terminal') {
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'reporting.list.all_terminal' | translate }}</h2>
+      <app-add-button [label]="'reporting.buttons.add_terminal'" (add)="openCreate()" />
+    </div>
+    <app-filter-bar
+      [filters]="terminalFilterConfigs()"
+      [values]="{}"
+      (filterApply)="onTerminalFilterApply($event)"
+      (filterClear)="onTerminalFilterClear()"
+    />
+    <app-data-table
+      [columns]="terminalColumns()"
+      [data]="terminalReports()"
+      [total]="terminalTotal()"
+      [page]="terminalPage()"
+      [perPage]="terminalPerPage()"
+      [loading]="terminalLoading()"
+      [sortKey]="terminalSortKey()"
+      [sortDirection]="terminalSortDirection()"
+      [actionsTemplate]="actionsTpl"
+      (sortChange)="onTerminalSort($event)"
+      (pageChange)="onTerminalPageChange($event)"
+      (perPageChange)="onTerminalPerPageChange($event)"
+    />
+  } @else {
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'reporting.list.all_vehicle' | translate }}</h2>
+      <app-add-button [label]="'reporting.buttons.add_vehicle'" (add)="openCreate()" />
+    </div>
+    <app-filter-bar
+      [filters]="vehicleFilterConfigs()"
+      [values]="{}"
+      (filterApply)="onVehicleFilterApply($event)"
+      (filterClear)="onVehicleFilterClear()"
+    />
+    <app-data-table
+      [columns]="vehicleColumns()"
+      [data]="vehicleReports()"
+      [total]="vehicleTotal()"
+      [page]="vehiclePage()"
+      [perPage]="vehiclePerPage()"
+      [loading]="vehicleLoading()"
+      [sortKey]="vehicleSortKey()"
+      [sortDirection]="vehicleSortDirection()"
+      [actionsTemplate]="actionsTpl"
+      (sortChange)="onVehicleSort($event)"
+      (pageChange)="onVehiclePageChange($event)"
+      (perPageChange)="onVehiclePerPageChange($event)"
+    />
+  }
+
+  <ng-template #actionsTpl let-report>
+    <div class="flex justify-end gap-1">
+      <app-icon-button
+        icon="settings"
+        tone="primary"
+        [ariaLabel]="'reporting.buttons.edit' | translate"
+        (clicked)="openEdit(report)"
+      />
+    </div>
+  </ng-template>
+</div>
+
+<!-- ===== Modal: dodawanie / edycja raportu ===== -->
+@if (modalMode() === 'create' || modalMode() === 'edit') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          @if (activeTab() === 'terminal') {
+            {{ modalMode() === 'edit' ? ('reporting.form.edit_terminal_title' | translate) : ('reporting.form.add_terminal_title' | translate) }}
+          } @else {
+            {{ modalMode() === 'edit' ? ('reporting.form.edit_vehicle_title' | translate) : ('reporting.form.add_vehicle_title' | translate) }}
+          }
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
+      </div>
+
+      @if (activeTab() === 'terminal') {
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'reporting.form.terminal' | translate }}</label>
+          <app-autocomplete-select
+            class="mt-1.5"
+            [options]="terminalOptions()"
+            [selectedValue]="modalTerminalId()"
+            [placeholder]="'reporting.form.terminal_placeholder' | translate"
+            (selectionChange)="onTerminalSelected($event)"
+          />
+        </div>
+      } @else {
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'reporting.form.equipment' | translate }}</label>
+          <app-autocomplete-select
+            class="mt-1.5"
+            [options]="equipmentOptions()"
+            [selectedValue]="modalEquipmentId()"
+            [placeholder]="'reporting.form.equipment_placeholder' | translate"
+            (selectionChange)="onEquipmentSelected($event)"
+          />
+        </div>
+      }
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'reporting.form.date' | translate }}</label>
+        <input
+          type="date"
+          name="data_raportu"
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          [ngModel]="modalDate()"
+          (ngModelChange)="modalDate.set($event)"
+        />
+      </div>
+
+      @if (activeTab() === 'vehicle') {
+        <app-form-input
+          type="number"
+          name="aktualny_przebieg"
+          labelKey="reporting.form.przebieg"
+          [ngModel]="modalPrzebieg()"
+          (ngModelChange)="modalPrzebieg.set($event)"
+        />
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'reporting.form.przebieg_oc' | translate }}</label>
+          <textarea
+            rows="3"
+            class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [placeholder]="'reporting.form.przebieg_oc_placeholder' | translate"
+            [ngModel]="modalPrzebiegOc()"
+            (ngModelChange)="modalPrzebiegOc.set($event)"
+          ></textarea>
+        </div>
+      } @else {
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'reporting.form.opis' | translate }}</label>
+          <textarea
+            rows="3"
+            class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [placeholder]="'reporting.form.opis_placeholder' | translate"
+            [ngModel]="modalOpis()"
+            (ngModelChange)="modalOpis.set($event)"
+          ></textarea>
+        </div>
+      }
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'reporting.form.uwagi' | translate }}</label>
+        <textarea
+          rows="2"
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          [placeholder]="'reporting.form.uwagi_placeholder' | translate"
+          [ngModel]="modalUwagi()"
+          (ngModelChange)="modalUwagi.set($event)"
+        ></textarea>
+      </div>
+
+      <!-- Auto-dane z harmonogramu (tylko edycja raportu terminalowego) -->
+      @if (activeTab() === 'terminal' && modalMode() === 'edit' && modalAutoData()) {
+        <div class="mb-3 rounded-lg bg-cyan-50 p-3 text-sm dark:bg-cyan-500/15">
+          <p class="mb-2 font-semibold text-cyan-800 dark:text-cyan-200">{{ 'reporting.auto_data.title' | translate }}</p>
+          <div class="flex flex-wrap gap-4 text-xs text-cyan-700 dark:text-cyan-300">
+            <span>{{ 'reporting.auto_data.orders' | translate }}: {{ modalAutoData()!.orders.length }}</span>
+            <span>{{ 'reporting.auto_data.employees' | translate }}: {{ modalAutoData()!.employees.length }}</span>
+            <span>{{ 'reporting.auto_data.equipment' | translate }}: {{ modalAutoData()!.equipment.length }}</span>
+            <span>{{ 'reporting.auto_data.total_hours' | translate }}: {{ modalAutoData()!.total_hours }} h</span>
+            <span>{{ 'reporting.auto_data.total_wages' | translate }}: {{ modalAutoData()!.total_wages }} zł</span>
+          </div>
+        </div>
+      }
+
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="closeModal()" />
+        <app-button variant="primary" [label]="'reporting.buttons.save'" [disabled]="modalSaving()" (clicked)="saveModal()" />
+      </div>
+    </div>
+  </div>
+}
+

@@ -141,8 +141,20 @@
         </span>
       </div>
 
-      <!-- Po prawej: przycisk Notatki + awatar (mobile) -->
+      <!-- Po prawej: przełącznik motywu + przycisk Notatki + awatar (mobile) -->
       <div class="flex items-center gap-2">
+        <button
+          type="button"
+          (click)="toggleTheme()"
+          [attr.aria-label]="dark() ? 'Włącz tryb jasny' : 'Włącz tryb ciemny'"
+          class="grid h-9 w-9 place-items-center rounded-lg text-blue-100/90 transition-colors hover:bg-white/15 hover:text-white"
+        >
+          @if (dark()) {
+            <app-svg-icon name="sun" size="sm" />
+          } @else {
+            <app-svg-icon name="moon" size="sm" />
+          }
+        </button>
         <button
           type="button"
           (click)="notesWidget.togglePanel()"

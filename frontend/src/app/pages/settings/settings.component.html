@@ -1,27 +1,30 @@
 <!-- Nagłówek sekcji -->
 <div>
-  <h1 class="text-2xl font-bold text-gray-900">{{ 'ustawienia.title' | translate }}</h1>
-  <p class="mt-1 text-gray-600">{{ 'ustawienia.users.subtitle' | translate }}</p>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'ustawienia.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'ustawienia.users.subtitle' | translate }}</p>
 </div>
 
 <!-- Sub-tabs -->
 <div class="mt-5 flex gap-2 overflow-x-auto">
   <button
     type="button"
-    class="whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors"
+    class="whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors dark:text-slate-400"
     [class.bg-pbs-primary]="activeTab() === 'users'"
     [class.text-white]="activeTab() === 'users'"
     [class.bg-white]="activeTab() !== 'users'"
     [class.border]="activeTab() !== 'users'"
     [class.border-gray-200]="activeTab() !== 'users'"
     [class.text-gray-600]="activeTab() !== 'users'"
+    [class.dark:bg-slate-800]="activeTab() !== 'users'"
+    [class.dark:border-slate-700]="activeTab() !== 'users'"
+    [class.dark:text-slate-300]="activeTab() !== 'users'"
     (click)="setTab('users')"
   >
     {{ 'ustawienia.tabs.users' | translate }}
   </button>
   <button
     type="button"
-    class="whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600"
+    class="whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
     (click)="setTab('alerts')"
   >
     {{ 'ustawienia.tabs.alerts' | translate }}
@@ -32,7 +35,7 @@
 @if (activeTab() === 'users') {
   <div class="mt-5">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-900">{{ 'ustawienia.users.all_users' | translate }}</h2>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'ustawienia.users.all_users' | translate }}</h2>
       <app-add-button [label]="'ustawienia.users.add'" (add)="openCreate()" />
     </div>
 
@@ -95,19 +98,19 @@
 @if (activeTab() === 'alerts') {
   <div class="mt-5">
     <div class="mb-1 flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-900">{{ 'ustawienia.alerts.title' | translate }}</h2>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'ustawienia.alerts.title' | translate }}</h2>
       <app-add-button [label]="'ustawienia.alerts.add'" (add)="openAlertCreate()" />
     </div>
-    <p class="mb-4 text-sm text-gray-600">{{ 'ustawienia.alerts.subtitle' | translate }}</p>
+    <p class="mb-4 text-sm text-gray-600 dark:text-slate-400">{{ 'ustawienia.alerts.subtitle' | translate }}</p>
 
     @if (alertsLoading()) {
-      <div class="rounded-lg bg-white p-8 text-center text-gray-400 shadow">{{ 'common.table.loading' | translate }}</div>
+      <div class="rounded-lg bg-white p-8 text-center text-gray-400 shadow dark:bg-slate-900 dark:text-slate-500 dark:ring-1 dark:ring-slate-800">{{ 'common.table.loading' | translate }}</div>
     } @else if (alertConfigs().length === 0) {
-      <div class="rounded-lg bg-white p-8 text-center text-gray-500 shadow">{{ 'ustawienia.alerts.no_configs' | translate }}</div>
+      <div class="rounded-lg bg-white p-8 text-center text-gray-500 shadow dark:bg-slate-900 dark:text-slate-400 dark:ring-1 dark:ring-slate-800">{{ 'ustawienia.alerts.no_configs' | translate }}</div>
     } @else {
-      <div class="overflow-x-auto rounded-lg bg-white shadow">
+      <div class="overflow-x-auto rounded-lg bg-white shadow dark:bg-slate-900 dark:ring-1 dark:ring-slate-800">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-slate-800/60 dark:text-slate-400">
             <tr>
               <th class="px-4 py-3 text-left font-medium">{{ 'ustawienia.alerts.recipients' | translate }}</th>
               <th class="px-4 py-3 text-left font-medium">{{ 'ustawienia.alerts.alert_types' | translate }}</th>
@@ -116,12 +119,12 @@
               <th class="px-4 py-3 text-right font-medium">{{ 'common.table.actions' | translate }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
             @for (c of alertConfigs(); track c.id) {
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 font-medium text-gray-900">{{ c.email_odbiorcy }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ alertTypeLabel(c.typ_alertu) }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ formatSendTime(c) }}</td>
+              <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                <td class="px-4 py-3 font-medium text-gray-900 dark:text-slate-200">{{ c.email_odbiorcy }}</td>
+                <td class="px-4 py-3 text-gray-600 dark:text-slate-400">{{ alertTypeLabel(c.typ_alertu) }}</td>
+                <td class="px-4 py-3 text-gray-600 dark:text-slate-400">{{ formatSendTime(c) }}</td>
                 <td class="px-4 py-3">
                   <app-status-badge
                     [status]="c.czy_aktywny ? 'active' : 'inactive'"
@@ -146,9 +149,9 @@
 <!-- ===== Modal: konfiguracja alertu (Etap 14) ===== -->
 @if (alertModalOpen()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ (editingAlertId() === null ? 'ustawienia.alerts.add' : 'ustawienia.alerts.edit') | translate }}
         </h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAlertModal()" />
@@ -166,13 +169,13 @@
       />
 
       <div class="mb-4">
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'ustawienia.alerts.alert_types' | translate }}</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'ustawienia.alerts.alert_types' | translate }}</label>
         <app-select [options]="alertTypeOptions" size="lg" [ngModel]="alertType()" (ngModelChange)="alertType.set($event)" />
       </div>
 
       @if (isMissingOc(alertType())) {
         <div class="mb-4">
-          <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'ustawienia.alerts.send_time' | translate }}</label>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'ustawienia.alerts.send_time' | translate }}</label>
           <app-form-input
             type="text"
             name="alertSendTime"
@@ -181,7 +184,7 @@
             [ngModel]="alertSendTime()"
             (ngModelChange)="alertSendTime.set($event)"
           />
-          <p class="mt-1 text-xs text-gray-500">{{ 'ustawienia.alerts.oc_time_hint' | translate }}</p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">{{ 'ustawienia.alerts.oc_time_hint' | translate }}</p>
         </div>
       }
 
@@ -193,7 +196,7 @@
           [checked]="alertActive()"
           (change)="toggleAlertActive($event)"
         />
-        <label for="alertActive" class="text-sm font-medium text-gray-700">{{ 'ustawienia.alerts.is_active' | translate }}</label>
+        <label for="alertActive" class="text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'ustawienia.alerts.is_active' | translate }}</label>
       </div>
 
       <div class="flex justify-end gap-3">
@@ -207,9 +210,9 @@
 <!-- ===== Modal: tworzenie użytkownika ===== -->
 @if (modalMode() === 'create') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'ustawienia.users.add' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'ustawienia.users.add' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
       </div>
 
@@ -225,7 +228,7 @@
       />
 
       <div class="mb-4">
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'ustawienia.users.role' | translate }}</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'ustawienia.users.role' | translate }}</label>
         <app-select
           [options]="roles"
           size="lg"
@@ -235,10 +238,10 @@
       </div>
 
       <div class="mb-4">
-        <label class="mb-2 block text-sm font-medium text-gray-700">{{ 'ustawienia.users.sections' | translate }}</label>
+        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'ustawienia.users.sections' | translate }}</label>
         <div class="flex flex-wrap gap-2">
           @for (s of sections; track s) {
-            <label class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs">
+            <label class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               <input type="checkbox" class="h-3.5 w-3.5 rounded accent-pbs-primary" [checked]="isPermissionChecked(s)" (change)="togglePermission(s, $event)" />
               {{ sectionLabel(s) }}
             </label>
@@ -246,7 +249,7 @@
         </div>
       </div>
 
-      <div class="mb-4 flex items-start gap-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
+      <div class="mb-4 flex items-start gap-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800 dark:bg-blue-500/15 dark:text-blue-300">
         <app-svg-icon name="alert" />
         <p>{{ 'ustawienia.users.invite_info' | translate }}</p>
       </div>
@@ -262,20 +265,20 @@
 <!-- ===== Modal: edycja uprawnień ===== -->
 @if (modalMode() === 'permissions') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'ustawienia.users.permissions_title' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'ustawienia.users.permissions_title' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
       </div>
 
       @if (modalUser(); as u) {
-        <p class="mb-1 text-sm text-gray-600">{{ 'ustawienia.users.permissions_subtitle' | translate }}</p>
-        <p class="mb-4 truncate text-sm font-medium text-gray-900">{{ u.email }}</p>
+        <p class="mb-1 text-sm text-gray-600 dark:text-slate-400">{{ 'ustawienia.users.permissions_subtitle' | translate }}</p>
+        <p class="mb-4 truncate text-sm font-medium text-gray-900 dark:text-slate-200">{{ u.email }}</p>
       }
 
       <div class="mb-4 flex flex-wrap gap-2">
         @for (s of sections; track s) {
-          <label class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs">
+          <label class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <input type="checkbox" class="h-3.5 w-3.5 rounded accent-pbs-primary" [checked]="isPermissionChecked(s)" (change)="togglePermission(s, $event)" />
             {{ sectionLabel(s) }}
           </label>

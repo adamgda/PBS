@@ -52,6 +52,13 @@ export const routes: Routes = [
       import('./pages/terminals/terminals.component').then((m) => m.TerminalsComponent),
   },
   {
+    path: 'harmonogram/nowe',
+    canActivate: [AuthGuard, PermissionGuard],
+    data: { permission: 'harmonogram' },
+    loadComponent: () =>
+      import('./pages/orders/order-new/order-new.component').then((m) => m.OrderNewComponent),
+  },
+  {
     path: 'harmonogram',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'harmonogram' },
@@ -59,18 +66,18 @@ export const routes: Routes = [
       import('./pages/orders/orders.component').then((m) => m.OrdersComponent),
   },
   {
-    path: 'analityka',
+    path: 'analytics',
     canActivate: [AuthGuard, PermissionGuard],
-    data: { permission: 'analityka' },
+    data: { permission: 'analytics' },
     loadComponent: () =>
-      import('./pages/analityka/analityka.component').then((m) => m.AnalitykaComponent),
+      import('./pages/analytics/analytics.component').then((m) => m.AnalyticsComponent),
   },
   {
-    path: 'raportowanie',
+    path: 'reporting',
     canActivate: [AuthGuard, PermissionGuard],
-    data: { permission: 'raportowanie' },
+    data: { permission: 'reporting' },
     loadComponent: () =>
-      import('./pages/raportowanie/raportowanie.component').then((m) => m.RaportowanieComponent),
+      import('./pages/reporting/reporting.component').then((m) => m.ReportingComponent),
   },
   {
     path: 'awaria',

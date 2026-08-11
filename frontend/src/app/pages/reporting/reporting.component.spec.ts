@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 
-import { RaportowanieComponent } from './raportowanie.component';
+import { ReportingComponent } from './reporting.component';
 import { TranslateService } from '../../services/translate.service';
 import { environment } from '../../../environments/environment';
 
@@ -15,12 +15,12 @@ class TranslateServiceStub {
   }
 }
 
-describe('RaportowanieComponent', () => {
+describe('ReportingComponent', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RaportowanieComponent],
+      imports: [ReportingComponent],
       providers: [
         provideRouter([]),
         provideHttpClient(),
@@ -49,7 +49,7 @@ describe('RaportowanieComponent', () => {
   }
 
   it('powinien utworzyć komponent i pobrać listę raportów terminalowych', () => {
-    const fixture = TestBed.createComponent(RaportowanieComponent);
+    const fixture = TestBed.createComponent(ReportingComponent);
     fixture.detectChanges();
     flushOptions();
     flushTerminalList();
@@ -59,7 +59,7 @@ describe('RaportowanieComponent', () => {
   });
 
   it('powinien przełączyć zakładkę na pojazdy i pobrać listę raportów pojazdowych', () => {
-    const fixture = TestBed.createComponent(RaportowanieComponent);
+    const fixture = TestBed.createComponent(ReportingComponent);
     fixture.detectChanges();
     flushOptions();
     flushTerminalList();
@@ -74,7 +74,7 @@ describe('RaportowanieComponent', () => {
   });
 
   it('powinien otworzyć modal tworzenia raportu terminalowego', () => {
-    const fixture = TestBed.createComponent(RaportowanieComponent);
+    const fixture = TestBed.createComponent(ReportingComponent);
     fixture.detectChanges();
     flushOptions();
     flushTerminalList();
@@ -87,7 +87,7 @@ describe('RaportowanieComponent', () => {
   });
 
   it('powinien zablokować zapis raportu terminalowego bez terminala', () => {
-    const fixture = TestBed.createComponent(RaportowanieComponent);
+    const fixture = TestBed.createComponent(ReportingComponent);
     fixture.detectChanges();
     flushOptions();
     flushTerminalList();
@@ -101,7 +101,7 @@ describe('RaportowanieComponent', () => {
   });
 
   it('powinien utworzyć raport terminalowy (POST /reports/terminal)', () => {
-    const fixture = TestBed.createComponent(RaportowanieComponent);
+    const fixture = TestBed.createComponent(ReportingComponent);
     fixture.detectChanges();
     flushOptions();
     flushTerminalList();
@@ -139,7 +139,7 @@ describe('RaportowanieComponent', () => {
   });
 
   it('powinien zablokować zapis raportu pojazdowego bez pojazdu', () => {
-    const fixture = TestBed.createComponent(RaportowanieComponent);
+    const fixture = TestBed.createComponent(ReportingComponent);
     fixture.detectChanges();
     flushOptions();
     flushTerminalList();

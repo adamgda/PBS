@@ -1,0 +1,143 @@
+<!-- Nagłówek podstrony -->
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'harmonogram.form.add_title' | translate }}</h1>
+    <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'harmonogram.subtitle' | translate }}</p>
+  </div>
+  <app-button variant="outline" [label]="'common.buttons.back' | translate" (clicked)="cancel()" />
+</div>
+
+<!-- Formularz -->
+<div class="mt-5 rounded-2xl bg-white p-6 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
+  <div class="grid grid-cols-1 gap-x-4 lg:grid-cols-2">
+    <app-form-input
+      type="text"
+      name="numer"
+      labelKey="harmonogram.form.number"
+      placeholderKey="harmonogram.form.number_placeholder"
+      [ngModel]="formNumer()"
+      (ngModelChange)="formNumer.set($event)"
+    />
+
+    <app-form-input
+      type="text"
+      name="klient"
+      labelKey="harmonogram.form.client_name"
+      placeholderKey="harmonogram.form.client_placeholder"
+      [ngModel]="formKlient()"
+      (ngModelChange)="formKlient.set($event)"
+    />
+
+    <div class="mb-3">
+      <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.terminal' | translate }}</label>
+      <app-autocomplete-select
+        class="mt-1.5"
+        [options]="terminalOptions()"
+        [selectedValue]="formTerminalId()"
+        [placeholder]="'harmonogram.form.terminal_placeholder' | translate"
+        (selectionChange)="onTerminalSelected($event)"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.status' | translate }}</label>
+      <app-select
+        class="mt-1.5"
+        size="lg"
+        [options]="statusSelectOptions"
+        [ngModel]="formStatus()"
+        (ngModelChange)="formStatus.set($event)"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.start_datetime' | translate }}</label>
+      <input
+        type="datetime-local"
+        class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        [ngModel]="formStart()"
+        (ngModelChange)="formStart.set($event)"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.end_datetime' | translate }}</label>
+      <input
+        type="datetime-local"
+        class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        [ngModel]="formEnd()"
+        (ngModelChange)="formEnd.set($event)"
+      />
+    </div>
+
+    <div class="mb-3 lg:col-span-2">
+      <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.scope' | translate }}</label>
+      <textarea
+        class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        rows="3"
+        [placeholder]="'harmonogram.form.scope_placeholder' | translate"
+        [ngModel]="formZakres()"
+        (ngModelChange)="formZakres.set($event)"
+      ></textarea>
+    </div>
+
+    <app-form-input
+      type="number"
+      name="wartosc"
+      labelKey="harmonogram.form.value"
+      [ngModel]="formWartosc()"
+      (ngModelChange)="formWartosc.set($event)"
+    />
+  </div>
+
+  <!-- Przypisania pracowników i sprzętu -->
+  <div class="mt-5 rounded-xl bg-gray-50 p-4 dark:bg-slate-800/60">
+    <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_employees' | translate }}</h3>
+    <app-autocomplete-select
+      class="mb-2"
+      [options]="employeeOptions()"
+      [selectedValue]="null"
+      [placeholder]="'harmonogram.assign.select_employee' | translate"
+      (selectionChange)="onPendingEmployeeSelected($event)"
+    />
+    @if (pendingEmployees().length) {
+      <div class="flex flex-wrap gap-2">
+        @for (p of pendingEmployees(); track p.employee_id) {
+          <span class="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200">
+            + {{ p.name }}{{ p.rola ? ' (' + roleLabel(p.rola) + ')' : '' }}
+            <button type="button" class="text-cyan-500 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300" (click)="removePendingEmployee(p)" aria-label="remove">✕</button>
+          </span>
+        }
+      </div>
+    } @else {
+      <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_employees' | translate }}</p>
+    }
+
+    <h3 class="mb-2 mt-4 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_equipment' | translate }}</h3>
+    <app-autocomplete-select
+      class="mb-2"
+      [options]="equipmentOptions()"
+      [selectedValue]="null"
+      [placeholder]="'harmonogram.assign.select_equipment' | translate"
+      (selectionChange)="onPendingEquipmentSelected($event)"
+    />
+    @if (pendingEquipment().length) {
+      <div class="flex flex-wrap gap-2">
+        @for (p of pendingEquipment(); track p.equipment_id) {
+          <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-300">
+            + {{ p.name }}
+            <button type="button" class="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200" (click)="removePendingEquipment(p)" aria-label="remove">✕</button>
+          </span>
+        }
+      </div>
+    } @else {
+      <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_equipment' | translate }}</p>
+    }
+  </div>
+
+  <!-- Akcje -->
+  <div class="mt-5 flex justify-end gap-3">
+    <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="cancel()" />
+    <app-button variant="primary" [label]="'harmonogram.buttons.save'" [disabled]="saving()" (clicked)="save()" />
+  </div>
+</div>

@@ -20,14 +20,14 @@ export interface TimelineEvent {
   imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-white rounded-lg shadow p-5">
+    <div class="bg-white rounded-lg shadow p-5 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-800">
       @if (title) {
-        <h3 class="text-base font-semibold text-gray-900 mb-4">{{ title | translate }}</h3>
+        <h3 class="text-base font-semibold text-gray-900 mb-4 dark:text-white">{{ title | translate }}</h3>
       }
       @if (events.length === 0) {
-        <p class="text-sm text-gray-400">{{ 'common.messages.info.no_results' | translate }}</p>
+        <p class="text-sm text-gray-400 dark:text-slate-500">{{ 'common.messages.info.no_results' | translate }}</p>
       } @else {
-        <ol class="relative border-l-2 border-gray-200 ml-3 space-y-4">
+        <ol class="relative border-l-2 border-gray-200 ml-3 space-y-4 dark:border-slate-700">
           @for (event of events; track event.id) {
             <li class="ml-6">
               <span
@@ -39,9 +39,9 @@ export interface TimelineEvent {
               >
                 {{ event.icon || event.type.charAt(0).toUpperCase() }}
               </span>
-              <div class="bg-gray-50 rounded-md p-3">
-                <div class="text-sm font-medium text-gray-900">{{ event.description }}</div>
-                <div class="text-xs text-gray-500 mt-1">{{ event.date }}</div>
+              <div class="bg-gray-50 rounded-md p-3 dark:bg-slate-800">
+                <div class="text-sm font-medium text-gray-900 dark:text-slate-200">{{ event.description }}</div>
+                <div class="text-xs text-gray-500 mt-1 dark:text-slate-400">{{ event.date }}</div>
               </div>
             </li>
           }

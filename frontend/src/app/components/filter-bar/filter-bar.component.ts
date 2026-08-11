@@ -29,7 +29,7 @@ export interface FilterConfig {
   imports: [CommonModule, FormsModule, ButtonComponent, SelectComponent, SvgIconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="mb-4 rounded-lg bg-white p-4 shadow">
+    <div class="mb-4 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:ring-1 dark:ring-slate-800">
       <!-- Mobile: zwijany nagłówek (desktop: ukryty) -->
       <button
         type="button"
@@ -40,7 +40,7 @@ export interface FilterConfig {
       >
         <span class="flex items-center gap-2">
           <app-svg-icon name="filter" size="sm" />
-          <span class="text-sm font-semibold text-gray-700">{{ 'common.buttons.filter' | translate }}</span>
+          <span class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'common.buttons.filter' | translate }}</span>
           @if (activeFilterCount() > 0) {
             <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pbs-primary px-1.5 text-xs font-semibold text-white">
               {{ activeFilterCount() }}
@@ -64,13 +64,13 @@ export interface FilterConfig {
         <div class="flex flex-wrap items-end gap-3">
           @for (filter of filters(); track filter.key) {
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-gray-600">{{ filter.label }}</label>
+              <label class="text-xs font-medium text-gray-600 dark:text-slate-400">{{ filter.label }}</label>
 
               @switch (filter.type) {
                 @case ('text') {
                   <input
                     type="text"
-                    class="rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+                    class="rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                     [placeholder]="filter.placeholder || ''"
                     [ngModel]="filterValues()[filter.key] || ''"
                     (ngModelChange)="onFilterChange(filter.key, $event)"
@@ -88,7 +88,7 @@ export interface FilterConfig {
                 @case ('date') {
                   <input
                     type="date"
-                    class="rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+                    class="rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                     [ngModel]="filterValues()[filter.key] || ''"
                     (ngModelChange)="onFilterChange(filter.key, $event)"
                     (keydown.enter)="onApply()"

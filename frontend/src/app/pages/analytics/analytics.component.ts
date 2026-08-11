@@ -47,7 +47,7 @@ type RangePreset = '7' | '30' | '90' | '365';
  * pracowników i relacje między zasobami.
  */
 @Component({
-  selector: 'app-analityka',
+  selector: 'app-analytics',
   standalone: true,
   imports: [
     CommonModule,
@@ -58,9 +58,9 @@ type RangePreset = '7' | '30' | '90' | '365';
     NgApexchartsModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './analityka.component.html',
+  templateUrl: './analytics.component.html',
 })
-export class AnalitykaComponent {
+export class AnalyticsComponent {
   private readonly analyticsService = inject(AnalyticsService);
   private readonly translate = inject(TranslateService);
 
@@ -81,10 +81,10 @@ export class AnalitykaComponent {
   readonly relations = this._relations.asReadonly();
 
   readonly presets: { key: RangePreset; label: string }[] = [
-    { key: '7', label: 'analityka.presets.7' },
-    { key: '30', label: 'analityka.presets.30' },
-    { key: '90', label: 'analityka.presets.90' },
-    { key: '365', label: 'analityka.presets.365' },
+    { key: '7', label: 'analytics.presets.7' },
+    { key: '30', label: 'analytics.presets.30' },
+    { key: '90', label: 'analytics.presets.90' },
+    { key: '365', label: 'analytics.presets.365' },
   ];
 
   constructor() {
@@ -152,15 +152,15 @@ export class AnalitykaComponent {
   kpis(): KpiDatum[] {
     const o = this._overview();
     return [
-      { label: 'analityka.kpi.orders', value: o?.total_orders ?? 0, icon: 'harmonogram', tone: 'primary' },
-      { label: 'analityka.kpi.hours', value: `${this.fmt(o?.total_hours ?? 0)} h`, icon: 'pracownicy', tone: 'info' },
-      { label: 'analityka.kpi.wages', value: `${this.fmt(o?.total_wages ?? 0)} zł`, icon: 'raportowanie', tone: 'success' },
+      { label: 'analytics.kpi.orders', value: o?.total_orders ?? 0, icon: 'harmonogram', tone: 'primary' },
+      { label: 'analytics.kpi.hours', value: `${this.fmt(o?.total_hours ?? 0)} h`, icon: 'pracownicy', tone: 'info' },
+      { label: 'analytics.kpi.wages', value: `${this.fmt(o?.total_wages ?? 0)} zł`, icon: 'reporting', tone: 'success' },
       {
-        label: 'analityka.kpi.incidents',
+        label: 'analytics.kpi.incidents',
         value: o?.total_incidents ?? 0,
         icon: 'awaria',
         tone: 'danger',
-        subtitle: `${this.t('analityka.kpi.downtime')}: ${this.fmt(o?.incident_downtime_hours ?? 0)} h`,
+        subtitle: `${this.t('analytics.kpi.downtime')}: ${this.fmt(o?.incident_downtime_hours ?? 0)} h`,
       },
     ];
   }
@@ -171,7 +171,7 @@ export class AnalitykaComponent {
     const rows = this._terminals();
     return {
       chart: { type: 'bar', height: 300, fontFamily: 'Inter, sans-serif', toolbar: { show: false }, parentHeightOffset: 0 } as ApexChart,
-      series: [{ name: this.t('analityka.charts.orders'), data: rows.map((r) => r.order_count) }] as ApexAxisChartSeries,
+      series: [{ name: this.t('analytics.charts.orders'), data: rows.map((r) => r.order_count) }] as ApexAxisChartSeries,
       xaxis: { categories: rows.map((r) => r.nazwa ?? '—'), axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#94a3b8', fontSize: '12px' } } } as ApexXAxis,
       yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } } as ApexYAxis,
       plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } } as ApexPlotOptions,
@@ -193,7 +193,7 @@ export class AnalitykaComponent {
       labels: rows.map((r) => r.nazwa ?? '—'),
       colors: ['#0891b2', '#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
       legend: { position: 'bottom', fontFamily: 'Inter, sans-serif', labels: { colors: '#475569' } } as ApexLegend,
-      plotOptions: { pie: { donut: { size: '72%', labels: { show: true, name: { show: false }, value: { show: true, fontSize: '22px', fontWeight: '700', color: '#172d49' }, total: { show: true, label: this.t('analityka.charts.assignments'), color: '#64748b', fontSize: '12px' } } } } } as ApexPlotOptions,
+      plotOptions: { pie: { donut: { size: '72%', labels: { show: true, name: { show: false }, value: { show: true, fontSize: '22px', fontWeight: '700', color: '#172d49' }, total: { show: true, label: this.t('analytics.charts.assignments'), color: '#64748b', fontSize: '12px' } } } } } as ApexPlotOptions,
       dataLabels: { enabled: false } as ApexDataLabels,
       stroke: { width: 0 },
       tooltip: { theme: 'light' } as ApexTooltip,
@@ -207,7 +207,7 @@ export class AnalitykaComponent {
     const rows = this._terminals();
     return {
       chart: { type: 'line', height: 300, fontFamily: 'Inter, sans-serif', toolbar: { show: false }, parentHeightOffset: 0 } as ApexChart,
-      series: [{ name: this.t('analityka.charts.orders'), data: rows.map((r) => r.order_count) }] as ApexAxisChartSeries,
+      series: [{ name: this.t('analytics.charts.orders'), data: rows.map((r) => r.order_count) }] as ApexAxisChartSeries,
       xaxis: { categories: rows.map((r) => r.nazwa ?? '—'), axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#94a3b8', fontSize: '12px' } } } as ApexXAxis,
       yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } } as ApexYAxis,
       stroke: { curve: 'smooth', width: 2.5 } as ApexStroke,

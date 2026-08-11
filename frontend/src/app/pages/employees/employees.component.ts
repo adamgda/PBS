@@ -224,9 +224,9 @@ export class EmployeesComponent {
     { key: 'email', label: this.t('pracownicy.list.email') },
     { key: 'terminal_nazwa', label: this.t('pracownicy.list.terminal') },
     { key: 'sprzet_nazwa', label: this.t('pracownicy.list.equipment') },
-    { key: 'stawka_godzinowa', label: this.t('pracownicy.list.hourly_rate') },
-    { key: 'godziny_mc', label: this.t('pracownicy.list.hours_worked') },
-    { key: 'wynagrodzenie', label: this.t('pracownicy.list.wage') },
+    { key: 'stawka_godzinowa', label: this.t('pracownicy.list.hourly_rate'), minWidth: '110px' },
+    { key: 'godziny_mc', label: this.t('pracownicy.list.hours_worked'), minWidth: '90px' },
+    { key: 'wynagrodzenie', label: this.t('pracownicy.list.wage'), minWidth: '120px' },
     { key: 'rola_dzis', label: this.t('pracownicy.list.role_today') },
     { key: 'is_active', label: this.t('pracownicy.list.status'), sortable: true },
   ]);

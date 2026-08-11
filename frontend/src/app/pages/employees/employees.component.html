@@ -1,16 +1,17 @@
 <!-- Nagłówek sekcji -->
 <div>
-  <h1 class="text-2xl font-bold text-gray-900">{{ 'pracownicy.title' | translate }}</h1>
-  <p class="mt-1 text-gray-600">{{ 'pracownicy.subtitle' | translate }}</p>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'pracownicy.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'pracownicy.subtitle' | translate }}</p>
 </div>
 
 <!-- Nawigacja zakładek (Etap 7a) -->
-<div class="mt-4 flex gap-2 border-b border-gray-200">
+<div class="mt-4 flex gap-2 border-b border-gray-200 dark:border-slate-800">
   <button
     type="button"
-    class="border-b-2 px-4 py-2 text-sm font-medium"
+    class="border-b-2 px-4 py-2 text-sm font-medium dark:text-slate-400 dark:hover:text-slate-200"
     [class.border-pbs-primary]="activeTab() === 'list'"
     [class.text-pbs-primary]="activeTab() === 'list'"
+    [class.dark:text-pbs-secondary]="activeTab() === 'list'"
     [class.border-transparent]="activeTab() !== 'list'"
     [class.text-gray-500]="activeTab() !== 'list'"
     (click)="setTab('list')"
@@ -19,9 +20,10 @@
   </button>
   <button
     type="button"
-    class="border-b-2 px-4 py-2 text-sm font-medium"
+    class="border-b-2 px-4 py-2 text-sm font-medium dark:text-slate-400 dark:hover:text-slate-200"
     [class.border-pbs-primary]="activeTab() === 'settlement'"
     [class.text-pbs-primary]="activeTab() === 'settlement'"
+    [class.dark:text-pbs-secondary]="activeTab() === 'settlement'"
     [class.border-transparent]="activeTab() !== 'settlement'"
     [class.text-gray-500]="activeTab() !== 'settlement'"
     (click)="setTab('settlement')"
@@ -30,9 +32,10 @@
   </button>
   <button
     type="button"
-    class="border-b-2 px-4 py-2 text-sm font-medium"
+    class="border-b-2 px-4 py-2 text-sm font-medium dark:text-slate-400 dark:hover:text-slate-200"
     [class.border-pbs-primary]="activeTab() === 'invoices'"
     [class.text-pbs-primary]="activeTab() === 'invoices'"
+    [class.dark:text-pbs-secondary]="activeTab() === 'invoices'"
     [class.border-transparent]="activeTab() !== 'invoices'"
     [class.text-gray-500]="activeTab() !== 'invoices'"
     (click)="setTab('invoices')"
@@ -49,32 +52,32 @@
   <ng-template #kpiSkeletonSingle>
     <div class="flex animate-pulse items-start justify-between gap-3">
       <div class="min-w-0 flex-1 space-y-2">
-        <div class="h-3 w-3/4 rounded bg-gray-200"></div>
-        <div class="h-6 w-1/2 rounded bg-gray-200"></div>
+        <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-slate-700"></div>
+        <div class="h-6 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
       </div>
-      <div class="h-10 w-10 shrink-0 rounded-xl bg-gray-200"></div>
+      <div class="h-10 w-10 shrink-0 rounded-xl bg-gray-200 dark:bg-slate-700"></div>
     </div>
   </ng-template>
 
   <ng-template #kpiSkeletonSplit>
     <div class="animate-pulse space-y-2">
       <div class="flex items-center justify-between gap-3">
-        <div class="h-3 w-1/2 rounded bg-gray-200"></div>
-        <div class="h-6 w-1/4 rounded bg-gray-200"></div>
+        <div class="h-3 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
+        <div class="h-6 w-1/4 rounded bg-gray-200 dark:bg-slate-700"></div>
       </div>
-      <div class="mt-3 h-px bg-gray-100"></div>
-      <div class="h-3 w-1/3 rounded bg-gray-200"></div>
-      <div class="h-5 w-2/5 rounded bg-gray-200"></div>
+      <div class="mt-3 h-px bg-gray-100 dark:bg-slate-800"></div>
+      <div class="h-3 w-1/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+      <div class="h-5 w-2/5 rounded bg-gray-200 dark:bg-slate-700"></div>
     </div>
   </ng-template>
 
   <!-- 1. Godziny -->
-  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100">
+  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
     @if (summary(); as s) {
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <p class="truncate text-xs font-medium text-gray-500">{{ 'pracownicy.kpi.hours_total' | translate }}</p>
-          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900">{{ s.godziny_total }}<span class="ml-1 text-sm font-semibold text-gray-400">h</span></p>
+          <p class="truncate text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.hours_total' | translate }}</p>
+          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ s.godziny_total }}<span class="ml-1 text-sm font-semibold text-gray-400 dark:text-slate-500">h</span></p>
         </div>
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-pbs-primary to-pbs-navy-600 text-white shadow-sm">
           <app-svg-icon name="harmonogram" size="sm" />
@@ -86,12 +89,12 @@
   </div>
 
   <!-- 2. Wynagrodzenie -->
-  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100">
+  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
     @if (summary(); as s) {
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <p class="truncate text-xs font-medium text-gray-500">{{ 'pracownicy.kpi.wages_total' | translate }}</p>
-          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900">{{ s.wynagrodzenie_total | number }}<span class="ml-1 text-sm font-semibold text-gray-400">PLN</span></p>
+          <p class="truncate text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.wages_total' | translate }}</p>
+          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ s.wynagrodzenie_total | number }}<span class="ml-1 text-sm font-semibold text-gray-400 dark:text-slate-500">PLN</span></p>
         </div>
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm">
           <app-svg-icon name="money" size="sm" />
@@ -103,23 +106,23 @@
   </div>
 
   <!-- 3. Podział godzin -->
-  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100">
+  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
     @if (summary(); as s) {
       <div class="flex items-start justify-between gap-3">
-        <p class="truncate text-xs font-medium text-gray-500">{{ 'pracownicy.kpi.split' | translate }}</p>
+        <p class="truncate text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split' | translate }}</p>
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm">
-          <app-svg-icon name="analityka" size="sm" />
+          <app-svg-icon name="analytics" size="sm" />
         </span>
       </div>
       <div class="mt-3 space-y-2">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-xs text-gray-500">{{ 'pracownicy.kpi.split_1_15' | translate }}</span>
-          <span class="text-sm font-semibold text-gray-800">{{ s.godziny_1_15 }} h · {{ s.wynagrodzenie_1_15 | number }} PLN</span>
+          <span class="text-xs text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split_1_15' | translate }}</span>
+          <span class="text-sm font-semibold text-gray-800 dark:text-slate-200">{{ s.godziny_1_15 }} h · {{ s.wynagrodzenie_1_15 | number }} PLN</span>
         </div>
-        <div class="h-px bg-gray-100"></div>
+        <div class="h-px bg-gray-100 dark:bg-slate-800"></div>
         <div class="flex items-center justify-between gap-2">
-          <span class="text-xs text-gray-500">{{ 'pracownicy.kpi.split_15_23' | translate }}</span>
-          <span class="text-sm font-semibold text-gray-800">{{ s.godziny_15_23 }} h · {{ s.wynagrodzenie_15_23 | number }} PLN</span>
+          <span class="text-xs text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split_15_23' | translate }}</span>
+          <span class="text-sm font-semibold text-gray-800 dark:text-slate-200">{{ s.godziny_15_23 }} h · {{ s.wynagrodzenie_15_23 | number }} PLN</span>
         </div>
       </div>
     } @else if (summaryLoading()) {
@@ -128,12 +131,12 @@
   </div>
 
   <!-- 4. Na urlopie -->
-  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100">
+  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
     @if (summary(); as s) {
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <p class="truncate text-xs font-medium text-gray-500">{{ 'pracownicy.kpi.on_leave' | translate }}</p>
-          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900">{{ s.na_urlopie }}</p>
+          <p class="truncate text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.on_leave' | translate }}</p>
+          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ s.na_urlopie }}</p>
         </div>
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm">
           <app-svg-icon name="calendar" size="sm" />
@@ -158,6 +161,9 @@
     [class.border]="quickFilter() !== null"
     [class.border-gray-200]="quickFilter() !== null"
     [class.text-gray-600]="quickFilter() !== null"
+    [class.dark:bg-slate-800]="quickFilter() !== null"
+    [class.dark:border-slate-700]="quickFilter() !== null"
+    [class.dark:text-slate-300]="quickFilter() !== null"
   >
     {{ 'pracownicy.quick_filters.all' | translate }} ({{ quickFilterCounts().all }})
   </button>
@@ -172,6 +178,9 @@
       [class.border]="quickFilter() !== chip.key"
       [class.border-gray-200]="quickFilter() !== chip.key"
       [class.text-gray-600]="quickFilter() !== chip.key"
+      [class.dark:bg-slate-800]="quickFilter() !== chip.key"
+      [class.dark:border-slate-700]="quickFilter() !== chip.key"
+      [class.dark:text-slate-300]="quickFilter() !== chip.key"
     >
       {{ chip.label | translate }} ({{ quickFilterCounts()[chip.key] }})
     </button>
@@ -181,7 +190,7 @@
 <!-- Lista pracowników -->
 <div class="mt-5">
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.list.all_employees' | translate }}</h2>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'pracownicy.list.all_employees' | translate }}</h2>
     <app-add-button [label]="'pracownicy.buttons.add'" (add)="openCreate()" />
   </div>
 
@@ -240,7 +249,7 @@
   </ng-template>
 
   <ng-template #rateCellTpl let-employee>
-    <span class="font-medium text-gray-900">{{ employee.stawka_godzinowa | number }} PLN/h</span>
+    <span class="font-medium text-gray-900 dark:text-slate-200">{{ employee.stawka_godzinowa | number }} PLN/h</span>
   </ng-template>
 
   <ng-template #hoursCellTpl let-employee>
@@ -248,7 +257,7 @@
   </ng-template>
 
   <ng-template #wageCellTpl let-employee>
-    <span class="font-medium text-gray-900">{{ employee.wynagrodzenie | number }} PLN</span>
+    <span class="font-medium text-gray-900 dark:text-slate-200">{{ employee.wynagrodzenie | number }} PLN</span>
   </ng-template>
 
   <ng-template #roleCellTpl let-employee>
@@ -267,7 +276,7 @@
     <div class="relative flex justify-end">
       <button
         type="button"
-        class="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+        class="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
         [attr.aria-label]="'pracownicy.buttons.actions' | translate"
         (click)="toggleActions(employee.id)"
       >
@@ -277,10 +286,10 @@
       @if (openActionsId() === employee.id) {
         <!-- Tło zamykające po kliknięciu poza menu -->
         <div class="fixed inset-0 z-10" (click)="closeActions()"></div>
-        <div class="absolute right-0 top-9 z-20 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <div class="absolute right-0 top-9 z-20 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openChangeRate(employee); closeActions()"
           >
             <app-svg-icon name="money" size="sm" class="shrink-0 text-amber-500" />
@@ -288,7 +297,7 @@
           </button>
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openVacations(employee); closeActions()"
           >
             <app-svg-icon name="calendar" size="sm" class="shrink-0 text-cyan-600" />
@@ -296,7 +305,7 @@
           </button>
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openAssign(employee); closeActions()"
           >
             <app-svg-icon name="exchange" size="sm" class="shrink-0 text-indigo-500" />
@@ -304,16 +313,16 @@
           </button>
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openDocuments(employee); closeActions()"
           >
             <app-svg-icon name="document" size="sm" class="shrink-0 text-emerald-600" />
             {{ 'pracownicy.buttons.documents' | translate }}
           </button>
-          <div class="my-1 border-t border-gray-100"></div>
+          <div class="my-1 border-t border-gray-100 dark:border-slate-800"></div>
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openEdit(employee); closeActions()"
           >
             <app-svg-icon name="settings" size="sm" class="shrink-0 text-gray-500" />
@@ -321,7 +330,7 @@
           </button>
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
             (click)="closeActions(); deleteEmployee(employee)"
           >
             <app-svg-icon name="trash" size="sm" class="shrink-0" />
@@ -337,9 +346,9 @@
 <!-- ===== Modal: dodawanie / edycja pracownika ===== -->
 @if (modalMode() === 'create' || modalMode() === 'edit') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ modalMode() === 'edit' ? ('pracownicy.form.edit_title' | translate) : ('pracownicy.form.add_title' | translate) }}
         </h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
@@ -382,7 +391,7 @@
       />
 
       <div class="mb-3">
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.form.assign_terminal' | translate }}</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.form.assign_terminal' | translate }}</label>
         <app-autocomplete-select
           [options]="terminalOptions()"
           [selectedValue]="modalTerminalId()"
@@ -392,7 +401,7 @@
       </div>
 
       <div class="mb-3">
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.form.assign_equipment' | translate }}</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.form.assign_equipment' | translate }}</label>
         <app-autocomplete-select
           [options]="sprzetOptions()"
           [selectedValue]="modalSprzetId()"
@@ -402,7 +411,7 @@
       </div>
 
       <div class="mb-4 flex items-center gap-2">
-        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300">
           <input
             type="checkbox"
             class="h-4 w-4 rounded accent-pbs-primary"
@@ -424,18 +433,18 @@
 <!-- ===== Modal: szybkie przypisanie terminala/sprzętu ===== -->
 @if (assignMode()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.assignment.title' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'pracownicy.assignment.title' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAssign()" />
       </div>
 
       @if (assignEmployee(); as emp) {
-        <p class="mb-4 text-sm text-gray-600">{{ fullName(emp) }}</p>
+        <p class="mb-4 text-sm text-gray-600 dark:text-slate-400">{{ fullName(emp) }}</p>
       }
 
       <div class="mb-3">
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.assignment.terminal' | translate }}</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.assignment.terminal' | translate }}</label>
         <app-autocomplete-select
           [options]="terminalOptions()"
           [selectedValue]="assignTerminalId()"
@@ -445,7 +454,7 @@
       </div>
 
       <div class="mb-4">
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.assignment.equipment' | translate }}</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.assignment.equipment' | translate }}</label>
         <app-autocomplete-select
           [options]="sprzetOptions()"
           [selectedValue]="assignSprzetId()"
@@ -465,11 +474,11 @@
 <!-- ===== Panel: certyfikaty i uprawnienia ===== -->
 @if (docsEmployee(); as emp) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <h3 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.certificates.title' | translate }}</h3>
-          <p class="text-sm text-gray-600">{{ fullName(emp) }}</p>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'pracownicy.certificates.title' | translate }}</h3>
+          <p class="text-sm text-gray-600 dark:text-slate-400">{{ fullName(emp) }}</p>
         </div>
         <div class="flex items-center gap-2">
           <app-button variant="primary" [label]="'pracownicy.certificates.add'" (clicked)="openAddDoc()" />
@@ -482,9 +491,9 @@
       } @else if (documents().length === 0) {
         <p class="py-8 text-center text-gray-500">{{ 'pracownicy.certificates.no_documents' | translate }}</p>
       } @else {
-        <div class="overflow-x-auto rounded-lg border border-gray-200">
-          <table class="min-w-full divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+        <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-800">
+          <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-slate-800">
+            <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500 dark:bg-slate-800/60 dark:text-slate-400">
               <tr>
                 <th class="px-3 py-2 font-medium">{{ 'pracownicy.certificates.name' | translate }}</th>
                 <th class="px-3 py-2 font-medium">{{ 'pracownicy.certificates.number' | translate }}</th>
@@ -494,13 +503,13 @@
                 <th class="px-3 py-2"></th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
               @for (doc of documents(); track doc.id) {
                 <tr>
-                  <td class="px-3 py-2 font-medium text-gray-900">{{ doc.nazwa }}</td>
-                  <td class="px-3 py-2 text-gray-600">{{ doc.numer_dokumentu || '—' }}</td>
-                  <td class="px-3 py-2 text-gray-600">{{ doc.data_wydania || '—' }}</td>
-                  <td class="px-3 py-2 text-gray-600">{{ doc.data_waznosci || '—' }}</td>
+                  <td class="px-3 py-2 font-medium text-gray-900 dark:text-slate-200">{{ doc.nazwa }}</td>
+                  <td class="px-3 py-2 text-gray-600 dark:text-slate-400">{{ doc.numer_dokumentu || '—' }}</td>
+                  <td class="px-3 py-2 text-gray-600 dark:text-slate-400">{{ doc.data_wydania || '—' }}</td>
+                  <td class="px-3 py-2 text-gray-600 dark:text-slate-400">{{ doc.data_waznosci || '—' }}</td>
                   <td class="px-3 py-2">
                     <app-status-badge status="active" [tone]="docStatusTone(doc)" [label]="docStatusLabel(doc)" />
                   </td>
@@ -523,9 +532,9 @@
 <!-- ===== Modal: dodawanie / edycja dokumentu ===== -->
 @if (docModalMode() === 'create' || docModalMode() === 'edit') {
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ docModalMode() === 'edit' ? ('pracownicy.certificates.edit_title' | translate) : ('pracownicy.certificates.add_title' | translate) }}
         </h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeDocModal()" />
@@ -563,16 +572,16 @@
 
       @if (docModalMode() === 'create') {
         <div class="mb-4">
-          <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.certificates.file' | translate }}</label>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.certificates.file' | translate }}</label>
           <input
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
-            class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-pbs-primary file:px-4 file:py-2 file:text-white"
+            class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-pbs-primary file:px-4 file:py-2 file:text-white dark:text-slate-400"
             (change)="onDocFileSelected($event)"
           />
-          <p class="mt-1 text-xs text-gray-500">{{ 'pracownicy.certificates.upload_hint' | translate }}</p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-slate-500">{{ 'pracownicy.certificates.upload_hint' | translate }}</p>
           @if (docFileName()) {
-            <p class="mt-1 text-xs text-gray-700">{{ docFileName() }}</p>
+            <p class="mt-1 text-xs text-gray-700 dark:text-slate-300">{{ docFileName() }}</p>
           }
         </div>
       }
@@ -587,12 +596,12 @@
 <!-- ===== Etap 7a: Modal „Zmień stawkę" ===== -->
 @if (rateEmployee()) {
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.rate_modal.title' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'pracownicy.rate_modal.title' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeRateModal()" />
       </div>
-      <p class="mb-4 text-sm text-gray-600">{{ fullName(rateEmployee()!) }}</p>
+      <p class="mb-4 text-sm text-gray-600 dark:text-slate-400">{{ fullName(rateEmployee()!) }}</p>
 
       <app-form-input
         type="number"
@@ -611,12 +620,12 @@
 
       @if (rateHistory().length > 0) {
         <div class="mb-4">
-          <p class="mb-1 text-sm font-medium text-gray-700">{{ 'pracownicy.rate_modal.history' | translate }}</p>
-          <ul class="divide-y divide-gray-100 rounded-md border border-gray-200">
+          <p class="mb-1 text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.rate_modal.history' | translate }}</p>
+          <ul class="divide-y divide-gray-100 rounded-md border border-gray-200 dark:divide-slate-800 dark:border-slate-700">
             @for (r of rateHistory(); track r.id) {
-              <li class="flex items-center justify-between px-3 py-2 text-sm">
+              <li class="flex items-center justify-between px-3 py-2 text-sm dark:text-slate-200">
                 <span>{{ r.stawka_godzinowa | number }} PLN/h</span>
-                <span class="text-gray-500">{{ r.data_od }} — {{ r.data_do ?? '…' }}</span>
+                <span class="text-gray-500 dark:text-slate-400">{{ r.data_od }} — {{ r.data_do ?? '…' }}</span>
               </li>
             }
           </ul>
@@ -634,19 +643,19 @@
 <!-- ===== Etap 7a: Panel urlopów pracownika ===== -->
 @if (vacationsEmployee()) {
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.leave.title' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'pracownicy.leave.title' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeVacations()" />
       </div>
-      <p class="mb-4 text-sm text-gray-600">{{ fullName(vacationsEmployee()!) }}</p>
+      <p class="mb-4 text-sm text-gray-600 dark:text-slate-400">{{ fullName(vacationsEmployee()!) }}</p>
 
       <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <app-datepicker name="vac_od" labelKey="pracownicy.leave.start_date" [ngModel]="vacDataOd()" (ngModelChange)="vacDataOd.set($event)" />
         <app-datepicker name="vac_do" labelKey="pracownicy.leave.end_date" [ngModel]="vacDataDo()" (ngModelChange)="vacDataDo.set($event)" />
         <div>
-          <label class="mb-1 block text-sm font-medium text-gray-700">{{ 'pracownicy.leave.type' | translate }}</label>
-          <select class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" [ngModel]="vacTyp()" (ngModelChange)="vacTyp.set($event)">
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.leave.type' | translate }}</label>
+          <select class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" [ngModel]="vacTyp()" (ngModelChange)="vacTyp.set($event)">
             <option value="wypoczynkowy">{{ 'pracownicy.leave.type_vacation' | translate }}</option>
             <option value="na_zadanie">{{ 'pracownicy.leave.type_on_demand' | translate }}</option>
             <option value="L4">{{ 'pracownicy.leave.type_sick' | translate }}</option>
@@ -660,16 +669,16 @@
       @if (vacations().length === 0) {
         <p class="text-sm text-gray-500">{{ 'pracownicy.leave.no_vacations' | translate }}</p>
       } @else {
-        <ul class="divide-y divide-gray-100 rounded-md border border-gray-200">
+        <ul class="divide-y divide-gray-100 rounded-md border border-gray-200 dark:divide-slate-800 dark:border-slate-700">
           @for (v of vacations(); track v.id) {
-            <li class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+            <li class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm dark:text-slate-200">
               <div>
                 <span class="font-medium">{{ v.data_od }} — {{ v.data_do }}</span>
-                <span class="ml-2 text-gray-500">{{ vacationTypeLabel(v.typ) }}</span>
+                <span class="ml-2 text-gray-500 dark:text-slate-400">{{ vacationTypeLabel(v.typ) }}</span>
               </div>
               <div class="flex items-center gap-2">
                 <select
-                  class="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                  class="rounded-md border border-gray-300 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                   [ngModel]="v.status"
                   (ngModelChange)="changeVacationStatus(v, $event)"
                 >
@@ -692,38 +701,38 @@
   <div class="mt-5">
     <div class="mb-4 flex flex-wrap items-end gap-3">
       <div>
-        <label class="block text-sm font-medium text-gray-700">{{ 'pracownicy.settlement.month' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.settlement.month' | translate }}</label>
         <input
           type="month"
-          class="mt-1 block rounded-md border border-gray-300 px-3 py-2 text-sm"
+          class="mt-1 block rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           [value]="settlementMonth()"
           (input)="changeSettlementMonth($any($event.target).value)"
         />
       </div>
       <div class="flex gap-2">
-        <button type="button" class="rounded-md border px-3 py-2 text-sm" [class.bg-pbs-primary]="settlementPeriod()==='all'" [class.text-white]="settlementPeriod()==='all'" [class.border-gray-300]="settlementPeriod()!=='all'" (click)="changeSettlementPeriod('all')">{{ 'pracownicy.settlement.period_all' | translate }}</button>
-        <button type="button" class="rounded-md border px-3 py-2 text-sm" [class.bg-pbs-primary]="settlementPeriod()==='1-15'" [class.text-white]="settlementPeriod()==='1-15'" [class.border-gray-300]="settlementPeriod()!=='1-15'" (click)="changeSettlementPeriod('1-15')">{{ 'pracownicy.settlement.period_1_15' | translate }}</button>
-        <button type="button" class="rounded-md border px-3 py-2 text-sm" [class.bg-pbs-primary]="settlementPeriod()==='15-23'" [class.text-white]="settlementPeriod()==='15-23'" [class.border-gray-300]="settlementPeriod()!=='15-23'" (click)="changeSettlementPeriod('15-23')">{{ 'pracownicy.settlement.period_15_23' | translate }}</button>
+        <button type="button" class="rounded-md border px-3 py-2 text-sm dark:border-slate-700 dark:text-slate-300" [class.bg-pbs-primary]="settlementPeriod()==='all'" [class.text-white]="settlementPeriod()==='all'" [class.border-gray-300]="settlementPeriod()!=='all'" (click)="changeSettlementPeriod('all')">{{ 'pracownicy.settlement.period_all' | translate }}</button>
+        <button type="button" class="rounded-md border px-3 py-2 text-sm dark:border-slate-700 dark:text-slate-300" [class.bg-pbs-primary]="settlementPeriod()==='1-15'" [class.text-white]="settlementPeriod()==='1-15'" [class.border-gray-300]="settlementPeriod()!=='1-15'" (click)="changeSettlementPeriod('1-15')">{{ 'pracownicy.settlement.period_1_15' | translate }}</button>
+        <button type="button" class="rounded-md border px-3 py-2 text-sm dark:border-slate-700 dark:text-slate-300" [class.bg-pbs-primary]="settlementPeriod()==='15-23'" [class.text-white]="settlementPeriod()==='15-23'" [class.border-gray-300]="settlementPeriod()!=='15-23'" (click)="changeSettlementPeriod('15-23')">{{ 'pracownicy.settlement.period_15_23' | translate }}</button>
       </div>
     </div>
 
-    <div class="overflow-x-auto rounded-lg border border-gray-200">
-      <table class="min-w-full divide-y divide-gray-200 text-sm">
-        <thead class="bg-gray-50">
+    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-800">
+      <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-slate-800">
+        <thead class="bg-gray-50 dark:bg-slate-800/60">
           <tr>
-            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.settlement.port' | translate }}</th>
-            <th class="px-3 py-2 text-right font-medium text-gray-600">{{ 'pracownicy.settlement.employees' | translate }}</th>
-            <th class="px-3 py-2 text-right font-medium text-gray-600">{{ 'pracownicy.settlement.hours' | translate }}</th>
-            <th class="px-3 py-2 text-right font-medium text-gray-600">{{ 'pracownicy.settlement.wages' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.settlement.port' | translate }}</th>
+            <th class="px-3 py-2 text-right font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.settlement.employees' | translate }}</th>
+            <th class="px-3 py-2 text-right font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.settlement.hours' | translate }}</th>
+            <th class="px-3 py-2 text-right font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.settlement.wages' | translate }}</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
           @for (row of portRows(); track $index) {
-            <tr [class.bg-gray-50]="row.terminal_id === null" [class.font-semibold]="row.terminal_id === null">
-              <td class="px-3 py-2">{{ row.terminal_nazwa ?? '—' }}</td>
-              <td class="px-3 py-2 text-right">{{ row.liczba_pracownikow }}</td>
-              <td class="px-3 py-2 text-right">{{ row.suma_godzin }} h</td>
-              <td class="px-3 py-2 text-right">{{ row.suma_wynagrodzen | number }} PLN</td>
+            <tr [class.bg-gray-50]="row.terminal_id === null" [class.font-semibold]="row.terminal_id === null" [class.dark:bg-slate-800]="row.terminal_id === null">
+              <td class="px-3 py-2 dark:text-slate-200">{{ row.terminal_nazwa ?? '—' }}</td>
+              <td class="px-3 py-2 text-right dark:text-slate-200">{{ row.liczba_pracownikow }}</td>
+              <td class="px-3 py-2 text-right dark:text-slate-200">{{ row.suma_godzin }} h</td>
+              <td class="px-3 py-2 text-right dark:text-slate-200">{{ row.suma_wynagrodzen | number }} PLN</td>
             </tr>
           }
         </tbody>
@@ -735,12 +744,12 @@
 @if (activeTab() === 'invoices') {
   <div class="mt-5">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-900">{{ 'pracownicy.invoices.title' | translate }}</h2>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'pracownicy.invoices.title' | translate }}</h2>
       <app-add-button [label]="'pracownicy.invoices.add'" (add)="openAddInvoice()" />
     </div>
 
     @if (missingInvoices().length > 0) {
-      <div class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+      <div class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
         <p class="font-medium">{{ 'pracownicy.invoices.missing_title' | translate }}</p>
         <ul class="mt-1 list-disc pl-5">
           @for (m of missingInvoices(); track m.order_id) {
@@ -750,27 +759,27 @@
       </div>
     }
 
-    <div class="overflow-x-auto rounded-lg border border-gray-200">
-      <table class="min-w-full divide-y divide-gray-200 text-sm">
-        <thead class="bg-gray-50">
+    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-800">
+      <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-slate-800">
+        <thead class="bg-gray-50 dark:bg-slate-800/60">
           <tr>
-            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.number' | translate }}</th>
-            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.client' | translate }}</th>
-            <th class="px-3 py-2 text-right font-medium text-gray-600">{{ 'pracownicy.invoices.amount' | translate }}</th>
-            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.issue_date' | translate }}</th>
-            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.typ' | translate }}</th>
-            <th class="px-3 py-2 text-left font-medium text-gray-600">{{ 'pracownicy.invoices.status' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.number' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.client' | translate }}</th>
+            <th class="px-3 py-2 text-right font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.amount' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.issue_date' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.typ' | translate }}</th>
+            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.status' | translate }}</th>
             <th class="px-3 py-2"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
           @for (inv of invoices(); track inv.id) {
             <tr>
-              <td class="px-3 py-2 font-medium">{{ inv.numer_faktury }}</td>
-              <td class="px-3 py-2">{{ inv.klient_nazwa }}</td>
-              <td class="px-3 py-2 text-right">{{ inv.kwota_pln | number }} PLN</td>
-              <td class="px-3 py-2">{{ inv.data_wystawienia }}</td>
-              <td class="px-3 py-2">{{ invoiceTypLabel(inv.typ_wystawienia) }}</td>
+              <td class="px-3 py-2 font-medium dark:text-slate-200">{{ inv.numer_faktury }}</td>
+              <td class="px-3 py-2 dark:text-slate-200">{{ inv.klient_nazwa }}</td>
+              <td class="px-3 py-2 text-right dark:text-slate-200">{{ inv.kwota_pln | number }} PLN</td>
+              <td class="px-3 py-2 dark:text-slate-200">{{ inv.data_wystawienia }}</td>
+              <td class="px-3 py-2 dark:text-slate-200">{{ invoiceTypLabel(inv.typ_wystawienia) }}</td>
               <td class="px-3 py-2">
                 <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                   [class.bg-green-100]="inv.status==='zaplacona'" [class.text-green-800]="inv.status==='zaplacona'"
@@ -781,7 +790,7 @@
               </td>
               <td class="px-3 py-2">
                 <div class="flex justify-end gap-1">
-                  <select class="rounded-md border border-gray-300 px-2 py-1 text-xs" [ngModel]="inv.status" (ngModelChange)="changeInvoiceStatus(inv, $event)">
+                  <select class="rounded-md border border-gray-300 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" [ngModel]="inv.status" (ngModelChange)="changeInvoiceStatus(inv, $event)">
                     <option value="wystawiona">{{ 'pracownicy.invoices.status_issued' | translate }}</option>
                     <option value="zaplacona">{{ 'pracownicy.invoices.status_paid' | translate }}</option>
                     <option value="przeterminowana">{{ 'pracownicy.invoices.status_overdue' | translate }}</option>
@@ -800,9 +809,9 @@
 <!-- ===== Etap 7a: Modal faktury ===== -->
 @if (invoiceModalMode() === 'create' || invoiceModalMode() === 'edit') {
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ invoiceModalMode() === 'edit' ? ('pracownicy.invoices.edit_title' | translate) : ('pracownicy.invoices.add_title' | translate) }}
         </h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeInvoiceModal()" />
@@ -815,8 +824,8 @@
       <app-datepicker name="inv_termin" labelKey="pracownicy.invoices.due_date" [ngModel]="invTerminPlatnosci()" (ngModelChange)="invTerminPlatnosci.set($event)" />
 
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">{{ 'pracownicy.invoices.typ' | translate }}</label>
-        <select class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" [ngModel]="invTyp()" (ngModelChange)="invTyp.set($event)">
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.invoices.typ' | translate }}</label>
+        <select class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" [ngModel]="invTyp()" (ngModelChange)="invTyp.set($event)">
           <option value="po_zleceniu">{{ 'pracownicy.invoices.typ_after_order' | translate }}</option>
           <option value="po_tygodniu">{{ 'pracownicy.invoices.typ_after_week' | translate }}</option>
           <option value="koniec_miesiaca">{{ 'pracownicy.invoices.typ_month_end' | translate }}</option>

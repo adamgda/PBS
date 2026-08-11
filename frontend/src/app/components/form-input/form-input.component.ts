@@ -55,14 +55,14 @@ let nextUid = 0;
   template: `
     <div class="mb-3">
       @if (labelKey || label) {
-        <label class="block text-sm font-medium text-gray-700" [attr.for]="computedId">
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300" [attr.for]="computedId">
           {{ labelKey ? (labelKey | translate) : label }}
         </label>
       }
       <div class="relative mt-1.5">
         @if (icon) {
           <span
-            class="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center text-gray-400"
+            class="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center text-gray-400 dark:text-slate-500"
           >
             <app-svg-icon [name]="icon" />
           </span>
@@ -76,7 +76,7 @@ let nextUid = 0;
           [disabled]="disabledState()"
           [value]="value()"
           [placeholder]="placeholderKey ? (placeholderKey | translate) : placeholder"
-          class="block w-full rounded-lg border border-gray-200 bg-white py-2 shadow-sm transition-all duration-150 placeholder:text-gray-400 hover:border-gray-300 focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:hover:border-gray-200"
+          class="block w-full rounded-lg border border-gray-200 bg-white py-2 text-sm shadow-sm transition-all duration-150 placeholder:text-gray-400 hover:border-gray-300 focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:hover:border-gray-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:ring-pbs-secondary/50 dark:disabled:bg-slate-800 dark:disabled:hover:border-slate-700"
           [class.pl-11]="!!icon"
           [class.pl-3]="!icon"
           [class.pr-11]="passwordToggle"
@@ -88,7 +88,7 @@ let nextUid = 0;
           <button
             type="button"
             (click)="togglePassword()"
-            class="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            class="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
             [attr.aria-label]="(showPassword() ? hidePasswordLabelKey : showPasswordLabelKey) | translate"
             [attr.aria-pressed]="showPassword()"
           >

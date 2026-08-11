@@ -65,13 +65,16 @@ export type SelectSize = 'sm' | 'md' | 'lg';
       <app-svg-icon
         name="chevron-down"
         size="sm"
-        class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+        class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"
         [class.opacity-40]="disabled"
       />
     </div>
   `,
   styles: [
     `
+      :host {
+        display: block;
+      }
       select {
         -webkit-appearance: none;
         -moz-appearance: none;
@@ -110,11 +113,11 @@ export class SelectComponent implements ControlValueAccessor {
   get classes(): string {
     switch (this.size) {
       case 'sm':
-        return 'pl-2 pr-8 py-1 rounded-md border border-gray-200 text-sm transition-all hover:border-gray-300';
+        return 'pl-2 pr-8 py-1 rounded-md border border-gray-200 text-sm transition-all hover:border-gray-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600';
       case 'lg':
-        return 'block w-full rounded-lg border border-gray-200 bg-white pl-3 pr-9 py-2.5 text-sm shadow-sm transition-all hover:border-gray-300 focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60';
+        return 'block w-full rounded-lg border border-gray-200 bg-white pl-3 pr-9 py-2 text-sm shadow-sm transition-all hover:border-gray-300 focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600';
       default:
-        return 'pl-3 pr-8 py-2 border border-gray-200 rounded-md text-sm transition-all hover:border-gray-300 focus:ring-2 focus:ring-pbs-secondary/60 focus:border-transparent';
+        return 'pl-3 pr-8 py-2 border border-gray-200 rounded-md text-sm transition-all hover:border-gray-300 focus:ring-2 focus:ring-pbs-secondary/60 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600';
     }
   }
 

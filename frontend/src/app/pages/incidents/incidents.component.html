@@ -1,13 +1,13 @@
 <!-- Nagłówek sekcji -->
 <div>
-  <h1 class="text-2xl font-bold text-gray-900">{{ 'awaria.title' | translate }}</h1>
-  <p class="mt-1 text-gray-600">{{ 'awaria.subtitle' | translate }}</p>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'awaria.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'awaria.subtitle' | translate }}</p>
 </div>
 
 <!-- Lista awarii -->
 <div class="mt-5">
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-gray-900">{{ 'awaria.list.title' | translate }}</h2>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'awaria.list.title' | translate }}</h2>
     <app-add-button [label]="'awaria.buttons.add'" (add)="openCreate()" />
   </div>
 
@@ -35,13 +35,13 @@
   />
 
   <ng-template #typeCellTpl let-inc>
-    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-300">
       {{ typeLabel(inc) }}
     </span>
   </ng-template>
 
   <ng-template #opisCellTpl let-inc>
-    <span class="line-clamp-1 max-w-xs text-gray-600">{{ inc.opis }}</span>
+    <span class="line-clamp-1 max-w-xs text-gray-600 dark:text-slate-400">{{ inc.opis }}</span>
   </ng-template>
 
   <ng-template #statusCellTpl let-inc>
@@ -63,15 +63,15 @@
 <!-- ===== Modal: zgłoszenie awarii ===== -->
 @if (modalMode() === 'create') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'awaria.form.title' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'awaria.form.title' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
       </div>
 
-      <label class="block text-sm font-medium text-gray-700">{{ 'awaria.form.what_concerns' | translate }}</label>
+      <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'awaria.form.what_concerns' | translate }}</label>
       <div class="mt-1.5 mb-3 flex gap-3">
-        <label class="flex items-center gap-2 text-sm">
+        <label class="flex items-center gap-2 text-sm dark:text-slate-300">
           <input
             type="radio"
             name="incTyp"
@@ -81,7 +81,7 @@
           />
           {{ 'awaria.form.equipment' | translate }}
         </label>
-        <label class="flex items-center gap-2 text-sm">
+        <label class="flex items-center gap-2 text-sm dark:text-slate-300">
           <input
             type="radio"
             name="incTyp"
@@ -95,7 +95,7 @@
 
       @if (formTyp() === 'sprzet') {
         <div class="mb-3">
-          <label class="block text-sm font-medium text-gray-700">{{ 'awaria.form.select_equipment' | translate }}</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'awaria.form.select_equipment' | translate }}</label>
           <app-autocomplete-select
             class="mt-1.5"
             [options]="equipmentOptions()"
@@ -107,9 +107,9 @@
       }
 
       <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700">{{ 'awaria.form.description' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'awaria.form.description' | translate }}</label>
         <textarea
-          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           rows="4"
           [placeholder]="'awaria.form.description_placeholder' | translate"
           [ngModel]="formOpis()"
@@ -127,17 +127,17 @@
 <!-- ===== Modal: szczegóły awarii ===== -->
 @if (modalMode() === 'details' && detailsIncident()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-start justify-between gap-3">
         <div class="flex min-w-0 items-center gap-2">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-600">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
             <app-svg-icon name="alert" size="md" />
           </span>
           <div class="min-w-0">
-            <h3 class="truncate text-lg font-semibold text-gray-900">
+            <h3 class="truncate text-lg font-semibold text-gray-900 dark:text-white">
               #AW-{{ detailsIncident()!.id }} · {{ detailsIncident()!.equipment_nazwa || detailsIncident()!.opis }}
             </h3>
-            <p class="text-xs text-gray-500">
+            <p class="text-xs text-gray-500 dark:text-slate-400">
               {{ typeLabel(detailsIncident()!) }}
               @if (detailsIncident()!.equipment_nazwa) {
                 <span> · {{ 'awaria.list.equipment' | translate }}: {{ detailsIncident()!.equipment_nazwa }}</span>
@@ -160,6 +160,7 @@
                 class="mt-2.5 h-0.5 flex-1"
                 [class.bg-cyan-500]="i <= lifecycleIndex(detailsIncident()!.status)"
                 [class.bg-gray-200]="i > lifecycleIndex(detailsIncident()!.status)"
+                [class.dark:bg-slate-700]="i > lifecycleIndex(detailsIncident()!.status)"
               ></div>
             }
             <div class="flex min-w-0 flex-col items-center gap-1">
@@ -167,8 +168,10 @@
                 class="grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs"
                 [class.bg-cyan-500]="i <= lifecycleIndex(detailsIncident()!.status)"
                 [class.bg-gray-200]="i > lifecycleIndex(detailsIncident()!.status)"
+                [class.dark:bg-slate-700]="i > lifecycleIndex(detailsIncident()!.status)"
                 [class.text-white]="i <= lifecycleIndex(detailsIncident()!.status)"
                 [class.text-gray-400]="i > lifecycleIndex(detailsIncident()!.status)"
+                [class.dark:text-slate-400]="i > lifecycleIndex(detailsIncident()!.status)"
               >
                 @if (i <= lifecycleIndex(detailsIncident()!.status)) {
                   <app-svg-icon [name]="lifecycleIcon(step.status)" size="sm" />
@@ -177,7 +180,9 @@
               <span
                 class="text-center text-[11px] font-medium leading-tight"
                 [class.text-cyan-700]="i === lifecycleIndex(detailsIncident()!.status)"
+                [class.dark:text-cyan-400]="i === lifecycleIndex(detailsIncident()!.status)"
                 [class.text-gray-400]="i > lifecycleIndex(detailsIncident()!.status)"
+                [class.dark:text-slate-500]="i > lifecycleIndex(detailsIncident()!.status)"
               >{{ step.labelKey | translate }}</span>
             </div>
           }
@@ -186,29 +191,29 @@
 
       <!-- Statystyki -->
       <div class="mb-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <div class="rounded-lg bg-gray-50 p-2">
-          <p class="text-xs text-gray-500">{{ 'awaria.detail.reported_date' | translate }}</p>
-          <p class="font-medium">{{ detailsIncident()!.data_zgloszenia || '—' }}</p>
+        <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800">
+          <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'awaria.detail.reported_date' | translate }}</p>
+          <p class="font-medium dark:text-slate-200">{{ detailsIncident()!.data_zgloszenia || '—' }}</p>
         </div>
-        <div class="rounded-lg bg-gray-50 p-2">
-          <p class="text-xs text-gray-500">{{ 'awaria.detail.downtime' | translate }}</p>
-          <p class="font-medium text-rose-600">{{ downtime(detailsIncident()!) }}</p>
+        <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800">
+          <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'awaria.detail.downtime' | translate }}</p>
+          <p class="font-medium text-rose-600 dark:text-rose-400">{{ downtime(detailsIncident()!) }}</p>
         </div>
-        <div class="rounded-lg bg-gray-50 p-2">
-          <p class="text-xs text-gray-500">{{ 'awaria.detail.reported_by' | translate }}</p>
-          <p class="truncate font-medium">{{ detailsIncident()!.zgloszona_przez_email || '—' }}</p>
+        <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800">
+          <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'awaria.detail.reported_by' | translate }}</p>
+          <p class="truncate font-medium dark:text-slate-200">{{ detailsIncident()!.zgloszona_przez_email || '—' }}</p>
         </div>
-        <div class="rounded-lg bg-gray-50 p-2">
-          <p class="text-xs text-gray-500">{{ 'awaria.detail.close_date' | translate }}</p>
-          <p class="font-medium text-gray-400">{{ detailsIncident()!.data_zakonczenia || '—' }}</p>
+        <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800">
+          <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'awaria.detail.close_date' | translate }}</p>
+          <p class="font-medium text-gray-400 dark:text-slate-500">{{ detailsIncident()!.data_zakonczenia || '—' }}</p>
         </div>
       </div>
 
-      <p class="mb-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">{{ detailsIncident()!.opis }}</p>
+      <p class="mb-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700 dark:bg-slate-800 dark:text-slate-300">{{ detailsIncident()!.opis }}</p>
 
       <!-- Zmiana statusu -->
-      <div class="mb-4 rounded-lg border border-gray-100 p-3">
-        <label class="block text-sm font-semibold text-gray-700">{{ 'awaria.detail.status_change' | translate }}</label>
+      <div class="mb-4 rounded-lg border border-gray-100 p-3 dark:border-slate-800">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-slate-300">{{ 'awaria.detail.status_change' | translate }}</label>
         <div class="mt-2 flex flex-wrap items-center gap-2">
           <app-select
             size="md"
@@ -224,7 +229,7 @@
       <div class="mb-4 flex flex-wrap gap-2">
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/50 dark:bg-emerald-500/15 dark:text-emerald-300 dark:hover:bg-emerald-500/25"
           [disabled]="statusSaving() || detailsIncident()!.status === 'naprawiona'"
           (click)="setStatus('naprawiona')"
         >
@@ -232,7 +237,7 @@
         </button>
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           [disabled]="statusSaving() || detailsIncident()!.status === 'zamknieta'"
           (click)="setStatus('zamknieta')"
         >
@@ -242,25 +247,25 @@
 
       <!-- Komentarze -->
       <div class="mb-4">
-        <h4 class="mb-2 text-sm font-semibold text-gray-700">{{ 'awaria.detail.comments' | translate }}</h4>
+        <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-300">{{ 'awaria.detail.comments' | translate }}</h4>
         @if (detailsComments().length === 0) {
-          <p class="text-sm text-gray-400">{{ 'awaria.detail.no_comments' | translate }}</p>
+          <p class="text-sm text-gray-400 dark:text-slate-500">{{ 'awaria.detail.no_comments' | translate }}</p>
         } @else {
           <ul class="mb-3 space-y-2">
             @for (c of detailsComments(); track c.id) {
-              <li class="rounded-lg bg-gray-50 p-3 text-sm">
-                <div class="mb-1 flex items-center justify-between text-xs text-gray-500">
+              <li class="rounded-lg bg-gray-50 p-3 text-sm dark:bg-slate-800">
+                <div class="mb-1 flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
                   <span>{{ c.user_email || '—' }}</span>
                   <span>{{ c.created_at || '—' }}</span>
                 </div>
-                <p class="text-gray-800">{{ c.tresc }}</p>
+                <p class="text-gray-800 dark:text-slate-200">{{ c.tresc }}</p>
               </li>
             }
           </ul>
         }
         <div class="flex flex-col gap-2">
           <textarea
-            class="block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+            class="block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             rows="2"
             [placeholder]="'awaria.detail.comment_placeholder' | translate"
             [ngModel]="newComment()"
@@ -274,19 +279,19 @@
 
       <!-- Historia statusów -->
       <div>
-        <h4 class="mb-2 text-sm font-semibold text-gray-700">{{ 'awaria.detail.status_history' | translate }}</h4>
+        <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-300">{{ 'awaria.detail.status_history' | translate }}</h4>
         @if (detailsHistory().length === 0) {
-          <p class="text-sm text-gray-400">{{ 'awaria.detail.no_history' | translate }}</p>
+          <p class="text-sm text-gray-400 dark:text-slate-500">{{ 'awaria.detail.no_history' | translate }}</p>
         } @else {
           <ul class="space-y-2">
             @for (h of detailsHistory(); track h.id) {
-              <li class="flex items-center justify-between rounded-lg border border-gray-100 p-2 text-sm">
+              <li class="flex items-center justify-between rounded-lg border border-gray-100 p-2 text-sm dark:border-slate-800">
                 <span>
                   <app-status-badge [status]="h.status_od === 'zgloszona' ? 'reported' : (h.status_od === 'w_trakcie_naprawy' ? 'under_repair' : (h.status_od === 'naprawiona' ? 'repaired' : 'closed'))" />
-                  <span class="mx-1 text-gray-400">→</span>
+                  <span class="mx-1 text-gray-400 dark:text-slate-500">→</span>
                   <app-status-badge [status]="h.status_do === 'zgloszona' ? 'reported' : (h.status_do === 'w_trakcie_naprawy' ? 'under_repair' : (h.status_do === 'naprawiona' ? 'repaired' : 'closed'))" />
                 </span>
-                <span class="text-xs text-gray-500">{{ h.zmieniony_przez_email || '—' }} · {{ h.created_at || '—' }}</span>
+                <span class="text-xs text-gray-500 dark:text-slate-400">{{ h.zmieniony_przez_email || '—' }} · {{ h.created_at || '—' }}</span>
               </li>
             }
           </ul>

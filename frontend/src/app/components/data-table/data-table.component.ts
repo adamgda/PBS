@@ -13,6 +13,8 @@ export interface DataTableColumn<T> {
   label: string;
   sortable?: boolean;
   width?: string;
+  /** Minimalna szerokość kolumny (np. '120px') — zapobiega zbytniemu ściskaniu. */
+  minWidth?: string;
   formatter?: (row: T) => string;
   /** Kolumna renderowana jako nagłówek karty w widoku mobilnym (bez etykiety, pogrubiona). */
   isTitle?: boolean;
@@ -33,14 +35,14 @@ export interface DataTableSortEvent {
   imports: [CommonModule, FormsModule, TranslatePipe, SelectComponent, SvgIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100">
+    <div class="overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
       @if (loading()) {
-        <div class="flex flex-col items-center justify-center gap-3 p-10 text-gray-400">
+        <div class="flex flex-col items-center justify-center gap-3 p-10 text-gray-400 dark:text-slate-500">
           <app-svg-icon name="spinner" size="lg" class="animate-spin text-pbs-secondary" />
           <span class="text-sm">{{ 'common.table.loading' | translate }}</span>
         </div>
       } @else if (data().length === 0) {
-        <div class="flex flex-col items-center justify-center gap-2 p-10 text-gray-400">
+        <div class="flex flex-col items-center justify-center gap-2 p-10 text-gray-400 dark:text-slate-500">
           <app-svg-icon name="search" size="lg" />
           <span class="text-sm">{{ 'common.table.no_data' | translate }}</span>
         </div>
@@ -48,17 +50,18 @@ export interface DataTableSortEvent {
         <!-- Desktop: tabela (przewijana tylko przy zbyt dużej szerokości) -->
         <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
-          <thead class="bg-gray-50/90 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+          <thead class="bg-gray-50/90 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-slate-800/60 dark:text-slate-400">
             <tr>
               @for (col of columns(); track col.key) {
                 <th
-                  class="px-4 py-3 font-medium"
+                  class="whitespace-nowrap border-b border-gray-200 px-4 py-3 font-medium dark:border-slate-800"
                   [style.width]="col.width"
+                  [style.min-width]="col.minWidth"
                 >
                   @if (col.sortable) {
                     <button
                       type="button"
-                      class="group flex items-center gap-1 uppercase tracking-wider hover:text-pbs-primary"
+                      class="group flex items-center gap-1 uppercase tracking-wider hover:text-pbs-primary dark:hover:text-pbs-secondary"
                       (click)="onSort(col.key)"
                     >
                       <span>{{ col.label }}</span>
@@ -72,21 +75,21 @@ export interface DataTableSortEvent {
                 </th>
               }
               @if (actionsTemplate) {
-                <th class="px-4 py-3 text-right font-medium">
+                <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3 text-right font-medium dark:border-slate-800">
                   {{ 'common.table.actions' | translate }}
                 </th>
               }
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 text-sm text-gray-800">
+          <tbody class="divide-y divide-gray-100 text-sm text-gray-800 dark:divide-slate-800 dark:text-slate-200">
             @for (row of data(); track row) {
               <tr
-                class="transition-colors hover:bg-pbs-navy-50/60"
+                class="transition-colors hover:bg-pbs-navy-50/60 dark:hover:bg-slate-800/60"
                 [class.cursor-pointer]="rowClickable"
                 (click)="rowClickable && rowClick.emit(row)"
               >
                 @for (col of columns(); track col.key) {
-                  <td class="px-4 py-3">
+                  <td class="px-4 py-3.5" [style.min-width]="col.minWidth">
                     @if (cellTemplates[col.key]; as tpl) {
                       <ng-container
                         [ngTemplateOutlet]="tpl"
@@ -98,7 +101,7 @@ export interface DataTableSortEvent {
                   </td>
                 }
                 @if (actionsTemplate) {
-                  <td class="px-4 py-3 text-right" (click)="$event.stopPropagation()">
+                  <td class="px-4 py-3.5 text-right" (click)="$event.stopPropagation()">
                     <ng-container [ngTemplateOutlet]="actionsTemplate" [ngTemplateOutletContext]="{ $implicit: row }"></ng-container>
                   </td>
                 }
@@ -112,7 +115,7 @@ export interface DataTableSortEvent {
         <div class="block space-y-3 p-3 md:hidden">
           @for (row of data(); track row) {
             <div
-              class="rounded-lg bg-white p-4 ring-1 ring-gray-100"
+              class="rounded-lg bg-white p-4 ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800"
               [class.cursor-pointer]="rowClickable"
               (click)="rowClickable && rowClick.emit(row)"
             >
@@ -122,7 +125,7 @@ export interface DataTableSortEvent {
                   <div class="min-w-0 flex-1">
                     @for (col of columns(); track col.key) {
                       @if (col.isTitle) {
-                        <div class="break-words text-base font-semibold text-gray-900">
+                        <div class="break-words text-base font-semibold text-gray-900 dark:text-white">
                           @if (cellTemplates[col.key]; as tpl) {
                             <ng-container
                               [ngTemplateOutlet]="tpl"
@@ -148,8 +151,8 @@ export interface DataTableSortEvent {
                 @for (col of columns(); track col.key) {
                   @if (!col.isTitle) {
                     <div class="flex justify-between gap-3 py-1 text-sm">
-                      <span class="shrink-0 font-medium text-gray-500">{{ col.label }}</span>
-                      <span class="break-words text-right text-gray-800">
+                      <span class="shrink-0 font-medium text-gray-500 dark:text-slate-400">{{ col.label }}</span>
+                      <span class="break-words text-right text-gray-800 dark:text-slate-200">
                         @if (cellTemplates[col.key]; as tpl) {
                           <ng-container
                             [ngTemplateOutlet]="tpl"
@@ -166,8 +169,8 @@ export interface DataTableSortEvent {
                 <!-- Brak kolumny tytułowej: wszystkie kolumny jako pary klucz-wartość -->
                 @for (col of columns(); track col.key) {
                   <div class="flex justify-between gap-3 py-1 text-sm">
-                    <span class="shrink-0 font-medium text-gray-500">{{ col.label }}</span>
-                    <span class="break-words text-right text-gray-800">
+                    <span class="shrink-0 font-medium text-gray-500 dark:text-slate-400">{{ col.label }}</span>
+                    <span class="break-words text-right text-gray-800 dark:text-slate-200">
                       @if (cellTemplates[col.key]; as tpl) {
                         <ng-container
                           [ngTemplateOutlet]="tpl"
@@ -181,8 +184,8 @@ export interface DataTableSortEvent {
                 }
                 @if (actionsTemplate) {
                   <!-- Jawna etykieta „Akcje" — klarowne powiązanie z rekordem -->
-                  <div class="mt-3 flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
-                    <span class="text-xs font-medium uppercase tracking-wide text-gray-400">
+                  <div class="mt-3 flex items-center justify-between gap-2 border-t border-gray-100 pt-3 dark:border-slate-800">
+                    <span class="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-slate-500">
                       {{ 'common.table.actions' | translate }}
                     </span>
                     <div class="flex gap-1" (click)="$event.stopPropagation()">
@@ -200,16 +203,16 @@ export interface DataTableSortEvent {
 
         <!-- Paginacja -->
         @if (total() > 0) {
-          <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-4 py-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-4 py-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-medium uppercase tracking-wide text-gray-400">{{ 'common.table.total' | translate }}</span>
-              <span class="font-semibold text-gray-800">{{ total() }}</span>
+              <span class="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-slate-500">{{ 'common.table.total' | translate }}</span>
+              <span class="font-semibold text-gray-800 dark:text-slate-200">{{ total() }}</span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <span class="mr-1 text-gray-500">{{ 'common.table.page' | translate }} {{ page() }} {{ 'common.table.of' | translate }} {{ totalPages() }}</span>
+              <span class="mr-1 text-gray-500 dark:text-slate-400">{{ 'common.table.page' | translate }} {{ page() }} {{ 'common.table.of' | translate }} {{ totalPages() }}</span>
               <button
                 type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 [disabled]="page() === 1"
                 (click)="onPageChange(page() - 1)"
                 aria-label="Poprzednia strona"
@@ -218,7 +221,7 @@ export interface DataTableSortEvent {
               </button>
               <button
                 type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 [disabled]="page() === totalPages()"
                 (click)="onPageChange(page() + 1)"
                 aria-label="Następna strona"

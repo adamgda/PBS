@@ -5,6 +5,7 @@ import { filter } from 'rxjs';
 
 import { AuthService } from './services/auth.service';
 import { OfflineService } from './services/offline.service';
+import { ThemeService } from './services/theme.service';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { ToastNotificationComponent } from './components/toast-notification/toast-notification.component';
 import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
@@ -39,10 +40,18 @@ import { QuickNotesWidgetComponent } from './components/quick-notes-widget/quick
 export class AppComponent {
   private readonly authService = inject(AuthService);
   private readonly offlineService = inject(OfflineService);
+  private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
   readonly isLoggedIn = this.authService.isLoggedIn;
   readonly online = this.offlineService.online;
+
+  /** Czy aktywny jest tryb ciemny (do przełącznika w headerze). */
+  readonly dark = this.themeService.dark;
+
+  toggleTheme(): void {
+    this.themeService.toggle();
+  }
 
   /** Otwarcie draweru nawigacji na mobile */
   readonly mobileOpen = signal(false);
@@ -56,8 +65,8 @@ export class AppComponent {
     { path: '/sprzet', label: 'common.menu.sprzet', permission: 'sprzet', icon: 'sprzet' },
     { path: '/terminale', label: 'common.menu.terminale', permission: 'terminale', icon: 'terminale' },
     { path: '/harmonogram', label: 'common.menu.harmonogram', permission: 'harmonogram', icon: 'harmonogram' },
-    { path: '/analityka', label: 'common.menu.analityka', permission: 'analityka', icon: 'analityka' },
-    { path: '/raportowanie', label: 'common.menu.raportowanie', permission: 'raportowanie', icon: 'raportowanie' },
+    { path: '/analytics', label: 'common.menu.analytics', permission: 'analytics', icon: 'analytics' },
+    { path: '/reporting', label: 'common.menu.reporting', permission: 'reporting', icon: 'reporting' },
     { path: '/awaria', label: 'common.menu.awaria', permission: 'awaria', icon: 'awaria' },
     { path: '/settings', label: 'common.menu.ustawienia', permission: 'ustawienia', icon: 'settings' },
   ];

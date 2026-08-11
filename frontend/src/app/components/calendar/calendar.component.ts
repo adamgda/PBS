@@ -22,26 +22,26 @@ export type CalendarView = 'week' | 'month' | 'day';
   imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-white rounded-lg shadow">
+    <div class="bg-white rounded-lg shadow dark:bg-slate-900 dark:ring-1 dark:ring-slate-800">
       <!-- Toolbar -->
-      <div class="flex items-center justify-between p-4 border-b border-gray-100">
+      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-800">
         <div class="flex items-center gap-2">
           <button
             type="button"
-            class="px-3 py-1 rounded border border-gray-200 text-sm hover:bg-gray-50"
+            class="px-3 py-1 rounded border border-gray-200 text-sm hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="navigate(-1)"
           >←</button>
           <button
             type="button"
-            class="px-3 py-1 rounded border border-gray-200 text-sm hover:bg-gray-50"
+            class="px-3 py-1 rounded border border-gray-200 text-sm hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="navigate(1)"
           >→</button>
           <button
             type="button"
-            class="px-3 py-1 rounded border border-gray-200 text-sm hover:bg-gray-50"
+            class="px-3 py-1 rounded border border-gray-200 text-sm hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="goToday()"
           >{{ 'common.buttons.refresh' | translate }}</button>
-          <span class="ml-2 font-semibold text-gray-900">{{ currentPeriodLabel() }}</span>
+          <span class="ml-2 font-semibold text-gray-900 dark:text-white">{{ currentPeriodLabel() }}</span>
         </div>
       </div>
 
@@ -51,15 +51,17 @@ export type CalendarView = 'week' | 'month' | 'day';
           @case ('month') {
             <div class="grid grid-cols-7 gap-1">
               @for (day of dayNames; track day) {
-                <div class="text-xs font-medium text-gray-500 text-center py-1">{{ day }}</div>
+                <div class="text-xs font-medium text-gray-500 text-center py-1 dark:text-slate-400">{{ day }}</div>
               }
               @for (cell of monthGrid(); track cell.date) {
                 <div
-                  class="min-h-20 border border-gray-100 rounded p-1 text-xs"
+                  class="min-h-20 border border-gray-100 rounded p-1 text-xs dark:border-slate-800"
                   [class.bg-gray-50]="!cell.isCurrentMonth"
+                  [class.dark:bg-slate-800]="!cell.isCurrentMonth"
                   [class.bg-blue-50]="cell.isToday"
+                  [class.dark:bg-blue-500]="cell.isToday"
                 >
-                  <div class="text-gray-600">{{ cell.dayNumber }}</div>
+                  <div class="text-gray-600 dark:text-slate-300">{{ cell.dayNumber }}</div>
                   @for (ev of cell.events; track ev.id) {
                     <div
                       class="mt-1 px-1 py-0.5 rounded text-white text-xs truncate"
@@ -74,8 +76,8 @@ export type CalendarView = 'week' | 'month' | 'day';
           @case ('week') {
             <div class="grid grid-cols-7 gap-2">
               @for (day of weekDays(); track day.date) {
-                <div class="border border-gray-100 rounded p-2">
-                  <div class="text-xs font-medium text-gray-600 mb-1">{{ day.label }}</div>
+                <div class="border border-gray-100 rounded p-2 dark:border-slate-800">
+                  <div class="text-xs font-medium text-gray-600 mb-1 dark:text-slate-300">{{ day.label }}</div>
                   @for (ev of day.events; track ev.id) {
                     <div
                       class="mt-1 px-2 py-1 rounded text-white text-xs truncate cursor-pointer"
@@ -97,7 +99,7 @@ export type CalendarView = 'week' | 'month' | 'day';
                 >{{ ev.title }}</div>
               }
               @if (dayEvents().length === 0) {
-                <p class="text-sm text-gray-400">{{ 'common.table.no_data' | translate }}</p>
+                <p class="text-sm text-gray-400 dark:text-slate-500">{{ 'common.table.no_data' | translate }}</p>
               }
             </div>
           }

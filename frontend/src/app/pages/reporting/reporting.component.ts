@@ -36,7 +36,7 @@ type ModalMode = 'create' | 'edit' | null;
  * tworzenie i edycja raportów. Raport terminalowy pokazuje auto-dane z harmonogramu.
  */
 @Component({
-  selector: 'app-raportowanie',
+  selector: 'app-reporting',
   standalone: true,
   imports: [
     CommonModule,
@@ -52,9 +52,9 @@ type ModalMode = 'create' | 'edit' | null;
     DataTableComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './raportowanie.component.html',
+  templateUrl: './reporting.component.html',
 })
-export class RaportowanieComponent {
+export class ReportingComponent {
   private readonly reportsService = inject(ReportsService);
   private readonly terminalsService = inject(TerminalsService);
   private readonly equipmentService = inject(EquipmentService);
@@ -128,40 +128,40 @@ export class RaportowanieComponent {
   });
 
   readonly terminalColumns = computed<DataTableColumn<TerminalReport>[]>(() => [
-    { key: 'data_raportu', label: this.t('raportowanie.list.date'), sortable: true, isTitle: true },
-    { key: 'terminal_nazwa', label: this.t('raportowanie.list.terminal'), sortable: true },
-    { key: 'opis', label: this.t('raportowanie.list.opis') },
-    { key: 'utworzony_przez_email', label: this.t('raportowanie.list.author') },
+    { key: 'data_raportu', label: this.t('reporting.list.date'), sortable: true, isTitle: true },
+    { key: 'terminal_nazwa', label: this.t('reporting.list.terminal'), sortable: true },
+    { key: 'opis', label: this.t('reporting.list.opis') },
+    { key: 'utworzony_przez_email', label: this.t('reporting.list.author') },
   ]);
 
   readonly vehicleColumns = computed<DataTableColumn<VehicleReport>[]>(() => [
-    { key: 'data_raportu', label: this.t('raportowanie.list.date'), sortable: true, isTitle: true },
-    { key: 'equipment_nazwa', label: this.t('raportowanie.list.equipment'), sortable: true },
-    { key: 'aktualny_przebieg', label: this.t('raportowanie.list.przebieg'), sortable: true },
-    { key: 'przebieg_oc', label: this.t('raportowanie.list.przebieg_oc') },
-    { key: 'utworzony_przez_email', label: this.t('raportowanie.list.author') },
+    { key: 'data_raportu', label: this.t('reporting.list.date'), sortable: true, isTitle: true },
+    { key: 'equipment_nazwa', label: this.t('reporting.list.equipment'), sortable: true },
+    { key: 'aktualny_przebieg', label: this.t('reporting.list.przebieg'), sortable: true },
+    { key: 'przebieg_oc', label: this.t('reporting.list.przebieg_oc') },
+    { key: 'utworzony_przez_email', label: this.t('reporting.list.author') },
   ]);
 
   readonly terminalFilterConfigs = computed<FilterConfig[]>(() => [
     {
       key: 'terminal_id',
-      label: this.t('raportowanie.filters.terminal'),
+      label: this.t('reporting.filters.terminal'),
       type: 'select',
       options: this._terminalOptions().map((o) => ({ value: String(o.value), label: o.label })),
     },
-    { key: 'date_from', label: this.t('raportowanie.filters.date_from'), type: 'date' },
-    { key: 'date_to', label: this.t('raportowanie.filters.date_to'), type: 'date' },
+    { key: 'date_from', label: this.t('reporting.filters.date_from'), type: 'date' },
+    { key: 'date_to', label: this.t('reporting.filters.date_to'), type: 'date' },
   ]);
 
   readonly vehicleFilterConfigs = computed<FilterConfig[]>(() => [
     {
       key: 'equipment_id',
-      label: this.t('raportowanie.filters.equipment'),
+      label: this.t('reporting.filters.equipment'),
       type: 'select',
       options: this._equipmentOptions().map((o) => ({ value: String(o.value), label: o.label })),
     },
-    { key: 'date_from', label: this.t('raportowanie.filters.date_from'), type: 'date' },
-    { key: 'date_to', label: this.t('raportowanie.filters.date_to'), type: 'date' },
+    { key: 'date_from', label: this.t('reporting.filters.date_from'), type: 'date' },
+    { key: 'date_to', label: this.t('reporting.filters.date_to'), type: 'date' },
   ]);
 
   constructor() {
@@ -370,15 +370,15 @@ export class RaportowanieComponent {
     const date = this.modalDate().trim();
     const opis = this.modalOpis().trim();
     if (!terminalId) {
-      this.toastService.error(this.t('raportowanie.messages.terminal_required'));
+      this.toastService.error(this.t('reporting.messages.terminal_required'));
       return;
     }
     if (!date) {
-      this.toastService.error(this.t('raportowanie.messages.date_required'));
+      this.toastService.error(this.t('reporting.messages.date_required'));
       return;
     }
     if (!opis) {
-      this.toastService.error(this.t('raportowanie.messages.opis_required'));
+      this.toastService.error(this.t('reporting.messages.opis_required'));
       return;
     }
 
@@ -399,7 +399,7 @@ export class RaportowanieComponent {
         this.modalSaving.set(false);
         this.closeModal();
         this.toastService.success(
-          this.t(mode === 'edit' ? 'raportowanie.messages.updated.success' : 'raportowanie.messages.created.success'),
+          this.t(mode === 'edit' ? 'reporting.messages.updated.success' : 'reporting.messages.created.success'),
         );
         this.loadTerminalReports();
       },
@@ -416,19 +416,19 @@ export class RaportowanieComponent {
     const przebieg = Number(this.modalPrzebieg());
     const przebiegOc = this.modalPrzebiegOc().trim();
     if (!equipmentId) {
-      this.toastService.error(this.t('raportowanie.messages.equipment_required'));
+      this.toastService.error(this.t('reporting.messages.equipment_required'));
       return;
     }
     if (!date) {
-      this.toastService.error(this.t('raportowanie.messages.date_required'));
+      this.toastService.error(this.t('reporting.messages.date_required'));
       return;
     }
     if (this.modalPrzebieg().trim() === '' || Number.isNaN(przebieg) || przebieg < 0) {
-      this.toastService.error(this.t('raportowanie.messages.przebieg_required'));
+      this.toastService.error(this.t('reporting.messages.przebieg_required'));
       return;
     }
     if (!przebiegOc) {
-      this.toastService.error(this.t('raportowanie.messages.przebieg_oc_required'));
+      this.toastService.error(this.t('reporting.messages.przebieg_oc_required'));
       return;
     }
 
@@ -450,7 +450,7 @@ export class RaportowanieComponent {
         this.modalSaving.set(false);
         this.closeModal();
         this.toastService.success(
-          this.t(mode === 'edit' ? 'raportowanie.messages.updated.success' : 'raportowanie.messages.created.success'),
+          this.t(mode === 'edit' ? 'reporting.messages.updated.success' : 'reporting.messages.created.success'),
         );
         this.loadVehicleReports();
       },

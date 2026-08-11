@@ -1,59 +1,59 @@
 <!-- Nagłówek sekcji -->
 <div class="flex flex-wrap items-start justify-between gap-3">
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">{{ 'harmonogram.title' | translate }}</h1>
-    <p class="mt-1 text-gray-600">{{ 'harmonogram.subtitle' | translate }}</p>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'harmonogram.title' | translate }}</h1>
+    <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'harmonogram.subtitle' | translate }}</p>
   </div>
 </div>
 
 <!-- Pasek nawigacji widoku + przełącznik widoku -->
 <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
   <div class="flex items-center gap-2">
-    <button type="button" class="grid h-9 w-9 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50" (click)="prevPeriod()" [attr.aria-label]="'harmonogram.view.prev' | translate">
+    <button type="button" class="grid h-9 w-9 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" (click)="prevPeriod()" [attr.aria-label]="'harmonogram.view.prev' | translate">
       <app-svg-icon name="chevron-left" class="h-5 w-5" />
     </button>
-    <p class="px-2 text-sm font-semibold text-gray-900">{{ periodLabel() }}</p>
-    <button type="button" class="grid h-9 w-9 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50" (click)="nextPeriod()" [attr.aria-label]="'harmonogram.view.next' | translate">
+    <p class="px-2 text-sm font-semibold text-gray-900 dark:text-white">{{ periodLabel() }}</p>
+    <button type="button" class="grid h-9 w-9 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" (click)="nextPeriod()" [attr.aria-label]="'harmonogram.view.next' | translate">
       <app-svg-icon name="chevron-right" class="h-5 w-5" />
     </button>
-    <button type="button" class="ml-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50" (click)="goToday()">{{ 'harmonogram.view.today' | translate }}</button>
+    <button type="button" class="ml-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" (click)="goToday()">{{ 'harmonogram.view.today' | translate }}</button>
   </div>
   <div class="flex items-center gap-2">
-    <div class="inline-flex rounded-xl border border-gray-200 bg-white p-0.5 text-sm">
-      <button type="button" class="rounded-lg px-3 py-1.5 font-medium transition-colors" [class.bg-pbs-primary]="viewMode() === 'day'" [class.text-white]="viewMode() === 'day'" [class.text-gray-500]="viewMode() !== 'day'" (click)="setView('day')">{{ 'harmonogram.view.day' | translate }}</button>
-      <button type="button" class="rounded-lg px-3 py-1.5 font-medium transition-colors" [class.bg-pbs-primary]="viewMode() === 'week'" [class.text-white]="viewMode() === 'week'" [class.text-gray-500]="viewMode() !== 'week'" (click)="setView('week')">{{ 'harmonogram.view.week' | translate }}</button>
-      <button type="button" class="rounded-lg px-3 py-1.5 font-medium transition-colors" [class.bg-pbs-primary]="viewMode() === 'month'" [class.text-white]="viewMode() === 'month'" [class.text-gray-500]="viewMode() !== 'month'" (click)="setView('month')">{{ 'harmonogram.view.month' | translate }}</button>
+    <div class="inline-flex rounded-xl border border-gray-200 bg-white p-0.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+      <button type="button" class="rounded-lg px-3 py-1.5 font-medium transition-colors dark:text-slate-400" [class.bg-pbs-primary]="viewMode() === 'day'" [class.text-white]="viewMode() === 'day'" [class.text-gray-500]="viewMode() !== 'day'" (click)="setView('day')">{{ 'harmonogram.view.day' | translate }}</button>
+      <button type="button" class="rounded-lg px-3 py-1.5 font-medium transition-colors dark:text-slate-400" [class.bg-pbs-primary]="viewMode() === 'week'" [class.text-white]="viewMode() === 'week'" [class.text-gray-500]="viewMode() !== 'week'" (click)="setView('week')">{{ 'harmonogram.view.week' | translate }}</button>
+      <button type="button" class="rounded-lg px-3 py-1.5 font-medium transition-colors dark:text-slate-400" [class.bg-pbs-primary]="viewMode() === 'month'" [class.text-white]="viewMode() === 'month'" [class.text-gray-500]="viewMode() !== 'month'" (click)="setView('month')">{{ 'harmonogram.view.month' | translate }}</button>
     </div>
     <app-button variant="outline" [label]="'harmonogram.buttons.copy_week'" (clicked)="openCopyWeek()" />
-    <app-add-button [label]="'harmonogram.buttons.add'" (add)="openCreate()" />
+    <app-add-button [label]="'harmonogram.buttons.add'" (add)="goToNewOrder()" />
   </div>
 </div>
 
 <!-- Siatka tygodniowa (widok Tydzień) -->
 <div class="mt-4">
   @if (loading()) {
-    <div class="p-8 text-center text-gray-500">{{ 'common.table.loading' | translate }}</div>
+    <div class="p-8 text-center text-gray-500 dark:text-slate-400">{{ 'common.table.loading' | translate }}</div>
   } @else if (viewMode() === 'week') {
-    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div class="overflow-x-auto">
         <div class="grid min-w-[760px] grid-cols-8 text-xs">
           <!-- nagłówek -->
-          <div class="border-b border-r border-gray-100 bg-gray-50 p-2 font-medium text-gray-500">{{ 'harmonogram.grid.hours' | translate }}</div>
+          <div class="border-b border-r border-gray-100 bg-gray-50 p-2 font-medium text-gray-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">{{ 'harmonogram.grid.hours' | translate }}</div>
           @for (col of weekColumns(); track col.date; let last = $last) {
-            <div class="border-b border-r border-gray-100 bg-gray-50 p-2 text-center font-semibold" [class.border-r-0]="last" [class.text-cyan-700]="col.isToday" [class.text-gray-700]="!col.isToday">
-              {{ col.label }} @if (col.isToday) { <span class="text-[9px] text-cyan-500">{{ 'harmonogram.view.today_short' | translate }}</span> }
+            <div class="border-b border-r border-gray-100 bg-gray-50 p-2 text-center font-semibold dark:border-slate-800 dark:bg-slate-800/60" [class.border-r-0]="last" [class.text-cyan-700]="col.isToday" [class.dark:text-cyan-400]="col.isToday" [class.text-gray-700]="!col.isToday" [class.dark:text-slate-200]="!col.isToday">
+              {{ col.label }} @if (col.isToday) { <span class="text-[9px] text-cyan-500 dark:text-cyan-400">{{ 'harmonogram.view.today_short' | translate }}</span> }
             </div>
           }
           <!-- rzędy zmian -->
           @for (row of shiftRows(); track row.key; let last = $last) {
-            <div class="border-r border-b border-gray-100 p-2 text-gray-500" [class.border-b-0]="last">{{ row.label }}</div>
+            <div class="border-r border-b border-gray-100 p-2 text-gray-500 dark:border-slate-800 dark:text-slate-400" [class.border-b-0]="last">{{ row.label }}</div>
             @for (cell of row.cells; track cell.date; let cellLast = $last) {
-              <div class="cal-cell border-r border-b border-gray-100 p-1.5 align-top" [class.border-b-0]="last" [class.bg-cyan-50]="cell.isToday">
+              <div class="cal-cell border-r border-b border-gray-100 p-1.5 align-top dark:border-slate-800" [class.border-b-0]="last" [class.bg-cyan-50]="cell.isToday" [class.dark:bg-cyan-500]="cell.isToday">
                 @for (o of cell.orders; track o.id) {
                   <div class="mb-1 cursor-pointer rounded-md border-l-4 p-2" [class]="cardColorClasses(o.status)" (click)="onCalendarEventClick({ id: o.id, title: '', date: '' })">
                     <p class="text-xs font-semibold">{{ o.numer_zlecenia }}</p>
-                    <p class="text-[10px] text-gray-500">{{ orderCardSubtitle(o) }}</p>
-                    @if (o.status === 'w_realizacji') { <p class="text-[10px] font-medium text-amber-700">{{ statusLabel(o.status) }}</p> }
+                    <p class="text-[10px] text-gray-500 dark:text-slate-400">{{ orderCardSubtitle(o) }}</p>
+                    @if (o.status === 'w_realizacji') { <p class="text-[10px] font-medium text-amber-700 dark:text-amber-400">{{ statusLabel(o.status) }}</p> }
                   </div>
                 }
               </div>
@@ -69,14 +69,14 @@
 <!-- Detal zlecenia + dostępni pracownicy (widok główny) -->
 <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
   <!-- Detal zlecenia -->
-  <div class="lg:col-span-2 rounded-lg border border-gray-200 bg-white p-4">
+  <div class="lg:col-span-2 rounded-lg border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
     @if (selectedOrder()) {
       <div class="mb-3 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span class="grid h-9 w-9 place-items-center rounded-lg bg-cyan-50 text-cyan-600"><app-svg-icon name="document" class="h-5 w-5" /></span>
+          <span class="grid h-9 w-9 place-items-center rounded-lg bg-cyan-50 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400"><app-svg-icon name="document" class="h-5 w-5" /></span>
           <div>
-            <h3 class="font-semibold text-gray-900">{{ selectedOrder()!.numer_zlecenia }}<span class="font-normal text-gray-500"> — {{ selectedOrder()!.zakres_prac || '—' }}</span></h3>
-            <p class="text-xs text-gray-500">{{ selectedOrder()!.terminal_nazwa || ('harmonogram.order.terminal' | translate) }}</p>
+            <h3 class="font-semibold text-gray-900 dark:text-white">{{ selectedOrder()!.numer_zlecenia }}<span class="font-normal text-gray-500 dark:text-slate-400"> — {{ selectedOrder()!.zakres_prac || '—' }}</span></h3>
+            <p class="text-xs text-gray-500 dark:text-slate-400">{{ selectedOrder()!.terminal_nazwa || ('harmonogram.order.terminal' | translate) }}</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -85,26 +85,26 @@
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <div class="rounded-lg bg-gray-50 p-2"><p class="text-xs text-gray-500">{{ 'harmonogram.order.client' | translate }}</p><p class="font-medium">{{ selectedOrder()!.klient_nazwa }}</p></div>
-        <div class="rounded-lg bg-gray-50 p-2"><p class="text-xs text-gray-500">{{ 'harmonogram.order.start_date' | translate }}</p><p class="font-medium">{{ selectedOrder()!.data_rozpoczecia || '—' }}</p></div>
-        <div class="rounded-lg bg-gray-50 p-2"><p class="text-xs text-gray-500">{{ 'harmonogram.order.value' | translate }}</p><p class="font-medium">{{ formatCurrency(selectedOrder()!.wartosc_pln) }}</p></div>
-        <div class="rounded-lg bg-gray-50 p-2"><p class="text-xs text-gray-500">{{ 'harmonogram.order.status' | translate }}</p><p class="font-medium text-cyan-600">{{ statusLabel(selectedOrder()!.status) }}</p></div>
+        <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800"><p class="text-xs text-gray-500 dark:text-slate-400">{{ 'harmonogram.order.client' | translate }}</p><p class="font-medium dark:text-slate-200">{{ selectedOrder()!.klient_nazwa }}</p></div>
+        <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800"><p class="text-xs text-gray-500 dark:text-slate-400">{{ 'harmonogram.order.start_date' | translate }}</p><p class="font-medium dark:text-slate-200">{{ selectedOrder()!.data_rozpoczecia || '—' }}</p></div>
+        <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800"><p class="text-xs text-gray-500 dark:text-slate-400">{{ 'harmonogram.order.value' | translate }}</p><p class="font-medium dark:text-slate-200">{{ formatCurrency(selectedOrder()!.wartosc_pln) }}</p></div>
+        <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800"><p class="text-xs text-gray-500 dark:text-slate-400">{{ 'harmonogram.order.status' | translate }}</p><p class="font-medium text-cyan-600 dark:text-cyan-400">{{ statusLabel(selectedOrder()!.status) }}</p></div>
       </div>
       <!-- Pille przypisań -->
       <div class="mt-3 flex flex-wrap gap-2">
         @for (e of selectedOrder()!.employees; track e.id) {
-          <span class="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-800">{{ e.employee_name ?? ('harmonogram.order.deleted_employee' | translate) }} ({{ roleLabel(e.rola) }})</span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200">{{ e.employee_name ?? ('harmonogram.order.deleted_employee' | translate) }} ({{ roleLabel(e.rola) }})</span>
         }
         @if ((selectedOrder()!.equipment?.length ?? 0) > 0) {
-          <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">{{ 'harmonogram.order.assigned_equipment' | translate }}: {{ equipmentNames(selectedOrder()!) }}</span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-300">{{ 'harmonogram.order.assigned_equipment' | translate }}: {{ equipmentNames(selectedOrder()!) }}</span>
         }
       </div>
       <!-- Rozliczenie godzin i wynagrodzeń -->
-      <div class="mt-3 rounded-lg bg-gray-50 p-3 text-sm">
-        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">{{ 'harmonogram.wages.title' | translate }}</p>
+      <div class="mt-3 rounded-lg bg-gray-50 p-3 text-sm dark:bg-slate-800">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700 dark:text-slate-300">{{ 'harmonogram.wages.title' | translate }}</p>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead class="text-xs text-gray-500">
+            <thead class="text-xs text-gray-500 dark:text-slate-400">
               <tr>
                 <th class="pb-1 text-left font-medium">{{ 'harmonogram.wages.employee' | translate }}</th>
                 <th class="pb-1 text-left font-medium">{{ 'harmonogram.wages.role' | translate }}</th>
@@ -113,27 +113,27 @@
                 <th class="pb-1 text-right font-medium">{{ 'harmonogram.wages.wage' | translate }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
+            <tbody class="divide-y divide-gray-200 dark:divide-slate-700">
               @for (e of selectedOrder()!.employees; track e.id) {
                 <tr>
-                  <td class="py-1.5 font-medium">{{ e.employee_name ?? ('harmonogram.order.deleted_employee' | translate) }}</td>
-                  <td class="py-1.5"><span class="inline-flex items-center rounded-full bg-cyan-50 px-2 py-0.5 text-xs font-medium text-cyan-800">{{ roleLabel(e.rola) }}</span></td>
-                  <td class="py-1.5 text-right">{{ e.godziny !== null ? (e.godziny + ' h') : '—' }}</td>
-                  <td class="py-1.5 text-right">{{ e.stawka_godzinowa !== null ? formatCurrency(e.stawka_godzinowa) : '—' }}</td>
-                  <td class="py-1.5 text-right font-semibold text-emerald-700">{{ formatCurrency(e.wynagrodzenie) }}</td>
+                  <td class="py-1.5 font-medium dark:text-slate-200">{{ e.employee_name ?? ('harmonogram.order.deleted_employee' | translate) }}</td>
+                  <td class="py-1.5"><span class="inline-flex items-center rounded-full bg-cyan-50 px-2 py-0.5 text-xs font-medium text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200">{{ roleLabel(e.rola) }}</span></td>
+                  <td class="py-1.5 text-right dark:text-slate-200">{{ e.godziny !== null ? (e.godziny + ' h') : '—' }}</td>
+                  <td class="py-1.5 text-right dark:text-slate-200">{{ e.stawka_godzinowa !== null ? formatCurrency(e.stawka_godzinowa) : '—' }}</td>
+                  <td class="py-1.5 text-right font-semibold text-emerald-700 dark:text-emerald-400">{{ formatCurrency(e.wynagrodzenie) }}</td>
                 </tr>
               }
               @if ((selectedOrder()!.employees?.length ?? 0) === 0) {
-                <tr><td class="py-1.5 text-xs text-gray-400" colspan="5">{{ 'harmonogram.order.no_employees' | translate }}</td></tr>
+                <tr><td class="py-1.5 text-xs text-gray-400 dark:text-slate-500" colspan="5">{{ 'harmonogram.order.no_employees' | translate }}</td></tr>
               }
             </tbody>
             @if ((selectedOrder()!.employees?.length ?? 0) > 0) {
               <tfoot>
-                <tr class="border-t border-gray-300 font-semibold">
+                <tr class="border-t border-gray-300 font-semibold dark:border-slate-600 dark:text-slate-200">
                   <td class="py-1.5" colspan="2">{{ 'harmonogram.wages.sum' | translate }}</td>
                   <td class="py-1.5 text-right">{{ wagesSummary().godziny }} h</td>
                   <td class="py-1.5"></td>
-                  <td class="py-1.5 text-right text-emerald-700">{{ formatCurrency(wagesSummary().wynagrodzenie) }}</td>
+                  <td class="py-1.5 text-right text-emerald-700 dark:text-emerald-400">{{ formatCurrency(wagesSummary().wynagrodzenie) }}</td>
                 </tr>
               </tfoot>
             }
@@ -142,59 +142,59 @@
       </div>
       <!-- Przekazanie zmiany -->
       @if (shiftHandover(); as handover) {
-        <div class="mt-3 flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-sm">
-          <app-svg-icon name="check" class="h-5 w-5 shrink-0 text-indigo-600" />
+        <div class="mt-3 flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-sm dark:border-indigo-900/50 dark:bg-indigo-950/40">
+          <app-svg-icon name="check" class="h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <p class="font-semibold text-indigo-800">{{ 'harmonogram.shift.handover_title' | translate }}: {{ handover.from }} → {{ handover.to }}</p>
-            <p class="text-xs text-indigo-600">{{ 'harmonogram.shift.handover_note' | translate }}</p>
+            <p class="font-semibold text-indigo-800 dark:text-indigo-300">{{ 'harmonogram.shift.handover_title' | translate }}: {{ handover.from }} → {{ handover.to }}</p>
+            <p class="text-xs text-indigo-600 dark:text-indigo-400">{{ 'harmonogram.shift.handover_note' | translate }}</p>
           </div>
         </div>
       }
       } @else {
         <div class="py-10 text-center">
-          <app-svg-icon name="document" class="mx-auto h-8 w-8 text-gray-300" />
-          <p class="mt-2 text-sm font-medium text-gray-600">{{ 'harmonogram.detail.no_order_title' | translate }}</p>
-          <p class="mt-1 text-xs text-gray-400">{{ 'harmonogram.detail.no_order_hint' | translate }}</p>
+          <app-svg-icon name="document" class="mx-auto h-8 w-8 text-gray-300 dark:text-slate-600" />
+          <p class="mt-2 text-sm font-medium text-gray-600 dark:text-slate-300">{{ 'harmonogram.detail.no_order_title' | translate }}</p>
+          <p class="mt-1 text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.detail.no_order_hint' | translate }}</p>
         </div>
       }
     </div>
 
     <!-- Dostępni pracownicy -->
-    <div class="rounded-lg border border-gray-200 bg-white p-4">
+    <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
       <div class="mb-3 flex items-center gap-2">
-        <span class="grid h-9 w-9 place-items-center rounded-lg bg-emerald-50 text-emerald-600"><app-svg-icon name="pracownicy" class="h-5 w-5" /></span>
-        <h3 class="font-semibold text-gray-900">{{ 'harmonogram.available_employees.title' | translate }}</h3>
+        <span class="grid h-9 w-9 place-items-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"><app-svg-icon name="pracownicy" class="h-5 w-5" /></span>
+        <h3 class="font-semibold text-gray-900 dark:text-white">{{ 'harmonogram.available_employees.title' | translate }}</h3>
       </div>
       <div class="relative mb-3">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><app-svg-icon name="search" class="h-4 w-4" /></span>
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"><app-svg-icon name="search" class="h-4 w-4" /></span>
         <input
           type="text"
           [placeholder]="'harmonogram.available_employees.search_placeholder' | translate"
           [ngModel]="employeeSearch()"
           (ngModelChange)="employeeSearch.set($event)"
-          class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
         />
       </div>
       <ul class="space-y-2 text-sm">
         @for (emp of filteredAvailableEmployees(); track emp.id) {
-          <li class="flex items-center justify-between rounded-lg p-2 hover:bg-gray-50" [class.opacity-60]="emp.on_leave">
+          <li class="flex items-center justify-between rounded-lg p-2 hover:bg-gray-50 dark:hover:bg-slate-800" [class.opacity-60]="emp.on_leave">
             <div class="flex items-center gap-2">
               <span class="grid h-8 w-8 place-items-center rounded-full bg-pbs-primary text-xs font-semibold text-white">{{ initials(emp.imie, emp.nazwisko) }}</span>
               <div>
-                <span class="font-medium" [class.text-gray-400]="emp.on_leave">{{ emp.imie }} {{ emp.nazwisko }}</span>
-                <p class="text-xs text-gray-500">{{ formatCurrency(emp.stawka_godzinowa) }}/h{{ emp.rola_dzis ? ' · ' + roleLabel(emp.rola_dzis) : '' }}</p>
+                <span class="font-medium dark:text-slate-200" [class.text-gray-400]="emp.on_leave" [class.dark:text-slate-500]="emp.on_leave">{{ emp.imie }} {{ emp.nazwisko }}</span>
+                <p class="text-xs text-gray-500 dark:text-slate-400">{{ formatCurrency(emp.stawka_godzinowa) }}/h{{ emp.rola_dzis ? ' · ' + roleLabel(emp.rola_dzis) : '' }}</p>
               </div>
             </div>
             @if (emp.on_leave) {
-              <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">{{ 'harmonogram.available_employees.on_leave' | translate }}</span>
+              <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">{{ 'harmonogram.available_employees.on_leave' | translate }}</span>
             } @else if (isEmployeeAssigned(emp)) {
-              <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">{{ 'harmonogram.available_employees.assigned' | translate }}</span>
+              <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">{{ 'harmonogram.available_employees.assigned' | translate }}</span>
             } @else {
               <app-button variant="primary" size="sm" [label]="'harmonogram.assign.add'" (clicked)="quickAssignEmployee(emp)" />
             }
           </li>
         } @empty {
-          <li class="text-xs text-gray-400">{{ 'harmonogram.available_employees.empty' | translate }}</li>
+          <li class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.available_employees.empty' | translate }}</li>
         }
       </ul>
     </div>
@@ -202,9 +202,9 @@
 <!-- ===== Modal: formularz zlecenia (create/edit) ===== -->
 @if (modalMode() === 'create' || modalMode() === 'edit') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ modalMode() === 'edit' ? ('harmonogram.form.edit_title' | translate) : ('harmonogram.form.add_title' | translate) }}
         </h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
@@ -229,7 +229,7 @@
       />
 
       <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.terminal' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.terminal' | translate }}</label>
         <app-autocomplete-select
           class="mt-1.5"
           [options]="terminalOptions()"
@@ -241,19 +241,19 @@
 
       <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.start_datetime' | translate }}</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.start_datetime' | translate }}</label>
           <input
             type="datetime-local"
-            class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+            class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             [ngModel]="formStart()"
             (ngModelChange)="formStart.set($event)"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.end_datetime' | translate }}</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.end_datetime' | translate }}</label>
           <input
             type="datetime-local"
-            class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+            class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             [ngModel]="formEnd()"
             (ngModelChange)="formEnd.set($event)"
           />
@@ -261,9 +261,9 @@
       </div>
 
       <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.scope' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.scope' | translate }}</label>
         <textarea
-          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           rows="3"
           [placeholder]="'harmonogram.form.scope_placeholder' | translate"
           [ngModel]="formZakres()"
@@ -280,7 +280,7 @@
           (ngModelChange)="formWartosc.set($event)"
         />
         <div>
-          <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.form.status' | translate }}</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.form.status' | translate }}</label>
           <app-select
             class="mt-1.5"
             size="lg"
@@ -292,8 +292,8 @@
       </div>
       <!-- Przypisania podczas tworzenia zlecenia (pille + autocomplete) -->
       @if (modalMode() === 'create') {
-        <div class="mb-4 rounded-lg bg-gray-50 p-4">
-          <h4 class="mb-2 text-sm font-semibold text-gray-700">{{ 'harmonogram.order.assigned_employees' | translate }}</h4>
+        <div class="mb-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800/60">
+          <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_employees' | translate }}</h4>
           <app-autocomplete-select
             class="mb-2"
             [options]="employeeOptions()"
@@ -304,17 +304,17 @@
           @if (pendingEmployees().length) {
             <div class="flex flex-wrap gap-2">
               @for (p of pendingEmployees(); track p.employee_id) {
-                <span class="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-800">
+                <span class="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200">
                   + {{ p.name }}{{ p.rola ? ' (' + roleLabel(p.rola) + ')' : '' }}
-                  <button type="button" class="text-cyan-500 hover:text-cyan-700" (click)="removePendingEmployee(p)" aria-label="remove">✕</button>
+                  <button type="button" class="text-cyan-500 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300" (click)="removePendingEmployee(p)" aria-label="remove">✕</button>
                 </span>
               }
             </div>
           } @else {
-            <p class="text-xs text-gray-400">{{ 'harmonogram.order.no_employees' | translate }}</p>
+            <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_employees' | translate }}</p>
           }
 
-          <h4 class="mb-2 mt-3 text-sm font-semibold text-gray-700">{{ 'harmonogram.order.assigned_equipment' | translate }}</h4>
+          <h4 class="mb-2 mt-3 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_equipment' | translate }}</h4>
           <app-autocomplete-select
             class="mb-2"
             [options]="equipmentOptions()"
@@ -325,31 +325,31 @@
           @if (pendingEquipment().length) {
             <div class="flex flex-wrap gap-2">
               @for (p of pendingEquipment(); track p.equipment_id) {
-                <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-300">
                   + {{ p.name }}
-                  <button type="button" class="text-gray-500 hover:text-gray-700" (click)="removePendingEquipment(p)" aria-label="remove">✕</button>
+                  <button type="button" class="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200" (click)="removePendingEquipment(p)" aria-label="remove">✕</button>
                 </span>
               }
             </div>
           } @else {
-            <p class="text-xs text-gray-400">{{ 'harmonogram.order.no_equipment' | translate }}</p>
+            <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_equipment' | translate }}</p>
           }
         </div>
       }
       <!-- Przypisania (tylko w trybie edycji) -->
       @if (modalMode() === 'edit' && detailsOrder()) {
-        <div class="mb-4 rounded-lg bg-gray-50 p-4">
+        <div class="mb-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800/60">
           <div class="mb-2 flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-gray-700">{{ 'harmonogram.order.assigned_employees' | translate }}</h4>
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_employees' | translate }}</h4>
             <app-button variant="secondary" [label]="'harmonogram.buttons.assign_employee'" (clicked)="openAssignEmployee()" />
           </div>
           @if (detailsOrder()!.employees?.length) {
             <ul class="space-y-1">
               @for (e of detailsOrder()!.employees; track e.id) {
-                <li class="flex items-center justify-between rounded bg-white px-2 py-1 text-sm">
+                <li class="flex items-center justify-between rounded bg-white px-2 py-1 text-sm dark:bg-slate-900 dark:text-slate-200">
                   <span>
                     {{ e.employee_name ?? ('harmonogram.order.deleted_employee' | translate) }}
-                    <span class="text-xs text-gray-500">({{ roleLabel(e.rola) }}{{ e.godziny !== null ? ' · ' + e.godziny + ' h' : '' }})</span>
+                    <span class="text-xs text-gray-500 dark:text-slate-400">({{ roleLabel(e.rola) }}{{ e.godziny !== null ? ' · ' + e.godziny + ' h' : '' }})</span>
                   </span>
                   @if (e.employee_id !== null) {
                     <app-icon-button icon="trash" tone="danger" size="sm" [ariaLabel]="'harmonogram.actions.remove_assignment' | translate" (clicked)="removeEmployee(e)" />
@@ -358,24 +358,24 @@
               }
             </ul>
           } @else {
-            <p class="text-xs text-gray-400">{{ 'harmonogram.order.no_employees' | translate }}</p>
+            <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_employees' | translate }}</p>
           }
 
           <div class="mt-3 mb-2 flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-gray-700">{{ 'harmonogram.order.assigned_equipment' | translate }}</h4>
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_equipment' | translate }}</h4>
             <app-button variant="secondary" [label]="'harmonogram.buttons.assign_equipment'" (clicked)="openAssignEquipment()" />
           </div>
           @if (detailsOrder()!.equipment?.length) {
             <ul class="space-y-1">
               @for (eq of detailsOrder()!.equipment; track eq.id) {
-                <li class="flex items-center justify-between rounded bg-white px-2 py-1 text-sm">
+                <li class="flex items-center justify-between rounded bg-white px-2 py-1 text-sm dark:bg-slate-900 dark:text-slate-200">
                   <span>{{ eq.equipment_nazwa || '—' }}</span>
                   <app-icon-button icon="trash" tone="danger" size="sm" [ariaLabel]="'harmonogram.actions.remove_assignment' | translate" (clicked)="removeEquipment(eq)" />
                 </li>
               }
             </ul>
           } @else {
-            <p class="text-xs text-gray-400">{{ 'harmonogram.order.no_equipment' | translate }}</p>
+            <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_equipment' | translate }}</p>
           }
         </div>
       }
@@ -393,14 +393,14 @@
 <!-- ===== Modal: przypisz pracownika ===== -->
 @if (modalMode() === 'assignEmployee' && assignOrder()) {
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'harmonogram.assign.employee_title' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'harmonogram.assign.employee_title' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAssign()" />
       </div>
-      <p class="mb-4 text-sm text-gray-600">{{ assignOrder()?.numer_zlecenia }}</p>
+      <p class="mb-4 text-sm text-gray-600 dark:text-slate-400">{{ assignOrder()?.numer_zlecenia }}</p>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.assign.select_employee' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.assign.select_employee' | translate }}</label>
         <app-autocomplete-select
           class="mt-1.5"
           [options]="employeeOptions()"
@@ -410,9 +410,9 @@
         />
       </div>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.assign.select_role' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.assign.select_role' | translate }}</label>
         <select
-          class="mt-1.5 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-pbs-primary focus:outline-none"
+          class="mt-1.5 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-pbs-primary focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           [ngModel]="assignRole()"
           (ngModelChange)="assignRole.set($event)"
         >
@@ -425,7 +425,7 @@
         </select>
       </div>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.assign.hours' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.assign.hours' | translate }}</label>
         <input
           type="number"
           min="0"
@@ -433,7 +433,7 @@
           [placeholder]="'harmonogram.assign.hours_placeholder' | translate"
           [ngModel]="assignGodziny()"
           (ngModelChange)="assignGodziny.set($event)"
-          class="mt-1.5 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-pbs-primary focus:outline-none"
+          class="mt-1.5 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-pbs-primary focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
         />
       </div>
       <div class="flex justify-end gap-3">
@@ -446,14 +446,14 @@
 <!-- ===== Modal: przypisz sprzęt ===== -->
 @if (modalMode() === 'assignEquipment' && assignOrder()) {
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'harmonogram.assign.equipment_title' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'harmonogram.assign.equipment_title' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAssign()" />
       </div>
-      <p class="mb-4 text-sm text-gray-600">{{ assignOrder()?.numer_zlecenia }}</p>
+      <p class="mb-4 text-sm text-gray-600 dark:text-slate-400">{{ assignOrder()?.numer_zlecenia }}</p>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.assign.select_equipment' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.assign.select_equipment' | translate }}</label>
         <app-autocomplete-select
           class="mt-1.5"
           [options]="equipmentOptions()"
@@ -472,36 +472,36 @@
 <!-- ===== Modal: kopiuj tydzień ===== -->
 @if (modalMode() === 'copyWeek') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'harmonogram.copy_week.title' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'harmonogram.copy_week.title' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeCopyWeek()" />
       </div>
       <!-- Podsumowanie tygodnia źródłowego (zgodnie z mockiem) -->
-      <div class="mb-3 rounded-lg bg-gray-50 p-3 text-sm">
-        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ 'harmonogram.copy_week.source_summary' | translate }}</p>
-        <p class="mt-1 font-medium text-gray-800">{{ weekLabelOf(copyWeekSource()) || ('harmonogram.copy_week.no_source' | translate) }}</p>
+      <div class="mb-3 rounded-lg bg-gray-50 p-3 text-sm dark:bg-slate-800">
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">{{ 'harmonogram.copy_week.source_summary' | translate }}</p>
+        <p class="mt-1 font-medium text-gray-800 dark:text-slate-200">{{ weekLabelOf(copyWeekSource()) || ('harmonogram.copy_week.no_source' | translate) }}</p>
       </div>
       <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.copy_week.source_week_start' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.copy_week.source_week_start' | translate }}</label>
         <input
           type="date"
-          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           [ngModel]="copyWeekSource()"
           (ngModelChange)="copyWeekSource.set($event)"
         />
       </div>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">{{ 'harmonogram.copy_week.target_week_start' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.copy_week.target_week_start' | translate }}</label>
         <input
           type="date"
-          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary"
+          class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           [ngModel]="copyWeekTarget()"
           (ngModelChange)="copyWeekTarget.set($event)"
         />
       </div>
       <!-- Notatka o zakresie kopiowania (jak na mocku) -->
-      <div class="mb-4 flex items-start gap-2 rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
+      <div class="mb-4 flex items-start gap-2 rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
         <app-svg-icon name="alert" class="mt-0.5 h-4 w-4 shrink-0" />
         <p>{{ 'harmonogram.copy_week.note' | translate }}</p>
       </div>

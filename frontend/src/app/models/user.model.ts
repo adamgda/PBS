@@ -11,8 +11,8 @@ export const PERMISSION_SECTIONS = [
   'sprzet',
   'terminale',
   'harmonogram',
-  'analityka',
-  'raportowanie',
+  'analytics',
+  'reporting',
   'ustawienia',
   'awaria',
 ] as const;

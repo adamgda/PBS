@@ -67,9 +67,9 @@ export class ButtonComponent {
     const variantClass = (() => {
       switch (this.variant) {
         case 'secondary':
-          return 'bg-gray-100 text-gray-700 shadow-sm hover:bg-gray-200';
+          return 'bg-gray-100 text-gray-700 shadow-sm hover:bg-gray-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700';
         case 'outline':
-          return 'border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300';
+          return 'border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:border-slate-600';
         case 'danger':
           return 'bg-pbs-danger text-white shadow-sm hover:bg-red-600 hover:shadow';
         case 'block':

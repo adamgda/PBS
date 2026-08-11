@@ -52,13 +52,13 @@ import { CommonModule } from '@angular/common';
           <rect x="3" y="5" width="18" height="16" rx="2" />
           <path d="M3 9.5h18M8 3v4M16 3v4" />
         }
-        @case ('analityka') {
+        @case ('analytics') {
           <path d="M3 20h18" />
           <rect x="5" y="11" width="3" height="6" rx="0.5" />
           <rect x="10.5" y="7" width="3" height="10" rx="0.5" />
           <rect x="16" y="14" width="3" height="3" rx="0.5" />
         }
-        @case ('raportowanie') {
+        @case ('reporting') {
           <path d="M7 3h6l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
           <path d="M13 3v4h4" />
           <path d="M9 13h6M9 16.5h6" />
@@ -183,6 +183,13 @@ import { CommonModule } from '@angular/common';
         @case ('pencil') {
           <path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
           <path d="m15 5 4 4" />
+        }
+        @case ('sun') {
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        }
+        @case ('moon') {
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
         }
         @default {
           <circle cx="12" cy="12" r="9" />

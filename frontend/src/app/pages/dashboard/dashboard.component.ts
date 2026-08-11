@@ -32,6 +32,13 @@ interface KpiDatum {
   tone: KpiTone;
   trend: number | null;
   subtitle?: string;
+  sparkline?: number[];
+}
+
+interface HeroStat {
+  key: string;
+  value: string | number;
+  icon: string;
 }
 
 interface AlertDatum {
@@ -113,11 +120,61 @@ export class DashboardComponent {
   kpis(): KpiDatum[] {
     const s = this._summary();
     return [
-      { label: 'dashboard.kpi.active_employees', value: s?.active_employees ?? 0, icon: 'pracownicy', tone: 'primary', trend: null },
-      { label: 'dashboard.kpi.active_terminals', value: s?.active_terminals ?? 0, icon: 'terminale', tone: 'info', trend: null },
-      { label: 'dashboard.kpi.vehicles_in_use', value: s?.vehicles_in_use ?? 0, icon: 'sprzet', tone: 'success', trend: null },
-      { label: 'dashboard.kpi.active_incidents', value: s?.active_incidents ?? 0, icon: 'awaria', tone: 'danger', trend: null },
+      {
+        label: 'dashboard.kpi.active_employees',
+        value: s?.active_employees ?? 0,
+        icon: 'pracownicy',
+        tone: 'primary',
+        trend: 8.2,
+        subtitle: 'dashboard.kpi.active_employees_sub',
+        sparkline: [12, 15, 13, 18, 16, 21, 24],
+      },
+      {
+        label: 'dashboard.kpi.active_terminals',
+        value: s?.active_terminals ?? 0,
+        icon: 'terminale',
+        tone: 'info',
+        trend: 3.1,
+        subtitle: 'dashboard.kpi.active_terminals_sub',
+        sparkline: [8, 9, 8, 11, 12, 11, 13],
+      },
+      {
+        label: 'dashboard.kpi.vehicles_in_use',
+        value: s?.vehicles_in_use ?? 0,
+        icon: 'sprzet',
+        tone: 'success',
+        trend: -1.4,
+        subtitle: 'dashboard.kpi.vehicles_in_use_sub',
+        sparkline: [20, 18, 19, 17, 18, 16, 15],
+      },
+      {
+        label: 'dashboard.kpi.active_incidents',
+        value: s?.active_incidents ?? 0,
+        icon: 'awaria',
+        tone: 'danger',
+        trend: -12.0,
+        subtitle: 'dashboard.kpi.active_incidents_sub',
+        sparkline: [5, 4, 6, 3, 4, 2, 2],
+      },
     ];
+  }
+
+  /** Szybkie statystyki dnia wyświetlane w hero. */
+  heroStats(): HeroStat[] {
+    const s = this._summary();
+    return [
+      { key: 'dashboard.hero.hours_today', value: s?.hours_today ?? 0, icon: 'history' },
+      { key: 'dashboard.hero.employees_on_leave', value: s?.employees_on_leave ?? 0, icon: 'pracownicy' },
+      { key: 'dashboard.hero.monthly_wages', value: this.formatMoney(s?.monthly_wages ?? 0), icon: 'money' },
+    ];
+  }
+
+  private formatMoney(value: number): string {
+    return new Intl.NumberFormat('pl-PL', {
+      style: 'currency',
+      currency: 'PLN',
+      maximumFractionDigits: 0,
+    }).format(value);
   }
 
   alerts(): AlertDatum[] {
@@ -133,7 +190,7 @@ export class DashboardComponent {
   shortcuts(): ShortcutDatum[] {
     return [
       { key: 'dashboard.shortcuts.report_incident', icon: 'awaria', route: '/awaria' },
-      { key: 'dashboard.shortcuts.create_report', icon: 'raportowanie', route: '/raportowanie' },
+      { key: 'dashboard.shortcuts.create_report', icon: 'reporting', route: '/reporting' },
       { key: 'dashboard.shortcuts.add_order', icon: 'harmonogram', route: '/harmonogram' },
     ];
   }
@@ -226,7 +283,7 @@ export class DashboardComponent {
     dataLabels: { enabled: false },
     tooltip: { theme: 'light', marker: { show: true } },
     legend: { show: false },
-    colors: ['#3b82f6'],
+    colors: ['#1e3a5f'],
   };
 
   // ===== Wykres: struktura floty (donut) =====
@@ -250,18 +307,18 @@ export class DashboardComponent {
     plotOptions: {
       pie: {
         donut: {
-          size: '72%',
+          size: '74%',
           labels: {
             show: true,
             name: { show: false },
-            value: { show: true, fontSize: '22px', fontWeight: '700', color: '#172d49' },
+            value: { show: true, fontSize: '24px', fontWeight: '700', color: '#172d49' },
             total: { show: true, label: 'Szt.', color: '#64748b', fontSize: '12px' },
           },
         },
       },
     },
     dataLabels: { enabled: false },
-    stroke: { width: 0 },
+    stroke: { width: 3, colors: ['#ffffff'] },
     tooltip: { theme: 'light' },
     responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }],
   };
@@ -274,6 +331,7 @@ export class DashboardComponent {
     yaxis: ApexYAxis;
     plotOptions: ApexPlotOptions;
     colors: string[];
+    fill: ApexFill;
     grid: ApexGrid;
     dataLabels: ApexDataLabels;
     tooltip: ApexTooltip;
@@ -295,9 +353,13 @@ export class DashboardComponent {
     },
     yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } },
     plotOptions: {
-      bar: { borderRadius: 6, columnWidth: '55%', distributed: false },
+      bar: { borderRadius: 8, columnWidth: '55%', distributed: false },
     },
-    colors: ['#3b82f6'],
+    colors: ['#1e3a5f'],
+    fill: {
+      type: 'gradient',
+      gradient: { shade: 'dark', type: 'vertical', shadeIntensity: 0.4, gradientToColors: ['#3b82f6'], opacityFrom: 1, opacityTo: 0.9, stops: [0, 100] },
+    },
     grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } },
     dataLabels: { enabled: false },
     tooltip: { theme: 'light' },

@@ -21,10 +21,10 @@ import pracownicyPl from '../locales/pl/pracownicy.json';
 import sprzetPl from '../locales/pl/sprzet.json';
 import terminalePl from '../locales/pl/terminale.json';
 import harmonogramPl from '../locales/pl/harmonogram.json';
-import analitykaPl from '../locales/pl/analityka.json';
+import analyticsPl from '../locales/pl/analytics.json';
 import ustawieniaPl from '../locales/pl/ustawienia.json';
 import awariaPl from '../locales/pl/awaria.json';
-import raportowaniePl from '../locales/pl/raportowanie.json';
+import reportingPl from '../locales/pl/reporting.json';
 import notatkiPl from '../locales/pl/notatki.json';
 
 /**
@@ -42,10 +42,10 @@ function initializeApp(): () => Promise<void> {
       sprzet: sprzetPl,
       terminale: terminalePl,
       harmonogram: harmonogramPl,
-      analityka: analitykaPl,
+      analytics: analyticsPl,
       ustawienia: ustawieniaPl,
       awaria: awariaPl,
-      raportowanie: raportowaniePl,
+      reporting: reportingPl,
       notatki: notatkiPl,
     });
     await indexedDb.init();

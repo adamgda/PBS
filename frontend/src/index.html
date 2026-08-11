@@ -18,6 +18,16 @@
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
 </head>
 <body>
+  <script>
+    // Wczesne ustawienie motywu (przed renderem Angulara) — zapobiega „flash of unstyled content".
+    (function () {
+      try {
+        var stored = localStorage.getItem('pbs-theme');
+        var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
   <app-root></app-root>
 </body>
 </html>

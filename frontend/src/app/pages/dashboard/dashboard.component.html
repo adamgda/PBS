@@ -1,32 +1,54 @@
 <div class="space-y-6">
-  <!-- ===== Nagłówek ===== -->
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-      <h1 class="app-title">
-        {{ 'dashboard.welcome' | translate }}, <span class="text-pbs-primary">{{ userName() }}</span>
-      </h1>
-      <p class="mt-1 text-sm text-gray-500">
-        {{ 'dashboard.welcome_suffix' | translate }} · {{ today | date: 'EEEE, d MMMM yyyy' }}
-      </p>
+  <!-- ===== Hero: gradientowe powitanie + statystyki dnia ===== -->
+  <section
+    class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-pbs-primary via-pbs-navy-700 to-pbs-secondary p-6 text-white shadow-elevated sm:p-8"
+  >
+    <!-- Dekoracyjne poświaty -->
+    <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-pbs-secondary/30 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-pbs-accent/20 blur-3xl"></div>
+
+    <div class="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-sm font-medium text-blue-100/80">{{ 'dashboard.welcome_suffix' | translate }}</p>
+        <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+          {{ 'dashboard.welcome' | translate }}, {{ userName() }}
+        </h1>
+        <p class="mt-1 text-sm text-blue-100/70">{{ today | date: 'EEEE, d MMMM yyyy' }}</p>
+      </div>
+      <button
+        type="button"
+        routerLink="/analytics"
+        class="inline-flex items-center gap-2 self-start rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/20 backdrop-blur transition-all hover:bg-white/20 sm:self-auto"
+      >
+        {{ 'common.menu.analytics' | translate }}
+        <app-svg-icon name="arrow-left" size="sm" class="rotate-180" />
+      </button>
     </div>
-    <button
-      type="button"
-      routerLink="/analityka"
-      class="inline-flex items-center gap-2 self-start rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50"
-    >
-      {{ 'common.menu.analityka' | translate }}
-      <app-svg-icon name="arrow-left" size="sm" class="rotate-180" />
-    </button>
-  </div>
+
+    <!-- Statystyki dnia -->
+    <div class="relative mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      @for (stat of heroStats(); track stat.key) {
+        <div class="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/15 backdrop-blur">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/15 text-white">
+            <app-svg-icon [name]="stat.icon" size="sm" />
+          </span>
+          <div class="min-w-0">
+            <p class="truncate text-xs text-blue-100/70">{{ stat.key | translate }}</p>
+            <p class="text-lg font-bold leading-tight">{{ stat.value }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
 
   <!-- ===== Stan ładowania / błąd ===== -->
   @if (loading()) {
-    <div class="flex items-center justify-center gap-3 rounded-xl border border-gray-100 bg-white p-6 text-sm text-gray-500 shadow-card">
+    <div class="flex items-center justify-center gap-3 rounded-xl border border-gray-100 bg-white p-6 text-sm text-gray-500 shadow-card dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
       <span class="h-4 w-4 animate-spin rounded-full border-2 border-pbs-primary border-t-transparent"></span>
       {{ 'common.table.loading' | translate }}
     </div>
   } @else if (error()) {
-    <div class="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+    <div class="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
       <app-svg-icon name="alert" size="sm" />
       {{ error() | translate }}
     </div>
@@ -43,6 +65,7 @@
         [tone]="kpi.tone"
         [trend]="kpi.trend"
         [subtitle]="kpi.subtitle ?? ''"
+        [sparkline]="kpi.sparkline ?? []"
       />
     }
   </div>
@@ -52,8 +75,8 @@
     <div class="app-card p-5 lg:col-span-2">
       <div class="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h2 class="text-base font-semibold text-gray-900">{{ 'dashboard.charts.area_title' | translate }}</h2>
-          <p class="text-xs text-gray-500">{{ 'dashboard.charts.area_subtitle' | translate }}</p>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.charts.area_title' | translate }}</h2>
+          <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.charts.area_subtitle' | translate }}</p>
         </div>
         <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>+{{ areaTrend() }}%
@@ -76,8 +99,8 @@
 
     <div class="app-card p-5">
       <div class="mb-2">
-        <h2 class="text-base font-semibold text-gray-900">{{ 'dashboard.charts.donut_title' | translate }}</h2>
-        <p class="text-xs text-gray-500">{{ 'dashboard.charts.donut_subtitle' | translate }}</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.charts.donut_title' | translate }}</h2>
+        <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.charts.donut_subtitle' | translate }}</p>
       </div>
       <apx-chart
         [chart]="donut.chart"
@@ -98,8 +121,8 @@
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
     <div class="app-card p-5 lg:col-span-2">
       <div class="mb-4">
-        <h2 class="text-base font-semibold text-gray-900">{{ 'dashboard.charts.bar_title' | translate }}</h2>
-        <p class="text-xs text-gray-500">{{ 'dashboard.charts.bar_subtitle' | translate }}</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.charts.bar_title' | translate }}</h2>
+        <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.charts.bar_subtitle' | translate }}</p>
       </div>
       <apx-chart
         [chart]="bar.chart"
@@ -108,6 +131,7 @@
         [yaxis]="bar.yaxis"
         [plotOptions]="bar.plotOptions"
         [colors]="bar.colors"
+        [fill]="bar.fill"
         [grid]="bar.grid"
         [dataLabels]="bar.dataLabels"
         [tooltip]="bar.tooltip"
@@ -117,15 +141,15 @@
 
     <div class="app-card flex flex-col p-5">
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-base font-semibold text-gray-900">{{ 'dashboard.alerts.title' | translate }}</h2>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.alerts.title' | translate }}</h2>
         <span class="grid h-8 w-8 place-items-center rounded-lg bg-amber-50 text-amber-600">
           <app-svg-icon name="alert" size="sm" />
         </span>
       </div>
       <ul class="space-y-3">
         @for (alert of alerts(); track alert.key) {
-          <li class="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-2.5 transition-colors hover:bg-gray-50">
-            <span class="text-sm text-gray-700">{{ alert.key | translate }}</span>
+          <li class="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-2.5 transition-colors hover:bg-gray-50 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:bg-slate-800/70">
+            <span class="text-sm text-gray-700 dark:text-slate-300">{{ alert.key | translate }}</span>
             <span
               class="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white"
               [class]="alertBadgeClass(alert.tone)"
@@ -150,10 +174,10 @@
   <!-- ===== Aktywność + skróty ===== -->
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
     <div class="app-card p-5">
-      <h2 class="mb-4 text-base font-semibold text-gray-900">{{ 'dashboard.activity.title' | translate }}</h2>
+      <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.activity.title' | translate }}</h2>
       <ol class="relative space-y-5 border-l border-gray-200 pl-5">
         @for (item of activity(); track item.titleKey) {
-          <li class="relative">
+          <li class="relative animate-fade-in">
             <span
               class="absolute -left-[27px] grid h-5 w-5 place-items-center rounded-full ring-4 ring-white"
               [class]="item.badge"
@@ -161,8 +185,8 @@
               <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
             </span>
             <div class="flex items-start justify-between gap-3">
-              <p class="text-sm font-medium text-gray-800">{{ item.titleKey | translate }}</p>
-              <span class="shrink-0 text-xs text-gray-400">{{ item.time }}</span>
+              <p class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ item.titleKey | translate }}</p>
+              <span class="shrink-0 text-xs text-gray-400 dark:text-slate-500">{{ item.time }}</span>
             </div>
           </li>
         }
@@ -170,18 +194,18 @@
     </div>
 
     <div class="app-card p-5">
-      <h2 class="mb-4 text-base font-semibold text-gray-900">{{ 'dashboard.shortcuts.title' | translate }}</h2>
+      <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.shortcuts.title' | translate }}</h2>
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
         @for (shortcut of shortcuts(); track shortcut.key) {
           <button
             type="button"
             (click)="go(shortcut.route)"
-            class="group flex flex-col items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-center transition-all hover:border-pbs-secondary/30 hover:bg-white hover:shadow-card-hover"
+            class="group flex flex-col items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-center transition-all hover:-translate-y-0.5 hover:border-pbs-secondary/30 hover:bg-white hover:shadow-card-hover dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-pbs-secondary/40 dark:hover:bg-slate-800"
           >
             <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-pbs-primary to-pbs-navy-600 text-white shadow-sm transition-transform group-hover:scale-105">
               <app-svg-icon [name]="shortcut.icon" />
             </span>
-            <span class="text-sm font-medium text-gray-700">{{ shortcut.key | translate }}</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-slate-300">{{ shortcut.key | translate }}</span>
           </button>
         }
       </div>

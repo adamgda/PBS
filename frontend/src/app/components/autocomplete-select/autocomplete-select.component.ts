@@ -28,12 +28,13 @@ export interface AutocompleteOption {
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe, SvgIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [':host { display: block; }'],
   template: `
     <div class="relative">
       <input
         #inputEl
         type="text"
-        class="w-full px-3 py-2 pr-9 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent"
+        class="w-full px-3 py-2 pr-9 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-pbs-primary focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
         [placeholder]="placeholder()"
         [ngModel]="searchText()"
         (ngModelChange)="onSearch($event)"
@@ -48,7 +49,7 @@ export interface AutocompleteOption {
       @if (canClear()) {
         <button
           type="button"
-          class="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          class="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
           [attr.aria-label]="'common.buttons.clear' | translate"
           [attr.title]="'common.buttons.clear' | translate"
           (mousedown)="$event.preventDefault(); clear()"
@@ -59,7 +60,7 @@ export interface AutocompleteOption {
 
       @if (isOpen() && filteredOptions().length > 0) {
         <div
-          class="fixed z-[70] mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-auto"
+          class="fixed z-[70] mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-auto dark:bg-slate-900 dark:border-slate-700"
           [style.top.px]="panelTop()"
           [style.left.px]="panelLeft()"
           [style.width.px]="panelWidth()"
@@ -69,14 +70,15 @@ export interface AutocompleteOption {
           @for (opt of filteredOptions(); track opt.value) {
             <button
               type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors flex flex-col"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors flex flex-col dark:hover:bg-slate-800"
               role="option"
               [class.bg-blue-50]="opt.value === selectedValue()"
+              [class.dark:bg-blue-500]="opt.value === selectedValue()"
               (mousedown)="$event.preventDefault(); selectOption(opt)"
             >
-              <span class="font-medium text-gray-900">{{ opt.label }}</span>
+              <span class="font-medium text-gray-900 dark:text-slate-200">{{ opt.label }}</span>
               @if (opt.sublabel) {
-                <span class="text-xs text-gray-500">{{ opt.sublabel }}</span>
+                <span class="text-xs text-gray-500 dark:text-slate-400">{{ opt.sublabel }}</span>
               }
             </button>
           }

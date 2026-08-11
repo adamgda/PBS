@@ -1,13 +1,13 @@
 <!-- Nagłówek sekcji -->
 <div>
-  <h1 class="text-2xl font-bold text-gray-900">{{ 'sprzet.title' | translate }}</h1>
-  <p class="mt-1 text-gray-600">{{ 'sprzet.subtitle' | translate }}</p>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'sprzet.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'sprzet.subtitle' | translate }}</p>
 </div>
 
 <!-- Lista sprzętu -->
 <div class="mt-5">
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-gray-900">{{ 'sprzet.list.all_equipment' | translate }}</h2>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'sprzet.list.all_equipment' | translate }}</h2>
     <app-add-button [label]="'sprzet.buttons.add'" (add)="openCreate()" />
   </div>
 
@@ -48,7 +48,7 @@
   </ng-template>
 
   <ng-template #categoryCellTpl let-eq>
-    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-300">
       {{ categoryLabel(eq) }}
     </span>
   </ng-template>
@@ -57,7 +57,7 @@
     @if (eq.ostatni_przebieg !== null && eq.ostatni_przebieg !== undefined) {
       <span>{{ eq.ostatni_przebieg }}</span>
     } @else {
-      <span class="text-gray-400">—</span>
+      <span class="text-gray-400 dark:text-slate-500">—</span>
     }
   </ng-template>
 
@@ -65,7 +65,7 @@
     @if (eq.employee_name) {
       <span>{{ eq.employee_name }}</span>
     } @else {
-      <span class="text-gray-400">{{ 'sprzet.list.unassigned' | translate }}</span>
+      <span class="text-gray-400 dark:text-slate-500">{{ 'sprzet.list.unassigned' | translate }}</span>
     }
   </ng-template>
 
@@ -73,7 +73,7 @@
     @if (eq.terminal_nazwa) {
       <span>{{ eq.terminal_nazwa }}</span>
     } @else {
-      <span class="text-gray-400">{{ 'sprzet.list.unassigned' | translate }}</span>
+      <span class="text-gray-400 dark:text-slate-500">{{ 'sprzet.list.unassigned' | translate }}</span>
     }
   </ng-template>
 
@@ -81,7 +81,7 @@
     <div class="relative flex justify-end">
       <button
         type="button"
-        class="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+        class="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
         [attr.aria-label]="'common.buttons.actions' | translate"
         (click)="toggleActions(eq.id)"
       >
@@ -91,10 +91,10 @@
       @if (openActionsId() === eq.id) {
         <!-- Tło zamykające po kliknięciu poza menu -->
         <div class="fixed inset-0 z-10" (click)="closeActions()"></div>
-        <div class="absolute right-0 top-9 z-20 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <div class="absolute right-0 top-9 z-20 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openAssign(eq); closeActions()"
           >
             <app-svg-icon name="exchange" size="sm" class="shrink-0 text-indigo-500" />
@@ -102,7 +102,7 @@
           </button>
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openDetails(eq); closeActions()"
           >
             <app-svg-icon name="document" size="sm" class="shrink-0 text-emerald-600" />
@@ -110,16 +110,16 @@
           </button>
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openEdit(eq); closeActions()"
           >
             <app-svg-icon name="settings" size="sm" class="shrink-0 text-gray-500" />
             {{ 'sprzet.buttons.edit' | translate }}
           </button>
-          <div class="my-1 border-t border-gray-100"></div>
+          <div class="my-1 border-t border-gray-100 dark:border-slate-800"></div>
           <button
             type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
             (click)="closeActions(); deleteEquipment(eq)"
           >
             <app-svg-icon name="trash" size="sm" class="shrink-0" />
@@ -135,24 +135,24 @@
 @if (selectedEquipment()) {
   <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
     <!-- Oś czasu sprzętu -->
-    <section class="overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100 lg:col-span-1">
-      <div class="flex items-center justify-between gap-3 border-b border-gray-100 p-4">
+    <section class="overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100 lg:col-span-1 dark:bg-slate-900 dark:ring-slate-800">
+      <div class="flex items-center justify-between gap-3 border-b border-gray-100 p-4 dark:border-slate-800">
         <div class="flex min-w-0 items-center gap-3">
-          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400">
             <app-svg-icon name="history" size="sm" />
           </span>
           <div class="min-w-0">
-            <h3 class="truncate font-semibold text-gray-900">
+            <h3 class="truncate font-semibold text-gray-900 dark:text-white">
               {{ 'sprzet.timeline.section_title' | translate: { name: selectedEquipment()?.nazwa ?? '' } }}
             </h3>
-            <p class="text-xs text-gray-500">{{ 'sprzet.timeline.section_subtitle' | translate }}</p>
+            <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'sprzet.timeline.section_subtitle' | translate }}</p>
           </div>
         </div>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="clearSelection()" />
       </div>
       <div class="p-4">
         @if (selectedLoading()) {
-          <div class="flex items-center justify-center gap-3 p-8 text-gray-400">
+          <div class="flex items-center justify-center gap-3 p-8 text-gray-400 dark:text-slate-500">
             <app-svg-icon name="spinner" size="md" class="animate-spin text-pbs-secondary" />
             <span class="text-sm">{{ 'common.table.loading' | translate }}</span>
           </div>
@@ -163,32 +163,32 @@
     </section>
 
     <!-- Planowanie przeglądów -->
-    <section class="overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100 lg:col-span-2">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4">
+    <section class="overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-gray-100 lg:col-span-2 dark:bg-slate-900 dark:ring-slate-800">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 dark:border-slate-800">
         <div class="flex min-w-0 items-center gap-3">
-          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-600">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400">
             <app-svg-icon name="wrench" size="sm" />
           </span>
           <div class="min-w-0">
-            <h3 class="truncate font-semibold text-gray-900">
+            <h3 class="truncate font-semibold text-gray-900 dark:text-white">
               {{ 'sprzet.service_plans.section_title' | translate: { name: selectedEquipment()?.nazwa ?? '' } }}
             </h3>
-            <p class="text-xs text-gray-500">{{ 'sprzet.service_plans.section_subtitle' | translate }}</p>
+            <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'sprzet.service_plans.section_subtitle' | translate }}</p>
           </div>
         </div>
         <app-button variant="primary" size="sm" [label]="'sprzet.service_plans.new_term'" (clicked)="openPlanCreate()" />
       </div>
       <div class="overflow-x-auto">
         @if (selectedLoading()) {
-          <div class="flex items-center justify-center gap-3 p-8 text-gray-400">
+          <div class="flex items-center justify-center gap-3 p-8 text-gray-400 dark:text-slate-500">
             <app-svg-icon name="spinner" size="md" class="animate-spin text-pbs-secondary" />
             <span class="text-sm">{{ 'common.table.loading' | translate }}</span>
           </div>
         } @else if (selectedPlans().length === 0) {
-          <p class="p-4 text-sm text-gray-400">{{ 'sprzet.service_plans.empty' | translate }}</p>
+          <p class="p-4 text-sm text-gray-400 dark:text-slate-500">{{ 'sprzet.service_plans.empty' | translate }}</p>
         } @else {
           <table class="w-full text-sm">
-            <thead class="bg-gray-50/90 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <thead class="bg-gray-50/90 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-slate-800/60 dark:text-slate-400">
               <tr>
                 <th class="px-4 py-3 font-medium">{{ 'sprzet.service_plans.col_type' | translate }}</th>
                 <th class="px-4 py-3 font-medium">{{ 'sprzet.service_plans.col_cycle' | translate }}</th>
@@ -197,13 +197,13 @@
                 <th class="px-4 py-3 font-medium">{{ 'sprzet.service_plans.col_status' | translate }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 text-gray-800">
+            <tbody class="divide-y divide-gray-100 text-gray-800 dark:divide-slate-800 dark:text-slate-200">
               @for (plan of selectedPlans(); track plan.id) {
                 <tr>
                   <td class="px-4 py-3 font-medium">{{ plan.typ_przegladu }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ planCycle(plan) }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ plan.data_ostatniego_wykonania || '—' }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ plan.data_nastepnego_planowanego || '—' }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-slate-400">{{ planCycle(plan) }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-slate-400">{{ plan.data_ostatniego_wykonania || '—' }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-slate-400">{{ plan.data_nastepnego_planowanego || '—' }}</td>
                   <td class="px-4 py-3">
                     <app-status-badge
                       [status]="planStatus(plan).status"
@@ -220,18 +220,18 @@
     </section>
   </div>
 } @else {
-  <div class="mt-6 rounded-xl bg-white p-6 text-center shadow-card ring-1 ring-gray-100">
-    <app-svg-icon name="sprzet" size="lg" class="mx-auto text-gray-300" />
-    <p class="mt-3 text-sm text-gray-500">{{ 'sprzet.details.select_hint' | translate }}</p>
+  <div class="mt-6 rounded-xl bg-white p-6 text-center shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
+    <app-svg-icon name="sprzet" size="lg" class="mx-auto text-gray-300 dark:text-slate-600" />
+    <p class="mt-3 text-sm text-gray-500 dark:text-slate-400">{{ 'sprzet.details.select_hint' | translate }}</p>
   </div>
 }
 
 <!-- ===== Modal: dodawanie / edycja sprzętu ===== -->
 @if (modalMode() === 'create' || modalMode() === 'edit') {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ modalMode() === 'edit' ? ('sprzet.form.edit_title' | translate) : ('sprzet.form.add_title' | translate) }}
         </h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeModal()" />
@@ -239,9 +239,9 @@
 
       <!-- Kategoria -->
       <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.category' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'sprzet.form.category' | translate }}</label>
         <div class="mt-1.5 flex gap-3">
-          <label class="flex items-center gap-2 text-sm">
+          <label class="flex items-center gap-2 text-sm dark:text-slate-300">
             <input
               type="radio"
               name="kategoria"
@@ -251,7 +251,7 @@
             />
             {{ 'sprzet.list.category_vehicle' | translate }}
           </label>
-          <label class="flex items-center gap-2 text-sm">
+          <label class="flex items-center gap-2 text-sm dark:text-slate-300">
             <input
               type="radio"
               name="kategoria"
@@ -283,7 +283,7 @@
       />
 
       <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.assign_employee' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'sprzet.form.assign_employee' | translate }}</label>
         <app-autocomplete-select
           class="mt-1.5"
           [options]="employeeOptions()"
@@ -294,7 +294,7 @@
       </div>
 
       <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.assign_terminal' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'sprzet.form.assign_terminal' | translate }}</label>
         <app-autocomplete-select
           class="mt-1.5"
           [options]="terminalOptions()"
@@ -306,8 +306,8 @@
 
       <!-- Dane pojazdu (tylko dla kategorii „pojazd") -->
       @if (modalKategoria() === 'pojazd') {
-        <div class="mb-4 rounded-lg bg-gray-50 p-4">
-          <h4 class="mb-3 text-sm font-semibold text-gray-700">{{ 'sprzet.form.vehicle_section' | translate }}</h4>
+        <div class="mb-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800/60">
+          <h4 class="mb-3 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'sprzet.form.vehicle_section' | translate }}</h4>
 
           <app-form-input
             type="number"
@@ -342,7 +342,7 @@
       }
 
       <div class="mb-4 flex items-center gap-2">
-        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300">
           <input
             type="checkbox"
             class="h-4 w-4 rounded accent-pbs-primary"
@@ -363,15 +363,15 @@
 <!-- ===== Modal: szybkie przypisanie ===== -->
 @if (modalMode() === 'assign' && assignEquipment()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{{ 'sprzet.buttons.assign' | translate }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'sprzet.buttons.assign' | translate }}</h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeAssignModal()" />
       </div>
-      <p class="mb-4 text-sm text-gray-600">{{ assignEquipment()?.nazwa }}</p>
+      <p class="mb-4 text-sm text-gray-600 dark:text-slate-400">{{ assignEquipment()?.nazwa }}</p>
 
       <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.assign_employee' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'sprzet.form.assign_employee' | translate }}</label>
         <app-autocomplete-select
           class="mt-1.5"
           [options]="employeeOptions()"
@@ -382,7 +382,7 @@
       </div>
 
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">{{ 'sprzet.form.assign_terminal' | translate }}</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'sprzet.form.assign_terminal' | translate }}</label>
         <app-autocomplete-select
           class="mt-1.5"
           [options]="terminalOptions()"
@@ -402,11 +402,11 @@
 <!-- ===== Modal: szczegóły (oś czasu + plany przeglądów) ===== -->
 @if (modalMode() === 'details' && detailsEquipment()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ detailsEquipment()?.nazwa }}
-          <span class="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+          <span class="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-300">
             {{ categoryLabel(detailsEquipment()!) }}
           </span>
         </h3>
@@ -416,43 +416,43 @@
       <!-- Podstawowe dane -->
       <dl class="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
-          <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.list.serial_number' | translate }}</dt>
-          <dd class="text-sm text-gray-900">{{ detailsEquipment()?.numer_seryjny || '—' }}</dd>
+          <dt class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'sprzet.list.serial_number' | translate }}</dt>
+          <dd class="text-sm text-gray-900 dark:text-slate-200">{{ detailsEquipment()?.numer_seryjny || '—' }}</dd>
         </div>
         <div>
-          <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.list.employee' | translate }}</dt>
-          <dd class="text-sm text-gray-900">{{ detailsEquipment()?.employee_name || '—' }}</dd>
+          <dt class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'sprzet.list.employee' | translate }}</dt>
+          <dd class="text-sm text-gray-900 dark:text-slate-200">{{ detailsEquipment()?.employee_name || '—' }}</dd>
         </div>
         <div>
-          <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.list.terminal' | translate }}</dt>
-          <dd class="text-sm text-gray-900">{{ detailsEquipment()?.terminal_nazwa || '—' }}</dd>
+          <dt class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'sprzet.list.terminal' | translate }}</dt>
+          <dd class="text-sm text-gray-900 dark:text-slate-200">{{ detailsEquipment()?.terminal_nazwa || '—' }}</dd>
         </div>
         <div>
-          <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.list.status' | translate }}</dt>
-          <dd class="text-sm text-gray-900">{{ statusLabel(detailsEquipment()!) }}</dd>
+          <dt class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'sprzet.list.status' | translate }}</dt>
+          <dd class="text-sm text-gray-900 dark:text-slate-200">{{ statusLabel(detailsEquipment()!) }}</dd>
         </div>
       </dl>
 
       <!-- Dane pojazdu -->
       @if (detailsEquipment()?.vehicle_details; as vd) {
-        <div class="mb-5 rounded-lg bg-gray-50 p-4">
-          <h4 class="mb-2 text-sm font-semibold text-gray-700">{{ 'sprzet.form.vehicle_section' | translate }}</h4>
+        <div class="mb-5 rounded-lg bg-gray-50 p-4 dark:bg-slate-800/60">
+          <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'sprzet.form.vehicle_section' | translate }}</h4>
           <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
-              <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.vehicle.last_mileage' | translate }}</dt>
-              <dd class="text-sm text-gray-900">{{ vd.ostatni_przebieg }}</dd>
+              <dt class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'sprzet.vehicle.last_mileage' | translate }}</dt>
+              <dd class="text-sm text-gray-900 dark:text-slate-200">{{ vd.ostatni_przebieg }}</dd>
             </div>
             <div>
-              <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.vehicle.last_oil_service' | translate }}</dt>
-              <dd class="text-sm text-gray-900">{{ vd.ostatni_serwis_olejowy || '—' }}</dd>
+              <dt class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'sprzet.vehicle.last_oil_service' | translate }}</dt>
+              <dd class="text-sm text-gray-900 dark:text-slate-200">{{ vd.ostatni_serwis_olejowy || '—' }}</dd>
             </div>
             <div>
-              <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.vehicle.last_oc_date' | translate }}</dt>
-              <dd class="text-sm text-gray-900">{{ vd.data_ostatniej_oc || '—' }}</dd>
+              <dt class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'sprzet.vehicle.last_oc_date' | translate }}</dt>
+              <dd class="text-sm text-gray-900 dark:text-slate-200">{{ vd.data_ostatniej_oc || '—' }}</dd>
             </div>
             <div>
-              <dt class="text-xs font-medium text-gray-500">{{ 'sprzet.vehicle.last_oc_result' | translate }}</dt>
-              <dd class="text-sm text-gray-900">{{ vd.wynik_ostatniej_oc || '—' }}</dd>
+              <dt class="text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'sprzet.vehicle.last_oc_result' | translate }}</dt>
+              <dd class="text-sm text-gray-900 dark:text-slate-200">{{ vd.wynik_ostatniej_oc || '—' }}</dd>
             </div>
           </dl>
         </div>
@@ -460,24 +460,24 @@
       <!-- Plany przeglądów -->
       <div class="mb-5">
         <div class="mb-3 flex items-center justify-between">
-          <h4 class="text-sm font-semibold text-gray-700">{{ 'sprzet.service_plans.title' | translate }}</h4>
+          <h4 class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'sprzet.service_plans.title' | translate }}</h4>
           <app-add-button [label]="'sprzet.buttons.add_plan'" (add)="openPlanCreate()" />
         </div>
 
         @if (detailsPlans().length === 0) {
-          <p class="text-sm text-gray-400">{{ 'sprzet.service_plans.empty' | translate }}</p>
+          <p class="text-sm text-gray-400 dark:text-slate-500">{{ 'sprzet.service_plans.empty' | translate }}</p>
         } @else {
           <ul class="space-y-2">
             @for (plan of detailsPlans(); track plan.id) {
-              <li class="flex items-start justify-between rounded-md border border-gray-100 p-3">
+              <li class="flex items-start justify-between rounded-md border border-gray-100 p-3 dark:border-slate-800">
                 <div>
                   <div class="flex items-center gap-2">
-                    <span class="text-sm font-medium text-gray-900">{{ plan.typ_przegladu }}</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-slate-200">{{ plan.typ_przegladu }}</span>
                     @if (plan.needs_service) {
                       <app-status-badge status="reported" tone="warning" [label]="'sprzet.service_plans.needs_service' | translate" />
                     }
                   </div>
-                  <p class="mt-1 text-xs text-gray-500">
+                  <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">
                     {{ 'sprzet.service_plans.interval_km' | translate }}: {{ plan.interwal_km ?? '—' }}
                     · {{ 'sprzet.service_plans.interval_days' | translate }}: {{ plan.interwal_dni ?? '—' }}
                     · {{ 'sprzet.service_plans.last_done' | translate }}: {{ plan.data_ostatniego_wykonania || '—' }}
@@ -502,9 +502,9 @@
 <!-- ===== Modal: dodawanie / edycja planu przeglądu ===== -->
 @if (planModalMode() === 'create' || planModalMode() === 'edit') {
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ planModalMode() === 'edit' ? ('sprzet.service_plans.edit' | translate) : ('sprzet.service_plans.add' | translate) }}
         </h3>
         <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closePlanModal()" />
@@ -551,7 +551,7 @@
       />
 
       <div class="mb-4 flex items-center gap-2">
-        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300">
           <input
             type="checkbox"
             class="h-4 w-4 rounded accent-pbs-primary"
