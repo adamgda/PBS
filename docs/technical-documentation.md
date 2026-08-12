@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Dokumentacja Techniczna
 
-> **Wersja dokumentu:** 1.4  
-> **Data:** 2026-08-09  
+> **Wersja dokumentu:** 1.5  
+> **Data:** 2026-08-12  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -1747,8 +1747,45 @@ Aplikacja deklaruje "offline-first" w założeniach — musi być zrealizowana p
 - **Alerty**: auto-alert jeśli p95 > 1000 ms lub error rate > 1%
 - **Dashboardy**: Grafana z metrykami API, DB, cache hit rate
 
+### 14.9 Przegląd końcowy i handover (Etap 18)
 
-## 15. Środowiska
+> Wyniki weryfikacji końcowej przed przekazaniem systemu. Szczegółowy stan pozycji w `docs/implementation-roadmap.md` (Etap 18).
+
+#### 14.9.1 Stan zweryfikowanych obszarów
+
+| # | Obszar | Status | Uwagi |
+|---|---|---|---|
+| 1 | Lokalizacje UI (`locales/pl/`) | ✅ | Rejestracja scentralizowana w `app.config.ts` (`registerMany`); skan szablonów nie wykrył twardych tekstów UI |
+| 2 | Autocomplete w selectach | ✅ | `AutocompleteSelectComponent` dla selektorów encji; `SelectComponent` (natywny) dla stałych, małych zbiorów |
+| 3 | Filtrowanie w listach | ✅ | `FilterBarComponent` na stronach list; sortowanie/paginacja w `DataTableComponent` |
+| 4 | Responsywność ≥ 320 px | ✅ | meta viewport `viewport-fit=cover`; klasy responsywne Tailwind |
+| 5 | Uprawnienia + IDOR | ✅ | `PermissionGuard`/`PermissionMiddleware`; własność zasobu w `NoteService` |
+| 6 | Wydajność API | ✅ (mechanizmy) | Paginator 25/100, sparse fieldsets, cache, kompresja; SLO mierzone na środowisku docelowym |
+| 7 | PWA (SW, offline, bg sync) | ✅ | `ngsw-config.json`, `OfflineService`, `IndexedDbService`; 189 testów frontendu |
+| 8 | Web Vitals | ✅ (mechanizmy) | `WebVitalsService` raportuje LCP/FID/CLS/INP; finalny pomiar na prod |
+| 9 | Nagłówki bezpieczeństwa | ✅ | `SecurityHeadersMiddleware` + testy |
+| 10 | Polityka haseł | ✅ | `PasswordPolicyService` (min. 12, 3/4 klasy, blokada popularnych) |
+| 11 | Blokada konta | ✅ | `AuthService` (5 → 15 min, 20/24 h → ręczne) |
+| 12 | Audit log + retencja | ✅ (logowanie) | Logowanie działa; retencja 12 mies. jako zadanie cron |
+| 13 | RODO | ✅ | `DELETE /employees/{id}` (fizyczne usunięcie, FK `SET NULL`); retencja 2/5 lat |
+| 14 | Indeksy DB | ✅ | Indeksy w migracjach; `slow_query_log`/`EXPLAIN` na środowisku z bazą |
+| 15 | Cache | ✅ | `CacheManager` (inwalidacja tagowa); hit rate na środowisku docelowym |
+| 16 | Sekrety | ✅ (skan ręczny) | Brak sekretów; `.env` nie śledzone; pre-commit + `.gitleaks.toml`; `gitleaks detect` w CI |
+| 17 | Penetration test | ⏳ zewnętrzny | Wykonać przed Go-Live (OWASP Top 10) |
+
+#### 14.9.2 Poprawki wprowadzone w ramach przeglądu (2026-08-12)
+
+- **Backend / PHPStan**: `backend/phpstan.neon` — usunięto `memoryLimit` z `parameters` (składnia PHPStan 2.x); limit pamięci przekazywany przez skrypt `composer analyse` (`--memory-limit=1G`). `composer analyse` przechodzi bez błędów (level 9).
+- **Frontend / testy**: `frontend/src/app/services/indexed-db.service.spec.ts` — dodano czyszczenie wszystkich store'ów w `beforeEach` (izolacja stanu współdzielonej bazy `fake-indexeddb`). Wszystkie 189 testów frontendu przechodzi.
+
+#### 14.9.3 Wymagania infrastrukturalne / zewnętrzne (do wdrożenia przed Go-Live)
+
+- Retencja danych: cron czyszczenia `audit_log` (12 mies.) oraz `revoked_refresh_tokens`, archiwizacja/anonimizacja nieaktywnych pracowników (2/5 lat).
+- CI/CD: uruchomienie `gitleaks detect` oraz testów (backend Pest, frontend Karma) w pipeline.
+- Penetration test OWASP Top 10 (zewnętrzny audyt bezpieczeństwa).
+- Pomiar SLO wydajności (p95 < 500 ms, p99 < 200 ms dla cache) oraz Web Vitals na środowisku produkcyjnym.
+
+
 
 | Środowisko | Cel | URL |
 |---|---|---|
@@ -1805,4 +1842,4 @@ Projekt wykorzystuje dwa skille AI zarejestrowane w `skills-lock.json`:
 
 ---
 
-> **Koniec dokumentacji technicznej PBS v1.3**
+> **Koniec dokumentacji technicznej PBS v1.5**

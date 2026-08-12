@@ -20,7 +20,7 @@ export interface TimelineEvent {
   imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-white rounded-lg shadow p-5 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-800">
+    <div>
       @if (title) {
         <h3 class="text-base font-semibold text-gray-900 mb-4 dark:text-white">{{ title | translate }}</h3>
       }

@@ -158,7 +158,7 @@ export class DashboardComponent {
   userName(): string {
     const email = this.authService.currentUser?.email ?? '';
     const name = email.split('@')[0] ?? '';
-    return (name.charAt(0) + name.slice(1)) || 'Użytkowniku';
+    return (name.charAt(0).toUpperCase() + name.slice(1)) || 'Użytkowniku';
   }
 
   go(route: string): void {

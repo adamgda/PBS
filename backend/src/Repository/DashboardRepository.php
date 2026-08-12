@@ -150,13 +150,13 @@ class DashboardRepository extends BaseRepository
     {
         $days = max(1, min(90, $days));
         $today = date('Y-m-d');
-        $from = date('Y-m-d', strtotime('-' . ($days - 1) . ' days'));
+        $from = $this->safeDate('Y-m-d', strtotime('-' . ($days - 1) . ' days'));
 
         $current = $this->dailyOrderCounts($from, $today);
         $currentSum = (int) array_sum($current['counts']);
 
-        $prevTo = date('Y-m-d', strtotime($from . ' -1 day'));
-        $prevFrom = date('Y-m-d', strtotime($prevTo . ' -' . ($days - 1) . ' days'));
+        $prevTo = $this->safeDate('Y-m-d', strtotime($from . ' -1 day'));
+        $prevFrom = $this->safeDate('Y-m-d', strtotime($prevTo . ' -' . ($days - 1) . ' days'));
         $previous = $this->dailyOrderCounts($prevFrom, $prevTo);
         $previousSum = (int) array_sum($previous['counts']);
 
@@ -166,7 +166,7 @@ class DashboardRepository extends BaseRepository
 
         return [
             'categories' => array_map(
-                static fn (string $d): string => date('d.m', strtotime($d)),
+                fn (string $d): string => $this->safeDate('d.m', strtotime($d)),
                 $current['dates'],
             ),
             'series' => array_map(static fn (mixed $c): int => (int) $c, $current['counts']),
@@ -275,7 +275,7 @@ class DashboardRepository extends BaseRepository
         $counts = [];
         $i = 0;
         while (true) {
-            $d = date('Y-m-d', strtotime($from . ' +' . $i . ' days'));
+            $d = $this->safeDate('Y-m-d', strtotime($from . ' +' . $i . ' days'));
             if ($d > $to) {
                 break;
             }
@@ -285,5 +285,14 @@ class DashboardRepository extends BaseRepository
         }
 
         return ['dates' => $dates, 'counts' => $counts];
+    }
+
+    /**
+     * Bezpieczne formatowanie daty z timestampem, który może być `false`
+     * (gdy strtotime() nie zinterpretuje wyrażenia).
+     */
+    private function safeDate(string $format, int|false $timestamp): string
+    {
+        return date($format, $timestamp === false ? time() : $timestamp);
     }
 }

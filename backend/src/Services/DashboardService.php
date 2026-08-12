@@ -121,15 +121,9 @@ final class DashboardService
 
         return [
             'orders_trend' => [
-                'categories' => array_values(array_map(
-                    static fn (mixed $v): string => is_string($v) ? $v : '',
-                    $trend['categories'] ?? [],
-                )),
-                'series' => array_map(
-                    fn (mixed $v): int => $this->toInt($v),
-                    $trend['series'] ?? [],
-                ),
-                'trend_pct' => $this->toFloat($trend['trend_pct'] ?? 0),
+                'categories' => array_values($trend['categories']),
+                'series' => $trend['series'],
+                'trend_pct' => $trend['trend_pct'],
             ],
             'fleet_structure' => [
                 'labels' => ['Terminale', 'Pojazdy', 'Pracownicy', 'Inny sprzęt'],
@@ -152,9 +146,9 @@ final class DashboardService
             ],
             'activity' => array_map(
                 fn (array $row): array => [
-                    'type' => is_string($row['type'] ?? null) ? $row['type'] : 'other',
-                    'title' => $this->nullableString($row['title'] ?? null) ?? '',
-                    'time' => is_string($row['ts'] ?? null) ? $row['ts'] : null,
+                    'type' => $row['type'],
+                    'title' => $row['title'],
+                    'time' => $row['ts'],
                 ],
                 $activity,
             ),

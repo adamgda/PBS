@@ -62,7 +62,9 @@ export class AuthService {
     return this.http.post<RefreshResponse>(`${this.apiUrl}/auth/refresh`, { refresh_token: this.getRefreshToken() }).pipe(
       tap((res) => this.storeTokens(res)),
       catchError((err) => {
-        this.logout();
+        // Token wygasł/odrzucony — natychmiast czyścimy sesję (nie ma sensu
+        // wysyłać logout, bo refresh token jest już nieważny).
+        this.clearSession();
         return throwError(() => err);
       }),
     );

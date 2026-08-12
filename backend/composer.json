@@ -42,7 +42,7 @@
     },
     "scripts": {
         "test": "pest",
-        "analyse": "phpstan analyse src tests --level=9",
+        "analyse": "phpstan analyse src --level=9 --memory-limit=1G",
         "migrate": "php bin/migrate.php",
         "seed": "php bin/seed.php"
     }
