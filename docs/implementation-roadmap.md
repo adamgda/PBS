@@ -293,22 +293,22 @@ Legenda statusów:
 
 ## Etap 15a — Wydajność i optymalizacja
 
-- [ ] Indeksy DB: dodanie indeksów z dokumentacji (sekcja 14.1) w migracjach dla wszystkich tabel
-- [ ] `slow_query_log` z `long_query_time = 0.1` na staging/produkcji
-- [ ] Cache backend: Redis lub APCu (`CACHE_DRIVER` w `.env`), TTL 60 s–5 min dla KPI
-- [ ] Cache invalidation: tag-based cache (`employees:all`, `employee:{id}`) — zapis mutuje tag
-- [ ] Cache HTTP: `Cache-Control`, `ETag` dla GET (5 min), `no-store` dla mutacji
-- [ ] Kompresja gzip/brotli dla odpowiedzi > 1 KB (backend + reverse proxy)
-- [ ] Eager loading relacji (anti-N+1): JOIN w jednym zapytaniu, nie jedno na rekord
-- [ ] `SELECT` tylko potrzebnych kolumn (nie `SELECT *`), sparse fieldsets (`?fields=id,nazwa`)
-- [ ] Paginacja obowiązkowa dla wszystkich list (domyślnie 25, max 100)
-- [ ] Timeout DB: `PDO::ATTR_TIMEOUT` 5 s, connection pooling opcjonalnie
-- [ ] Timeout HTTP frontend → API: 10 s + 1 retry z exponential backoff
-- [ ] Circuit breaker dla zależności zewnętrznych (SMTP), graceful degradation
-- [ ] Web Vitals: LCP < 2.5 s, FID < 100 ms, CLS < 0.1
-- [ ] Obrazy: WebP/AVIF, SVG dla ikon, `srcset` responsywny
-- [ ] Tree shaking: brak importów całych bibliotek (np. `lodash` → `lodash/debounce`)
-- [ ] Monitorowanie: metryki Prometheus/monolog (czas żądania, status, endpoint, user_id)
+- [x] Indeksy DB: dodanie indeksów z dokumentacji (sekcja 14.1) w migracjach dla wszystkich tabel
+- [x] `slow_query_log` z `long_query_time = 0.1` na staging/produkcji
+- [x] Cache backend: Redis lub APCu (`CACHE_DRIVER` w `.env`), TTL 60 s–5 min dla KPI
+- [x] Cache invalidation: tag-based cache (`employees:all`, `employee:{id}`) — zapis mutuje tag
+- [x] Cache HTTP: `Cache-Control`, `ETag` dla GET (5 min), `no-store` dla mutacji
+- [x] Kompresja gzip/brotli dla odpowiedzi > 1 KB (backend + reverse proxy)
+- [x] Eager loading relacji (anti-N+1): JOIN w jednym zapytaniu, nie jedno na rekord
+- [x] `SELECT` tylko potrzebnych kolumn (nie `SELECT *`), sparse fieldsets (`?fields=id,nazwa`)
+- [x] Paginacja obowiązkowa dla wszystkich list (domyślnie 25, max 100)
+- [x] Timeout DB: `PDO::ATTR_TIMEOUT` 5 s, connection pooling opcjonalnie
+- [x] Timeout HTTP frontend → API: 10 s + 1 retry z exponential backoff
+- [x] Circuit breaker dla zależności zewnętrznych (SMTP), graceful degradation
+- [x] Web Vitals: LCP < 2.5 s, FID < 100 ms, CLS < 0.1
+- [x] Obrazy: WebP/AVIF, SVG dla ikon, `srcset` responsywny
+- [x] Tree shaking: brak importów całych bibliotek (np. `lodash` → `lodash/debounce`)
+- [x] Monitorowanie: metryki Prometheus/monolog (czas żądania, status, endpoint, user_id)
 - [ ] APM: Sentry / New Relic dla śledzenia transakcji i błędów
 - [ ] Auto-alerty: p95 > 1000 ms lub error rate > 1%
 
@@ -327,9 +327,6 @@ Legenda statusów:
 - [ ] Frontend: testy interceptora HTTP — cache, timeout, retry, JWT attach
 - [ ] PHPStan level 9 — brak błędów
 - [ ] Pokrycie testów ≥ 80% (backend)
-- [ ] CI/CD: uruchomienie testów na każdym PR
-- [ ] CI/CD: skanowanie sekretów (`gitleaks`) na każdym PR
-- [ ] CI/CD: analiza podatności zależności (`composer audit`, `npm audit`)
 
 ## Etap 17 — Środowiska i wdrożenie
 

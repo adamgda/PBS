@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Cache\CacheManager;
 use App\Repository\DashboardRepository;
 
 /**
@@ -11,11 +12,17 @@ use App\Repository\DashboardRepository;
  *
  * Operacje (read-only): podsumowanie KPI (`summary`) oraz lista alertów (`alerts`).
  * Brak operacji mutujących — brak potrzeby audit logu.
+ *
+ * KPI dashboardu są cache'owane (dokumentacja 14.2): TTL 60 s, tag `dashboard`.
+ * Dane mogą być nieświeże o minutę — akceptowalne dla widoku KPI.
  */
 final class DashboardService
 {
+    private const CACHE_TTL = 60;
+
     public function __construct(
         private readonly DashboardRepository $dashboardRepository,
+        private readonly ?CacheManager $cache = null,
     ) {}
 
     /**
@@ -24,6 +31,52 @@ final class DashboardService
      * @return array<string, mixed>
      */
     public function summary(): array
+    {
+        if ($this->cache !== null) {
+            $cached = $this->cache->remember('dashboard:summary', self::CACHE_TTL, ['dashboard'], fn (): array => $this->buildSummary());
+
+            return is_array($cached) ? $cached : $this->buildSummary();
+        }
+
+        return $this->buildSummary();
+    }
+
+    /**
+     * Lista alertów dla dashboardu.
+     *
+     * @return array<string, array{count: int, items: array<int, array<string, mixed>>}>
+     */
+    public function alerts(): array
+    {
+        if ($this->cache !== null) {
+            $cached = $this->cache->remember('dashboard:alerts', self::CACHE_TTL, ['dashboard'], fn (): array => $this->buildAlerts());
+
+            return is_array($cached) ? $cached : $this->buildAlerts();
+        }
+
+        return $this->buildAlerts();
+    }
+
+    /**
+     * Dane wykresów, aktywności i trendu area dla dashboardu.
+     *
+     * @return array<string, mixed>
+     */
+    public function charts(): array
+    {
+        if ($this->cache !== null) {
+            $cached = $this->cache->remember('dashboard:charts', self::CACHE_TTL, ['dashboard'], fn (): array => $this->buildCharts());
+
+            return is_array($cached) ? $cached : $this->buildCharts();
+        }
+
+        return $this->buildCharts();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildSummary(): array
     {
         $row = $this->dashboardRepository->summary();
 
@@ -39,11 +92,9 @@ final class DashboardService
     }
 
     /**
-     * Lista alertów dla dashboardu.
-     *
      * @return array<string, array{count: int, items: array<int, array<string, mixed>>}>
      */
-    public function alerts(): array
+    private function buildAlerts(): array
     {
         $alerts = $this->dashboardRepository->alerts();
 
@@ -56,11 +107,9 @@ final class DashboardService
     }
 
     /**
-     * Dane wykresów, aktywności i trendu area dla dashboardu.
-     *
      * @return array<string, mixed>
      */
-    public function charts(): array
+    private function buildCharts(): array
     {
         $trend = $this->dashboardRepository->ordersTrend(14);
         $fleet = $this->dashboardRepository->fleetStructure();

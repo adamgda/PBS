@@ -17,6 +17,7 @@ final class Response
         private readonly int $statusCode,
         private readonly array $data,
         private array $headers = [],
+        private bool $compressed = false,
     ) {}
 
     /**
@@ -90,6 +91,21 @@ final class Response
         return $this->headers[$name] ?? null;
     }
 
+
+    /**
+     * Włącza kompresję gzip odpowiedzi (dokumentacja 14.3).
+     * Kompresja jest stosowana tylko dla odpowiedzi > 1 KB.
+     */
+    public function enableCompression(): void
+    {
+        $this->compressed = true;
+    }
+
+    public function isCompressed(): bool
+    {
+        return $this->compressed;
+    }
+
     /**
      * Wysyła odpowiedź do klienta.
      */
@@ -106,6 +122,21 @@ final class Response
         }
 
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($this->data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $body = json_encode($this->data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($body === false) {
+            $body = '{}';
+        }
+
+        // Kompresja gzip dla odpowiedzi > 1 KB (dokumentacja 14.3).
+        if ($this->compressed && strlen($body) > 1024 && function_exists('gzencode')) {
+            $compressed = gzencode($body, 6);
+            if ($compressed !== false) {
+                header('Content-Encoding: gzip');
+                header('Vary: Accept-Encoding');
+                $body = $compressed;
+            }
+        }
+
+        echo $body;
     }
 }

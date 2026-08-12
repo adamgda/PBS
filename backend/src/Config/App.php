@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Config;
 
+use App\Cache\CacheFactory;
+use App\Cache\CacheManager;
 use App\Controllers\AuthController;
 use App\Controllers\AlertSettingsController;
 use App\Controllers\AnalyticsController;
@@ -14,6 +16,7 @@ use App\Controllers\EquipmentController;
 use App\Controllers\HealthController;
 use App\Controllers\IncidentController;
 use App\Controllers\InvoiceController;
+use App\Controllers\MetricsController;
 use App\Controllers\NoteController;
 use App\Controllers\OrderController;
 use App\Controllers\ReportController;
@@ -23,9 +26,12 @@ use App\Controllers\UserController;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\CacheControlMiddleware;
+use App\Middleware\CompressionMiddleware;
 use App\Middleware\CorsMiddleware;
 use App\Middleware\CsrfMiddleware;
 use App\Middleware\MiddlewarePipeline;
+use App\Middleware\MonitoringMiddleware;
 use App\Middleware\PermissionMiddleware;
 use App\Middleware\RateLimiterMiddleware;
 use App\Middleware\QrRateLimiterMiddleware;
@@ -183,6 +189,7 @@ final class App
 
         // === Kontrolery ===
         $healthController = new HealthController();
+        $metricsController = new MetricsController();
         $authController = new AuthController($authService, $appDebug, $csrfMiddleware);
         $userService = new UserService(
             $userRepository,
@@ -284,8 +291,11 @@ final class App
         $analyticsService = new AnalyticsService($analyticsRepository);
         $analyticsController = new AnalyticsController($analyticsService);
 
-        // === Serwis dashboardu (Etap 13) ===
-        $dashboardService = new DashboardService($dashboardRepository);
+        // === Cache backend (Etap 15a — strategia cache, dokumentacja 14.2) ===
+        $cacheManager = CacheFactory::fromConfig($config);
+
+        // === Serwis dashboardu (Etap 13) — KPI cache'owane 60 s (tag `dashboard`) ===
+        $dashboardService = new DashboardService($dashboardRepository, $cacheManager);
         $dashboardController = new DashboardController($dashboardService);
 
         // === Serwis konfiguracji alertów (Etap 14) ===
@@ -421,6 +431,8 @@ final class App
         // === Trasy ===
         $routes = [
             ['method' => 'GET', 'path' => '/api/v1/health', 'handler' => [$healthController, 'index']],
+            // Metryki Web Vitals (Etap 15a) — publiczne, best-effort, rate-limited
+            ['method' => 'POST', 'path' => '/api/v1/metrics/web-vitals', 'handler' => [$metricsController, 'webVitals']],
             ['method' => 'POST', 'path' => '/api/v1/auth/login', 'handler' => [$authController, 'login']],
             ['method' => 'POST', 'path' => '/api/v1/auth/refresh', 'handler' => [$authController, 'refresh']],
             ['method' => 'POST', 'path' => '/api/v1/auth/logout', 'handler' => [$authController, 'logout']],
@@ -561,14 +573,16 @@ final class App
 
         $this->router = new Router($routes);
 
-        // === Middleware (kolejność: CORS → SecurityHeaders → Auth → Csrf → RateLimiter → Router) ===
+        // === Middleware (kolejność: CORS → Monitoring → SecurityHeaders → Auth → Csrf → RateLimiter → Cache → Compression → Router) ===
         $middleware = [
             new CorsMiddleware($allowedOrigins),
+            new MonitoringMiddleware(),
             $securityHeadersMiddleware,
             new AuthMiddleware(
                 jwtSecret: $jwtSecret,
                 publicRoutes: [
                     '/api/v1/health',
+                    '/api/v1/metrics/web-vitals',
                     '/api/v1/auth/login',
                     '/api/v1/auth/refresh',
                     '/api/v1/auth/forgot-password',
@@ -590,6 +604,8 @@ final class App
                 maxIpRequests: 10,
                 windowSeconds: 60,
             ),
+            new CacheControlMiddleware(),
+            new CompressionMiddleware(),
         ];
 
         $this->pipeline = new MiddlewarePipeline($middleware);

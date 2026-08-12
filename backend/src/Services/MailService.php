@@ -27,6 +27,15 @@ class MailService
     private readonly string $smtpFromName;
     private readonly bool $enabled;
 
+    /** Liczba kolejnych niepowodzeń SMTP (circuit breaker). */
+    private int $consecutiveFailures = 0;
+
+    /** Timestamp, do którego obwód pozostaje otwarty (graceful degradation). */
+    private int $circuitOpenUntil = 0;
+
+    private const CIRCUIT_FAILURE_THRESHOLD = 5;
+    private const CIRCUIT_COOLDOWN_SECONDS = 60;
+
     public function __construct(Config $config)
     {
         $this->smtpHost = $config->get('SMTP_HOST', '') ?? '';
@@ -97,13 +106,31 @@ class MailService
             return true;
         }
 
+        // Circuit breaker (dokumentacja 14.5): gdy SMTP wielokrotnie zawodzi,
+        // otwieramy obwód na 60 s — pomijamy próby połączenia (graceful degradation).
+        if ($this->circuitOpenUntil > time()) {
+            error_log('[MAIL] Circuit open — skipping SMTP attempt');
+            return false;
+        }
+
         try {
             $this->sendViaSmtp($to, $subject, $body);
+
+            // Sukces — reset licznika kolejnych awarii.
+            $this->consecutiveFailures = 0;
+            $this->circuitOpenUntil = 0;
 
             return true;
         } catch (\Throwable $e) {
             // Awaria SMTP — logujemy błąd (nie przerywamy flow użytkownika).
             error_log("[MAIL] SMTP error: {$e->getMessage()}");
+
+            $this->consecutiveFailures++;
+            if ($this->consecutiveFailures >= self::CIRCUIT_FAILURE_THRESHOLD) {
+                $this->circuitOpenUntil = time() + self::CIRCUIT_COOLDOWN_SECONDS;
+                $this->consecutiveFailures = 0;
+                error_log('[MAIL] Circuit opened for ' . self::CIRCUIT_COOLDOWN_SECONDS . 's');
+            }
 
             return false;
         }
