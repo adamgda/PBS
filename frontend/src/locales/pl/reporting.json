@@ -22,13 +22,20 @@
     "opis": "Opis",
     "przebieg": "Aktualny przebieg",
     "przebieg_oc": "Przebieg OC",
-    "author": "Autor"
+    "author": "Autor",
+    "source": "Źródło"
+  },
+  "source": {
+    "panel": "Panel",
+    "qr": "Z QR",
+    "qr_badge": "Z QR"
   },
   "filters": {
     "terminal": "Terminal",
     "equipment": "Pojazd",
     "date_from": "Od",
-    "date_to": "Do"
+    "date_to": "Do",
+    "source": "Źródło"
   },
   "form": {
     "add_terminal_title": "Nowy raport — terminal",

@@ -37,6 +37,7 @@ final class IncidentController extends Controller
             'typ' => is_string($query['typ'] ?? null) ? (string) $query['typ'] : '',
             'status' => is_string($query['status'] ?? null) ? (string) $query['status'] : '',
             'equipment_id' => is_string($query['equipment_id'] ?? null) ? (string) $query['equipment_id'] : '',
+            'zrodlo' => is_string($query['zrodlo'] ?? null) ? (string) $query['zrodlo'] : '',
             'sort' => is_string($query['sort'] ?? null) ? (string) $query['sort'] : 'id',
             'direction' => is_string($query['direction'] ?? null) ? (string) $query['direction'] : 'asc',
         ];

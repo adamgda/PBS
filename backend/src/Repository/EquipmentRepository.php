@@ -219,4 +219,37 @@ class EquipmentRepository extends BaseRepository
     {
         return $this->update($id, $data);
     }
+
+    /**
+     * Publiczny podgląd maszyny po tokenie QR (Etap 20).
+     * Zwraca wyłącznie bezpieczne pola — bez danych osobowych (RODO).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findPublicByQrToken(string $token): ?array
+    {
+        $sql = 'SELECT e.`id`, e.`kategoria`, e.`nazwa`, e.`numer_seryjny`, e.`is_active`
+                FROM `equipment` e
+                WHERE e.`qr_token` = :token LIMIT 1';
+        $stmt = $this->executeQuery($sql, [':token' => $token]);
+
+        /** @var array<string, mixed>|false $result */
+        $result = $stmt->fetch();
+
+        return $result === false ? null : $result;
+    }
+
+    /**
+     * Ustawia / unieważnia token QR maszyny.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function setQrToken(int $id, ?string $token): ?array
+    {
+        $sql = 'UPDATE `equipment` SET `qr_token` = :token WHERE `id` = :id';
+        $this->executeQuery($sql, [':token' => $token, ':id' => $id]);
+
+        return $this->findById($id);
+    }
+
 }

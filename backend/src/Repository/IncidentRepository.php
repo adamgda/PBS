@@ -42,7 +42,7 @@ class IncidentRepository extends BaseRepository
     /**
      * Wyszukiwanie awarii z paginacją, filtrowaniem i sortowaniem.
      *
-     * @param array{typ?: string, status?: string, equipment_id?: string} $filters
+     * @param array{typ?: string, status?: string, equipment_id?: string, zrodlo?: string} $filters
      * @return array<int, array<string, mixed>>
      */
     public function search(array $filters, int $limit, int $offset, string $sort, string $direction): array
@@ -72,6 +72,12 @@ class IncidentRepository extends BaseRepository
             $params[':equipment_id'] = (int) $equipmentId;
         }
 
+        $zrodlo = is_string($filters['zrodlo'] ?? null) ? $filters['zrodlo'] : '';
+        if ($zrodlo !== '') {
+            $where[] = 'i.`zrodlo` = :zrodlo';
+            $params[':zrodlo'] = $zrodlo;
+        }
+
         $sql = 'SELECT i.*, eq.`nazwa` AS equipment_nazwa, u.`email` AS zgloszona_przez_email
                 FROM `incidents` i
                 LEFT JOIN `equipment` eq ON eq.`id` = i.`equipment_id`
@@ -88,7 +94,7 @@ class IncidentRepository extends BaseRepository
     }
 
     /**
-     * @param array{typ?: string, status?: string, equipment_id?: string} $filters
+     * @param array{typ?: string, status?: string, equipment_id?: string, zrodlo?: string} $filters
      */
     public function countSearch(array $filters): int
     {
@@ -111,6 +117,12 @@ class IncidentRepository extends BaseRepository
         if ($equipmentId !== '') {
             $where[] = '`equipment_id` = :equipment_id';
             $params[':equipment_id'] = (int) $equipmentId;
+        }
+
+        $zrodlo = is_string($filters['zrodlo'] ?? null) ? $filters['zrodlo'] : '';
+        if ($zrodlo !== '') {
+            $where[] = '`zrodlo` = :zrodlo';
+            $params[':zrodlo'] = $zrodlo;
         }
 
         $sql = 'SELECT COUNT(*) FROM `incidents`';

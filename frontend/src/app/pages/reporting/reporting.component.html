@@ -100,6 +100,7 @@
       [sortKey]="vehicleSortKey()"
       [sortDirection]="vehicleSortDirection()"
       [actionsTemplate]="actionsTpl"
+      [cellTemplates]="{ zrodlo: sourceCellTpl }"
       (sortChange)="onVehicleSort($event)"
       (pageChange)="onVehiclePageChange($event)"
       (perPageChange)="onVehiclePerPageChange($event)"
@@ -115,6 +116,15 @@
         (clicked)="openEdit(report)"
       />
     </div>
+  </ng-template>
+
+  <ng-template #sourceCellTpl let-report>
+    @if (report.zrodlo === 'qr') {
+      <span class="inline-flex items-center gap-1 rounded-full bg-pbs-primary/10 px-2 py-0.5 text-xs font-semibold text-pbs-primary">
+        <app-svg-icon name="qr" size="sm" />
+        {{ 'reporting.source.qr_badge' | translate }}
+      </span>
+    }
   </ng-template>
 </div>
 

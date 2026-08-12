@@ -111,6 +111,14 @@
           <button
             type="button"
             class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
+            (click)="openQr(eq); closeActions()"
+          >
+            <app-svg-icon name="qr" size="sm" class="shrink-0 text-pbs-primary" />
+            {{ 'sprzet.qr.button' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
             (click)="openEdit(eq); closeActions()"
           >
             <app-svg-icon name="settings" size="sm" class="shrink-0 text-gray-500" />
@@ -569,3 +577,75 @@
     </div>
   </div>
 }
+
+<!-- ===== Modal: kod QR maszyny (Etap 20) ===== -->
+@if (qrModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          {{ 'sprzet.qr.modal_title' | translate: { name: qrEquipment()?.nazwa ?? '' } }}
+        </h3>
+        <app-icon-button icon="close" [ariaLabel]="'common.buttons.close' | translate" (clicked)="closeQr()" />
+      </div>
+
+      <p class="text-sm text-gray-600 dark:text-slate-400">{{ 'sprzet.qr.modal_subtitle' | translate }}</p>
+
+      @if (qrLoading()) {
+        <div class="flex items-center justify-center py-12">
+          <app-svg-icon class="h-8 w-8 animate-spin text-pbs-primary" name="spinner" />
+        </div>
+      } @else if (qrNotGenerated()) {
+        <div class="mt-6 rounded-lg bg-gray-50 p-6 text-center dark:bg-slate-800/60">
+          <p class="text-sm text-gray-600 dark:text-slate-300">{{ 'sprzet.qr.not_generated' | translate }}</p>
+          <app-button variant="primary" extraClass="mt-4" (clicked)="generateQr(qrEquipment()!)">
+            {{ 'sprzet.qr.generate' | translate }}
+          </app-button>
+        </div>
+      } @else if (qrError()) {
+        <div class="mt-6 rounded-lg bg-red-50 p-4 text-sm text-red-700" role="alert">
+          {{ qrError() }}
+        </div>
+      } @else if (qrInfo()) {
+        <div class="mt-6">
+          <div class="flex justify-center">
+            <div
+              class="qr-preview rounded-lg border border-gray-200 bg-white p-3 dark:border-slate-700"
+              [innerHTML]="qrSvg()"
+            ></div>
+          </div>
+          <p class="mt-3 text-center text-xs font-medium uppercase tracking-wide text-gray-500">{{ 'sprzet.qr.scan_hint' | translate }}</p>
+          <div class="mt-4 rounded-lg bg-gray-50 p-3 dark:bg-slate-800/60">
+            <p class="break-all text-xs text-gray-600 dark:text-slate-300">{{ qrInfo()?.public_url }}</p>
+          </div>
+
+          <div class="mt-5 flex flex-col gap-2 sm:flex-row">
+            <app-button variant="primary" extraClass="flex-1" (clicked)="printQr()">
+              <app-svg-icon name="qr" class="h-4 w-4" />
+              {{ 'sprzet.qr.print' | translate }}
+            </app-button>
+            <app-button variant="outline" (clicked)="regenerateQr(qrEquipment()!)">
+              {{ 'sprzet.qr.regenerate' | translate }}
+            </app-button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- ===== Obszar wydruku naklejki (widoczny tylko w @media print) ===== -->
+@if (qrInfo() && qrEquipment()) {
+  <div class="pbs-sticker-print">
+    <div class="pbs-sticker-print__code" [innerHTML]="qrSvg()"></div>
+    <div class="pbs-sticker-print__body">
+      <p class="pbs-sticker-print__name">{{ 'sprzet.qr.sticker_name' | translate: { name: qrEquipment()?.nazwa ?? '' } }}</p>
+      @if (qrEquipment()?.numer_seryjny) {
+        <p class="pbs-sticker-print__serial">{{ 'sprzet.qr.sticker_serial' | translate: { serial: qrEquipment()?.numer_seryjny ?? '' } }}</p>
+      }
+      <p class="pbs-sticker-print__instruction">{{ 'sprzet.qr.sticker_instruction' | translate }}</p>
+      <p class="pbs-sticker-print__footer">{{ 'sprzet.qr.sticker_footer' | translate }}</p>
+    </div>
+  </div>
+}
+

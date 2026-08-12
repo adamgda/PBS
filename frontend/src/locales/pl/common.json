@@ -132,9 +132,12 @@
     "terminale": "Terminale",
     "harmonogram": "Harmonogram",
     "analytics": "Analityka",
+    "analityka": "Analityka",
     "reporting": "Raporty",
+    "raportowanie": "Raporty",
     "ustawienia": "Ustawienia",
-    "awaria": "Awaria!"
+    "awaria": "Awaria!",
+    "logi_audytowe": "Logi audytowe"
   },
   "nav": {
     "menu": "Menu",

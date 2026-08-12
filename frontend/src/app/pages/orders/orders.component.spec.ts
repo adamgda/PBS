@@ -34,11 +34,9 @@ describe('OrdersComponent', () => {
   afterEach(() => httpMock.verify());
 
   function flushAllInitial() {
-    // load() → GET /orders, loadOptions() → terminals + employees + equipment
+    // load() → GET /orders, loadOptions() → GET /employees
     httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/orders`)).flush({ data: [], total: 0, page: 1, per_page: 100 });
-    httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/terminals`)).flush({ data: [], total: 0, page: 1, per_page: 100 });
     httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/employees`)).flush({ data: [], total: 0, page: 1, per_page: 100 });
-    httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/equipment`)).flush({ data: [], total: 0, page: 1, per_page: 100 });
   }
 
   it('powinien utworzyć komponent i pobrać zlecenia', () => {
@@ -47,64 +45,6 @@ describe('OrdersComponent', () => {
     flushAllInitial();
     expect(fixture.componentInstance).toBeTruthy();
     expect(fixture.componentInstance.orders()).toEqual([]);
-  });
-
-  it('powinien otworzyć modal tworzenia z domyślnymi wartościami', () => {
-    const fixture = TestBed.createComponent(OrdersComponent);
-    fixture.detectChanges();
-    flushAllInitial();
-
-    const comp = fixture.componentInstance;
-    comp.openCreate();
-    expect(comp.modalMode()).toBe('create');
-    expect(comp.formNumer()).toBe('');
-    expect(comp.formKlient()).toBe('');
-    expect(comp.formTerminalId()).toBeNull();
-    expect(comp.formStatus()).toBe('nowe');
-  });
-
-  it('powinien zablokować tworzenie przy pustym numerze', () => {
-    const fixture = TestBed.createComponent(OrdersComponent);
-    fixture.detectChanges();
-    flushAllInitial();
-
-    const comp = fixture.componentInstance;
-    comp.openCreate();
-    comp.saveModal();
-    const postReqs = httpMock.match((r) => r.method === 'POST');
-    expect(postReqs.length).toBe(0);
-  });
-
-  it('powinien utworzyć zlecenie (POST /orders)', () => {
-    const fixture = TestBed.createComponent(OrdersComponent);
-    fixture.detectChanges();
-    flushAllInitial();
-
-    const comp = fixture.componentInstance;
-    comp.openCreate();
-    comp.formNumer.set('ZL-TEST-1');
-    comp.formKlient.set('Klient Test');
-    comp.formTerminalId.set(1);
-    comp.formStart.set('2026-01-05T08:00');
-    comp.formEnd.set('2026-01-05T16:00');
-    comp.saveModal();
-    fixture.detectChanges();
-
-    const req = httpMock.expectOne(`${environment.apiUrl}/orders`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body.numer_zlecenia).toBe('ZL-TEST-1');
-    expect(req.request.body.terminal_id).toBe(1);
-    req.flush({
-      id: 1, numer_zlecenia: 'ZL-TEST-1', klient_nazwa: 'Klient Test', terminal_id: 1, terminal_nazwa: null,
-      data_rozpoczecia: '2026-01-05 08:00:00', data_zakonczenia: '2026-01-05 16:00:00', zakres_prac: '',
-      wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null,
-    });
-
-    // Po sukcesie lista przeładowana (GET /orders)
-    const reload = httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/orders`));
-    reload.flush({ data: [], total: 0, page: 1, per_page: 100 });
-
-    expect(comp.modalMode()).toBeNull();
   });
 
   it('statusColor mapuje status na kolor', () => {
@@ -142,56 +82,26 @@ describe('OrdersComponent', () => {
     expect(comp.modalMode()).toBeNull();
   });
 
-  // --- Etap 7a: wybór roli przy przypisywaniu pracownika ---
-
-  it('assignEmployee wysyła rolę w payloadzie', () => {
+  it('klik na kalendarz nie otwiera modala edycji, tylko zaznacza zlecenie', () => {
     const fixture = TestBed.createComponent(OrdersComponent);
     fixture.detectChanges();
     flushAllInitial();
 
     const comp = fixture.componentInstance;
-    // Ustaw zlecenie i pracownika bezpośrednio przez sygnały (pomijamy otwarcie detali).
-    comp.assignOrder.set({ id: 5, numer_zlecenia: 'ZL-005', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'T', data_rozpoczecia: null, data_zakonczenia: null, zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null } as never);
-    comp.assignEmployeeId.set(3);
-    comp.assignRole.set('operator');
-    comp.saveAssignEmployee();
+    (comp as any)._orders.set([
+      { id: 1, numer_zlecenia: 'ZL-1', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'BCT', data_rozpoczecia: '2026-06-17 08:00:00', data_zakonczenia: '2026-06-17 16:00:00', zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null } as never,
+    ]);
+    comp.onCalendarEventClick({ id: 1, title: '', date: '' });
 
-    const req = httpMock.expectOne((r) => r.method === 'POST' && r.url.endsWith('/orders/5/assign-employee'));
-    expect(req.request.body.employee_id).toBe(3);
-    expect(req.request.body.rola).toBe('operator');
-    req.flush({ order_id: 5, employee_id: 3, rola: 'operator', godziny: null, assigned: true });
+    expect(comp.modalMode()).toBeNull();
+    expect(comp.selectedOrder()?.id).toBe(1);
 
-    // Po sukcesie przeładowanie detali (GET /orders/5)
-    const detailReq = httpMock.expectOne((r) => r.method === 'GET' && r.url === `${environment.apiUrl}/orders/5`);
-    detailReq.flush({ id: 5, numer_zlecenia: 'ZL-005', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'T', data_rozpoczecia: null, data_zakonczenia: null, zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null, employees: [], equipment: [] });
+    // loadDetails() → GET /orders/1
+    httpMock.expectOne((r) => r.method === 'GET' && r.url === `${environment.apiUrl}/orders/1`).flush({
+      id: 1, numer_zlecenia: 'ZL-1', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'BCT', data_rozpoczecia: '2026-06-17 08:00:00', data_zakonczenia: '2026-06-17 16:00:00', zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null, employees: [], equipment: [],
+    } as never);
 
-    expect(comp.assignRole()).toBeNull();
-  });
-
-  // --- Rozbudowa: godziny, szybkie przypisywanie, przypisania przy tworzeniu ---
-
-  it('assignEmployee wysyła godziny w payloadzie', () => {
-    const fixture = TestBed.createComponent(OrdersComponent);
-    fixture.detectChanges();
-    flushAllInitial();
-
-    const comp = fixture.componentInstance;
-    comp.assignOrder.set({ id: 7, numer_zlecenia: 'ZL-007', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'T', data_rozpoczecia: null, data_zakonczenia: null, zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null } as never);
-    comp.assignEmployeeId.set(4);
-    comp.assignRole.set('brygadzista');
-    comp.assignGodziny.set('8');
-    comp.saveAssignEmployee();
-
-    const req = httpMock.expectOne((r) => r.method === 'POST' && r.url.endsWith('/orders/7/assign-employee'));
-    expect(req.request.body.employee_id).toBe(4);
-    expect(req.request.body.rola).toBe('brygadzista');
-    expect(req.request.body.godziny).toBe(8);
-    req.flush({ order_id: 7, employee_id: 4, rola: 'brygadzista', godziny: 8, assigned: true });
-
-    const detailReq = httpMock.expectOne((r) => r.method === 'GET' && r.url === `${environment.apiUrl}/orders/7`);
-    detailReq.flush({ id: 7, numer_zlecenia: 'ZL-007', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'T', data_rozpoczecia: null, data_zakonczenia: null, zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null, employees: [], equipment: [] });
-
-    expect(comp.assignGodziny()).toBe('');
+    expect(comp.selectedOrder()?.numer_zlecenia).toBe('ZL-1');
   });
 
   it('quickAssignEmployee przypisuje pracownika do wybranego zlecenia', () => {
@@ -209,43 +119,6 @@ describe('OrdersComponent', () => {
     req.flush({ assigned: true });
 
     httpMock.expectOne((r) => r.method === 'GET' && r.url === `${environment.apiUrl}/orders/9`).flush({ id: 9, numer_zlecenia: 'ZL-009', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'T', data_rozpoczecia: null, data_zakonczenia: null, zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null, employees: [], equipment: [] });
-  });
-
-  it('przypisania oczekujące są aplikowane po utworzeniu zlecenia', () => {
-    const fixture = TestBed.createComponent(OrdersComponent);
-    fixture.detectChanges();
-    flushAllInitial();
-
-    const comp = fixture.componentInstance;
-    comp.openCreate();
-    comp.formNumer.set('ZL-PENDING');
-    comp.formKlient.set('Klient');
-    comp.formTerminalId.set(1);
-    comp.formStart.set('2026-02-02T08:00');
-    comp.formEnd.set('2026-02-02T16:00');
-    // Dodaj przypisania oczekujące
-    comp.onPendingEmployeeSelected({ value: 21, label: 'Anna Kowal' });
-    comp.onPendingEquipmentSelected({ value: 31, label: 'RS-02' });
-    comp.saveModal();
-
-    // POST /orders
-    const postReq = httpMock.expectOne((r) => r.method === 'POST' && r.url === `${environment.apiUrl}/orders`);
-    postReq.flush({ id: 42, numer_zlecenia: 'ZL-PENDING', klient_nazwa: 'Klient', terminal_id: 1, terminal_nazwa: null, data_rozpoczecia: '2026-02-02 08:00:00', data_zakonczenia: '2026-02-02 16:00:00', zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null });
-
-    // Aplikacja przypisań: assign-employee + assign-equipment
-    const empReq = httpMock.expectOne((r) => r.method === 'POST' && r.url.endsWith('/orders/42/assign-employee'));
-    expect(empReq.request.body.employee_id).toBe(21);
-    empReq.flush({ assigned: true });
-    const eqReq = httpMock.expectOne((r) => r.method === 'POST' && r.url.endsWith('/orders/42/assign-equipment'));
-    expect(eqReq.request.body.equipment_id).toBe(31);
-    eqReq.flush({ assigned: true });
-
-    // Przeładowanie listy
-    httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/orders`)).flush({ data: [], total: 0, page: 1, per_page: 100 });
-
-    expect(comp.pendingEmployees()).toEqual([]);
-    expect(comp.pendingEquipment()).toEqual([]);
-    expect(comp.modalMode()).toBeNull();
   });
 
   it('wagesSummary sumuje godziny i wynagrodzenia', () => {

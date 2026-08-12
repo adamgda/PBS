@@ -44,6 +44,7 @@ final class EmployeeService
         private readonly EmployeeRateRepository $rateRepository,
         private readonly EmployeeVacationRepository $vacationRepository,
         private readonly OrderRepository $orderRepository,
+        private readonly UserService $userService,
     ) {}
 
     /**
@@ -252,6 +253,13 @@ final class EmployeeService
         ]);
 
         $this->auditLog($request, 'employee_created', $this->toInt($employee['id'] ?? 0));
+
+        // Nowy pracownik z adresem e-mail otrzymuje konto użytkownika (rola 'user')
+        // z ograniczonym dostępem (awaria + raportowanie obsługi) oraz link do
+        // ustawienia hasła wysyłany na jego adres e-mail.
+        if ($email !== null) {
+            $this->userService->createEmployeeAccount($email, $request);
+        }
 
         return $this->toDto($employee);
     }

@@ -59,7 +59,7 @@ final class UserController extends Controller
     {
         $body = $request->body();
         $email = is_string($body['email'] ?? null) ? $body['email'] : '';
-        $role = is_string($body['role'] ?? null) ? $body['role'] : 'user';
+        $role = is_string($body['role'] ?? null) ? $body['role'] : 'admin';
         $permissions = is_array($body['permissions'] ?? null) ? $body['permissions'] : [];
 
         if ($email === '') {

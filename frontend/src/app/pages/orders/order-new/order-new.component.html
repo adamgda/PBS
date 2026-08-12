@@ -1,12 +1,15 @@
 <!-- Nagłówek podstrony -->
 <div class="flex flex-wrap items-center justify-between gap-3">
   <div>
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'harmonogram.form.add_title' | translate }}</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ editingId() === null ? ('harmonogram.form.add_title' | translate) : ('harmonogram.form.edit_title' | translate) }}</h1>
     <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'harmonogram.subtitle' | translate }}</p>
   </div>
   <app-button variant="outline" [label]="'common.buttons.back' | translate" (clicked)="cancel()" />
 </div>
 
+@if (loading()) {
+  <div class="mt-5 rounded-2xl bg-white p-6 text-center text-gray-500 dark:bg-slate-900 dark:text-slate-400">{{ 'common.table.loading' | translate }}</div>
+} @else {
 <!-- Formularz -->
 <div class="mt-5 rounded-2xl bg-white p-6 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
   <div class="grid grid-cols-1 gap-x-4 lg:grid-cols-2">
@@ -90,6 +93,93 @@
     />
   </div>
 
+  @if (editingId() !== null) {
+    <div class="mt-5 rounded-xl bg-gray-50 p-4 dark:bg-slate-800/60">
+      <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_employees' | translate }}</h3>
+      @if (assignedEmployees().length) {
+        <ul class="space-y-1">
+          @for (e of assignedEmployees(); track e.id) {
+            <li class="flex items-center justify-between rounded bg-white px-2 py-1 text-sm dark:bg-slate-900 dark:text-slate-200">
+              <span>
+                {{ e.employee_name ?? ('harmonogram.order.deleted_employee' | translate) }}
+                <span class="text-xs text-gray-500 dark:text-slate-400">({{ roleLabel(e.rola) }}{{ e.godziny !== null ? ' · ' + e.godziny + ' h' : '' }})</span>
+              </span>
+              @if (e.employee_id !== null) {
+                <app-icon-button icon="trash" tone="danger" size="sm" [ariaLabel]="'harmonogram.actions.remove_assignment' | translate" (clicked)="unassignEmployee(e)" />
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_employees' | translate }}</p>
+      }
+      <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.assign.select_employee' | translate }}</label>
+          <app-autocomplete-select
+            class="mt-1.5"
+            [options]="employeeOptions()"
+            [selectedValue]="assignEmployeeId()"
+            [placeholder]="'harmonogram.assign.select_employee' | translate"
+            (selectionChange)="onAssignEmployeeSelected($event)"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.assign.select_role' | translate }}</label>
+          <select
+            class="mt-1.5 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-pbs-primary focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [ngModel]="assignRole()"
+            (ngModelChange)="assignRole.set($event)"
+          >
+            <option [ngValue]="null">{{ 'harmonogram.assign.no_role' | translate }}</option>
+            <option value="operator">{{ 'pracownicy.roles.operator' | translate }}</option>
+            <option value="brygadzista">{{ 'pracownicy.roles.foreman' | translate }}</option>
+            <option value="sztauer">{{ 'pracownicy.roles.stevedore' | translate }}</option>
+            <option value="lukowy">{{ 'pracownicy.roles.hatch' | translate }}</option>
+            <option value="operator_zurawia">{{ 'pracownicy.roles.crane_operator' | translate }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'harmonogram.assign.hours' | translate }}</label>
+          <div class="mt-1.5 flex gap-2">
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              [placeholder]="'harmonogram.assign.hours_placeholder' | translate"
+              [ngModel]="assignGodziny()"
+              (ngModelChange)="assignGodziny.set($event)"
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-pbs-primary focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            />
+            <app-button variant="primary" size="sm" [label]="'harmonogram.assign.add'" [disabled]="assignEmployeeId() === null" (clicked)="assignEmployee()" />
+          </div>
+        </div>
+      </div>
+      <h3 class="mb-2 mt-4 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_equipment' | translate }}</h3>
+      @if (assignedEquipment().length) {
+        <ul class="space-y-1">
+          @for (eq of assignedEquipment(); track eq.id) {
+            <li class="flex items-center justify-between rounded bg-white px-2 py-1 text-sm dark:bg-slate-900 dark:text-slate-200">
+              <span>{{ eq.equipment_nazwa || '—' }}</span>
+              <app-icon-button icon="trash" tone="danger" size="sm" [ariaLabel]="'harmonogram.actions.remove_assignment' | translate" (clicked)="unassignEquipment(eq)" />
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_equipment' | translate }}</p>
+      }
+      <div class="mt-3 flex gap-2">
+        <app-autocomplete-select
+          class="flex-1"
+          [options]="equipmentOptions()"
+          [selectedValue]="assignEquipmentId()"
+          [placeholder]="'harmonogram.assign.select_equipment' | translate"
+          (selectionChange)="onAssignEquipmentSelected($event)"
+        />
+        <app-button variant="primary" size="sm" [label]="'harmonogram.assign.add'" [disabled]="assignEquipmentId() === null" (clicked)="assignEquipment()" />
+      </div>
+    </div>
+  } @else {
   <!-- Przypisania pracowników i sprzętu -->
   <div class="mt-5 rounded-xl bg-gray-50 p-4 dark:bg-slate-800/60">
     <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-200">{{ 'harmonogram.order.assigned_employees' | translate }}</h3>
@@ -134,10 +224,15 @@
       <p class="text-xs text-gray-400 dark:text-slate-500">{{ 'harmonogram.order.no_equipment' | translate }}</p>
     }
   </div>
+  }
 
   <!-- Akcje -->
   <div class="mt-5 flex justify-end gap-3">
+    @if (editingId() !== null) {
+      <app-button variant="danger" [label]="'harmonogram.buttons.delete'" [disabled]="saving()" (clicked)="delete()" />
+    }
     <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="cancel()" />
     <app-button variant="primary" [label]="'harmonogram.buttons.save'" [disabled]="saving()" (clicked)="save()" />
   </div>
 </div>
+}

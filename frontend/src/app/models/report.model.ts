@@ -61,8 +61,9 @@ export interface VehicleReport {
   aktualny_przebieg: number;
   przebieg_oc: string;
   uwagi: string | null;
-  utworzony_przez: number;
+  utworzony_przez: number | null;
   utworzony_przez_email: string | null;
+  zrodlo: 'panel' | 'qr';
   created_at: string | null;
   updated_at: string | null;
 }
@@ -88,6 +89,7 @@ export interface VehicleReportListParams {
   equipment_id?: string;
   date_from?: string;
   date_to?: string;
+  zrodlo?: string;
   sort?: string;
   direction?: 'asc' | 'desc';
   page?: number;

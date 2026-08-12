@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Http\Request;
 use App\Http\Response;
 use App\Services\EquipmentService;
+use App\Services\QrService;
 
 /**
  * Kontroler sekcji Sprzęt (Etap 8) — endpointy:
@@ -21,6 +22,8 @@ use App\Services\EquipmentService;
  * POST   /api/v1/equipment/{id}/service-plans
  * PUT    /api/v1/service-plans/{id}
  * DELETE /api/v1/service-plans/{id}
+ * POST   /api/v1/equipment/{id}/qr-token   (Etap 20 — kody QR)
+ * GET    /api/v1/equipment/{id}/qr         (Etap 20 — kody QR)
  *
  * Wymaga uprawnienia sekcji `sprzet` (PermissionMiddleware na trasie).
  */
@@ -28,6 +31,7 @@ final class EquipmentController extends Controller
 {
     public function __construct(
         private readonly EquipmentService $equipmentService,
+        private readonly QrService $qrService,
     ) {}
 
     /**
@@ -228,6 +232,42 @@ final class EquipmentController extends Controller
     {
         $id = $this->toInt($params['id'] ?? 0, 0);
         $result = $this->equipmentService->deleteServicePlan($id, $request);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 200);
+    }
+
+    /**
+     * POST /api/v1/equipment/{id}/qr-token — (re)generacja tokena QR (Etap 20).
+     *
+     * @param array<string, string> $params
+     */
+    public function generateQrToken(Request $request, array $params = []): Response
+    {
+        $id = $this->toInt($params['id'] ?? 0, 0);
+        $result = $this->qrService->generateToken($id, $request);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 201);
+    }
+
+    /**
+     * GET /api/v1/equipment/{id}/qr — kod QR + dane do wydruku naklejki (Etap 20).
+     *
+     * @param array<string, string> $params
+     */
+    public function showQr(Request $request, array $params = []): Response
+    {
+        $id = $this->toInt($params['id'] ?? 0, 0);
+        $result = $this->qrService->qrInfo($id);
 
         $err = $this->errorResponse($result);
         if ($err !== null) {

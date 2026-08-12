@@ -102,3 +102,69 @@ button:focus-visible {
     @apply block text-sm font-medium text-gray-700 dark:text-slate-300;
   }
 }
+
+/* ===== Wydruk naklejki QR (Etap 20) ===== */
+/* Obszar wydruku jest ukryty na ekranie; widoczny tylko w @media print. */
+.pbs-sticker-print {
+  display: none;
+}
+
+/* Podgląd QR w modalu — jawny rozmiar (SVG ma tylko viewBox). */
+.qr-preview svg {
+  display: block;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto;
+}
+
+@media print {
+  /* Ukryj całą aplikację poza naklejką. */
+  body * {
+    visibility: hidden;
+  }
+  .pbs-sticker-print,
+  .pbs-sticker-print * {
+    visibility: visible;
+  }
+  .pbs-sticker-print {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 24px;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000;
+  }
+  .pbs-sticker-print__code svg {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto;
+  }
+  .pbs-sticker-print__body {
+    margin-top: 12px;
+  }
+  .pbs-sticker-print__name {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .pbs-sticker-print__serial {
+    font-size: 12px;
+    margin: 2px 0 0;
+  }
+  .pbs-sticker-print__instruction {
+    font-size: 12px;
+    margin: 10px 0 0;
+    max-width: 220px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pbs-sticker-print__footer {
+    font-size: 10px;
+    color: #666;
+    margin: 8px 0 0;
+  }
+}
+

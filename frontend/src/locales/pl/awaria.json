@@ -13,11 +13,18 @@
     "downtime": "Czas przestoju",
     "reported_by": "Zgłoszona przez",
     "description": "Opis",
-    "actions": "Akcje"
+    "actions": "Akcje",
+    "source": "Źródło"
+  },
+  "source": {
+    "panel": "Panel",
+    "qr": "Z QR",
+    "qr_badge": "Z QR"
   },
   "filters": {
     "type": "Typ",
     "status": "Status",
+    "source": "Źródło",
     "type_equipment": "Sprzęt",
     "type_other": "Inne"
   },

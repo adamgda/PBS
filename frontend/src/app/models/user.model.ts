@@ -4,15 +4,15 @@
 
 export type UserRole = 'super_admin' | 'admin' | 'user';
 
-/** Dopuszczalne sekcje uprawnień (zgodne z menu PBS). */
+/** Dopuszczalne sekcje uprawnień (zgodne z menu PBS oraz backendem). */
 export const PERMISSION_SECTIONS = [
   'dashboard',
   'pracownicy',
   'sprzet',
   'terminale',
   'harmonogram',
-  'analytics',
-  'reporting',
+  'analityka',
+  'raportowanie',
   'ustawienia',
   'awaria',
 ] as const;

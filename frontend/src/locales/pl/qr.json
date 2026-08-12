@@ -1,0 +1,52 @@
+{
+  "title": "Maszyna",
+  "subtitle": "Zgłoś awarię lub raport obsługi codziennej — bez logowania",
+  "select_action": "Co chcesz zrobić?",
+  "actions": {
+    "incident": "Zgłoś awarię",
+    "incident_desc": "Informuje zespół o usterce maszyny. Zgłoszenie trafi do weryfikacji.",
+    "daily_report": "Raport obsługi codziennej (OC)",
+    "daily_report_desc": "Zapisz przebieg i stan maszyny po codziennej obsłudze.",
+    "back": "Wróć"
+  },
+  "machine": {
+    "name": "Maszyna",
+    "serial": "Numer seryjny",
+    "category_vehicle": "Pojazd",
+    "category_other": "Inne"
+  },
+  "incident": {
+    "title": "Zgłoś awarię",
+    "description": "Opis sytuacji",
+    "description_placeholder": "Opisz co się stało, kiedy i jakie są objawy",
+    "contact": "Telefon kontaktowy (opcjonalnie)",
+    "contact_placeholder": "np. 500 100 200",
+    "submit": "Wyślij zgłoszenie",
+    "success_title": "Zgłoszenie wysłane",
+    "success_message": "Dziękujemy. Twoje zgłoszenie nr {{number}} zostało przekazane do obsługi.",
+    "number": "Numer zgłoszenia",
+    "another": "Zgłoś kolejną awarię"
+  },
+  "daily_report": {
+    "title": "Raport obsługi codziennej",
+    "mileage": "Aktualny przebieg (km)",
+    "mileage_placeholder": "np. 125000",
+    "description": "Opis obsługi",
+    "description_placeholder": "np. Sprawdzono płyny, ciśnienie w oponach, oświetlenie",
+    "notes": "Uwagi (opcjonalnie)",
+    "notes_placeholder": "Dodatkowe uwagi",
+    "submit": "Zapisz raport",
+    "success_title": "Raport zapisany",
+    "success_message": "Raport obsługi codziennej dla maszyny został zapisany."
+  },
+  "errors": {
+    "not_found_title": "Nie znaleziono maszyny",
+    "not_found_message": "Kod QR jest nieprawidłowy lub wygasł. Skontaktuj się z obsługą.",
+    "description_required": "Opis jest wymagany",
+    "mileage_required": "Podaj przebieg",
+    "mileage_invalid": "Przebieg musi być liczbą nieujemną",
+    "generic": "Wystąpił błąd. Spróbuj ponownie.",
+    "loading": "Wczytywanie danych maszyny..."
+  },
+  "footer": "Port Baltic Shipping (PBS)"
+}

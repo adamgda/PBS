@@ -139,6 +139,7 @@ export class ReportingComponent {
     { key: 'equipment_nazwa', label: this.t('reporting.list.equipment'), sortable: true },
     { key: 'aktualny_przebieg', label: this.t('reporting.list.przebieg'), sortable: true },
     { key: 'przebieg_oc', label: this.t('reporting.list.przebieg_oc') },
+    { key: 'zrodlo', label: this.t('reporting.list.source') },
     { key: 'utworzony_przez_email', label: this.t('reporting.list.author') },
   ]);
 
@@ -162,6 +163,15 @@ export class ReportingComponent {
     },
     { key: 'date_from', label: this.t('reporting.filters.date_from'), type: 'date' },
     { key: 'date_to', label: this.t('reporting.filters.date_to'), type: 'date' },
+    {
+      key: 'zrodlo',
+      label: this.t('reporting.filters.source'),
+      type: 'select',
+      options: [
+        { value: 'panel', label: this.t('reporting.source.panel') },
+        { value: 'qr', label: this.t('reporting.source.qr') },
+      ],
+    },
   ]);
 
   constructor() {

@@ -191,6 +191,17 @@ import { CommonModule } from '@angular/common';
         @case ('moon') {
           <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
         }
+        @case ('route') {
+          <circle cx="6" cy="19" r="2.5" />
+          <circle cx="18" cy="5" r="2.5" />
+          <path d="M8 19h6a4 4 0 0 0 0-8H10a4 4 0 0 1 0-8h6" />
+        }
+        @case ('qr') {
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <path d="M14 14h3v3h-3zM18 18h3v3h-3z" />
+        }
         @default {
           <circle cx="12" cy="12" r="9" />
         }

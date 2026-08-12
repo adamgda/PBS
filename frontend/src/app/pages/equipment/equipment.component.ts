@@ -1,12 +1,14 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 import { EquipmentService } from '../../services/equipment.service';
 import { EmployeesService } from '../../services/employees.service';
 import { TerminalsService } from '../../services/terminals.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmService } from '../../services/confirm.service';
+import { QrService } from '../../services/qr.service';
 import { TranslateService } from '../../services/translate.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
@@ -37,6 +39,7 @@ import {
   CreateServicePlanRequest,
   EquipmentCategory,
 } from '../../models/equipment.model';
+import { QrInfo } from '../../models/qr.model';
 
 type ModalMode = 'create' | 'edit' | 'assign' | 'details' | null;
 type PlanModalMode = 'create' | 'edit' | null;
@@ -84,6 +87,8 @@ export class EquipmentComponent {
   private readonly terminalsService = inject(TerminalsService);
   private readonly toastService = inject(ToastService);
   private readonly confirmService = inject(ConfirmService);
+  private readonly qrService = inject(QrService);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly translate = inject(TranslateService);
 
   private readonly _equipment = signal<Equipment[]>([]);
@@ -159,6 +164,15 @@ export class EquipmentComponent {
   readonly planLastDone = signal<string>('');
   readonly planNextPlanned = signal<string>('');
   readonly planIsActive = signal<boolean>(true);
+
+  // Modal kodu QR (Etap 20)
+  readonly qrModalOpen = signal<boolean>(false);
+  readonly qrEquipment = signal<Equipment | null>(null);
+  readonly qrLoading = signal<boolean>(false);
+  readonly qrNotGenerated = signal<boolean>(false);
+  readonly qrError = signal<string | null>(null);
+  readonly qrInfo = signal<QrInfo | null>(null);
+  readonly qrSvg = signal<SafeHtml | null>(null);
 
   // Opcje dla autocomplete
   private readonly _employeeOptions = signal<AutocompleteOption[]>([]);
@@ -626,6 +640,88 @@ export class EquipmentComponent {
       },
       error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
     });
+  }
+
+  // --- Kod QR maszyny (Etap 20) ---
+
+  openQr(eq: Equipment): void {
+    this.qrEquipment.set(eq);
+    this.qrInfo.set(null);
+    this.qrSvg.set(null);
+    this.qrNotGenerated.set(false);
+    this.qrError.set(null);
+    this.qrModalOpen.set(true);
+    this.loadQrInfo(eq.id, true);
+  }
+
+  closeQr(): void {
+    this.qrModalOpen.set(false);
+    this.qrEquipment.set(null);
+  }
+
+  private loadQrInfo(equipmentId: number, autoGenerate = false): void {
+    this.qrLoading.set(true);
+    this.qrError.set(null);
+    this.qrInfo.set(null);
+    this.qrSvg.set(null);
+
+    this.qrService.getQrInfo(equipmentId).subscribe({
+      next: (info) => {
+        this.qrLoading.set(false);
+        this.qrNotGenerated.set(false);
+        this.qrInfo.set(info);
+        this.qrSvg.set(this.sanitizer.bypassSecurityTrustHtml(info.qr_svg));
+      },
+      error: (err) => {
+        this.qrLoading.set(false);
+        if (err?.status === 409) {
+          if (autoGenerate) {
+            // Brak tokena — wygeneruj automatycznie przy pierwszym otwarciu.
+            this.autoGenerateToken(equipmentId);
+          } else {
+            this.qrNotGenerated.set(true);
+          }
+        } else {
+          this.qrError.set(err?.error?.error || this.t('common.messages.error.generic'));
+        }
+      },
+    });
+  }
+
+  private autoGenerateToken(equipmentId: number): void {
+    this.qrLoading.set(true);
+    this.qrService.generateToken(equipmentId).subscribe({
+      next: () => this.loadQrInfo(equipmentId, false),
+      error: (err) => {
+        this.qrLoading.set(false);
+        this.qrError.set(err?.error?.error || this.t('common.messages.error.generic'));
+      },
+    });
+  }
+
+  generateQr(eq: Equipment): void {
+    this.qrService.generateToken(eq.id).subscribe({
+      next: () => {
+        this.toastService.success(this.t('sprzet.qr.regenerated.success'));
+        this.loadQrInfo(eq.id);
+      },
+      error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
+    });
+  }
+
+  async regenerateQr(eq: Equipment): Promise<void> {
+    const confirmed = await this.confirmService.confirm({
+      title: this.t('sprzet.qr.regenerate_confirm_title'),
+      message: this.t('sprzet.qr.regenerate_confirm_message'),
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    this.generateQr(eq);
+  }
+
+  printQr(): void {
+    window.print();
   }
 
   // --- Pomocnicze ---

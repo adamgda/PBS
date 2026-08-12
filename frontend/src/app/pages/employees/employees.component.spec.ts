@@ -106,6 +106,7 @@ describe('EmployeesComponent', () => {
     comp.openCreate();
     comp.modalImie.set('Jan');
     comp.modalNazwisko.set('Kowalski');
+    comp.modalEmail.set('jan.kowalski@pbs.local');
     comp.saveModal();
     fixture.detectChanges();
 
@@ -113,9 +114,10 @@ describe('EmployeesComponent', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body.imie).toBe('Jan');
     expect(req.request.body.nazwisko).toBe('Kowalski');
+    expect(req.request.body.email).toBe('jan.kowalski@pbs.local');
 
     req.flush({
-      id: 8, imie: 'Jan', nazwisko: 'Kowalski', telefon: null, email: null,
+      id: 8, imie: 'Jan', nazwisko: 'Kowalski', telefon: null, email: 'jan.kowalski@pbs.local',
       current_terminal_id: null, terminal_nazwa: null, current_sprzet_id: null, sprzet_nazwa: null,
       is_active: true, created_at: null, updated_at: null,
     });
@@ -125,6 +127,22 @@ describe('EmployeesComponent', () => {
     reload.flush({ data: [], total: 0, page: 1, per_page: 25 });
 
     expect(comp.modalMode()).toBeNull();
+  });
+
+  it('powinien zablokować tworzenie pracownika bez adresu e-mail (link do hasła)', () => {
+    const fixture = TestBed.createComponent(EmployeesComponent);
+    fixture.detectChanges();
+    flushEmployeeList();
+    flushTerminalOptions();
+
+    const comp = fixture.componentInstance;
+    comp.openCreate();
+    comp.modalImie.set('Jan');
+    comp.modalNazwisko.set('Kowalski');
+    comp.saveModal();
+    // Nie wysłano POST
+    const postReqs = httpMock.match((r) => r.method === 'POST');
+    expect(postReqs.length).toBe(0);
   });
 
   it('statusLabel rozróżnia aktywny/nieaktywny', () => {

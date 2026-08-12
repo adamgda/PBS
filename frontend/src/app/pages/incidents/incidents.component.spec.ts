@@ -163,7 +163,7 @@ describe('IncidentsComponent', () => {
     const inc: Incident = {
       id: 5, typ: 'sprzet', equipment_id: 1, equipment_nazwa: 'RS-02', opis: 'test', status: 'zgloszona',
       data_zgloszenia: null, data_zakonczenia: null, zgloszona_przez: 1, zgloszona_przez_email: 'a@b.pl',
-      created_at: null, updated_at: null,
+      zrodlo: 'panel', created_at: null, updated_at: null,
     };
     comp.openDetails(inc);
 

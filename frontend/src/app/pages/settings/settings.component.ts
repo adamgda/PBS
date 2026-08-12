@@ -46,10 +46,11 @@ export class SettingsComponent {
 
   readonly activeTab = signal<'users' | 'alerts'>('users');
   readonly sections = PERMISSION_SECTIONS;
+  // Role są predefiniowane: z Ustawień tworzone są wyłącznie konta Administratora.
+  // Super Administratorzy nie są tworzeni z tego poziomu, a pracownicy (rola „użytkownik\")
+  // otrzymują konta automatycznie w zakładce Pracownicy (dostęp: awaria + raportowanie).
   readonly roles: { value: UserRole; labelKey: string }[] = [
-    { value: 'super_admin', labelKey: 'ustawienia.roles.super_admin' },
     { value: 'admin', labelKey: 'ustawienia.roles.admin' },
-    { value: 'user', labelKey: 'ustawienia.roles.user' },
   ];
 
   // --- Stan tabu Alerty (Etap 14) ---
@@ -92,7 +93,7 @@ export class SettingsComponent {
   readonly modalMode = signal<ModalMode>(null);
   readonly modalUser = signal<User | null>(null);
   readonly modalEmail = signal<string>('');
-  readonly modalRole = signal<UserRole>('user');
+  readonly modalRole = signal<UserRole>('admin');
   readonly modalPermissions = signal<Permissions>(this.emptyPermissions());
   readonly modalSaving = signal<boolean>(false);
 
@@ -158,7 +159,9 @@ export class SettingsComponent {
     this.modalMode.set('create');
     this.modalUser.set(null);
     this.modalEmail.set('');
-    this.modalRole.set('user');
+    // Rola predefiniowana: Administrator.
+    this.modalRole.set('admin');
+    // Uprawnienia do wyboru ręcznie — startujemy od pustych (wszystkie sekcje wyłączone).
     this.modalPermissions.set(this.emptyPermissions());
   }
 

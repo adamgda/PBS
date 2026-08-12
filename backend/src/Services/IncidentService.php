@@ -39,7 +39,7 @@ final class IncidentService
     /**
      * Lista awarii z paginacją i filtrami.
      *
-     * @param array{typ?: string, status?: string, equipment_id?: string, sort?: string, direction?: string} $filters
+     * @param array{typ?: string, status?: string, equipment_id?: string, zrodlo?: string, sort?: string, direction?: string} $filters
      * @return array{data: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
     public function list(array $filters, int $page, int $perPage): array
@@ -214,8 +214,9 @@ final class IncidentService
             'status' => is_string($row['status'] ?? null) ? $row['status'] : 'zgloszona',
             'data_zgloszenia' => is_string($row['data_zgloszenia'] ?? null) ? $row['data_zgloszenia'] : null,
             'data_zakonczenia' => is_string($row['data_zakonczenia'] ?? null) ? $row['data_zakonczenia'] : null,
-            'zgloszona_przez' => $this->toInt($row['zgloszona_przez'] ?? 0),
+            'zgloszona_przez' => $this->nullableInt($row['zgloszona_przez'] ?? null),
             'zgloszona_przez_email' => is_string($row['zgloszona_przez_email'] ?? null) ? $row['zgloszona_przez_email'] : null,
+            'zrodlo' => is_string($row['zrodlo'] ?? null) ? $row['zrodlo'] : 'panel',
             'created_at' => is_string($row['created_at'] ?? null) ? $row['created_at'] : null,
             'updated_at' => is_string($row['updated_at'] ?? null) ? $row['updated_at'] : null,
         ];

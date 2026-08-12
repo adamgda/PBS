@@ -1,0 +1,38 @@
+<div class="space-y-6">
+  <!-- Nagłówek sekcji -->
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'dashboard.audit.title' | translate }}</h1>
+    <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'dashboard.audit.subtitle' | translate }}</p>
+  </div>
+
+  <section class="app-card p-5">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <p class="text-sm text-gray-500 dark:text-slate-400">
+        {{ 'dashboard.audit.total' | translate }}: <span class="font-semibold text-gray-800 dark:text-slate-200">{{ logsTotal() }}</span>
+      </p>
+      <button
+        type="button"
+        (click)="clearLogs()"
+        class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700 disabled:opacity-50"
+        [disabled]="logsLoading()"
+      >
+        <app-svg-icon name="trash" size="sm" />
+        {{ 'dashboard.audit.clear_button' | translate }}
+      </button>
+    </div>
+
+    <app-data-table
+      [columns]="logColumns()"
+      [data]="logs()"
+      [total]="logsTotal()"
+      [page]="logsPage()"
+      [perPage]="logsPerPage()"
+      [loading]="logsLoading()"
+      [sortKey]="logsSortKey()"
+      [sortDirection]="logsSortDirection()"
+      (sortChange)="onLogsSort($event)"
+      (pageChange)="onLogsPageChange($event)"
+      (perPageChange)="onLogsPerPageChange($event)"
+    />
+  </section>
+</div>

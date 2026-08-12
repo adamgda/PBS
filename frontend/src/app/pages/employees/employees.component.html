@@ -390,6 +390,13 @@
         (ngModelChange)="modalEmail.set($event)"
       />
 
+      @if (modalMode() === 'create') {
+        <div class="mb-4 flex items-start gap-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800 dark:bg-blue-500/15 dark:text-blue-300">
+          <app-svg-icon name="alert" />
+          <p>{{ 'pracownicy.form.invite_info' | translate }}</p>
+        </div>
+      }
+
       <div class="mb-3">
         <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.form.assign_terminal' | translate }}</label>
         <app-autocomplete-select

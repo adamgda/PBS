@@ -105,7 +105,8 @@
     "is_active": "Aktywny",
     "assign_terminal": "Przypisz terminal",
     "assign_equipment": "Przypisz sprzęt",
-    "unassigned": "Brak przypisania"
+    "unassigned": "Brak przypisania",
+    "invite_info": "Po utworzeniu pracownik otrzyma na podany adres e-mail link do ustawienia hasła. Konto pracownika ma dostęp wyłącznie do zgłaszania awarii oraz raportowania obsługi."
   },
   "tabs": {
     "basic": "Dane podstawowe",
@@ -191,7 +192,8 @@
       "success": "Zapisano dane pracownika {{name}}"
     },
     "created": {
-      "success": "Utworzono pracownika {{name}}"
+      "success": "Utworzono pracownika {{name}}",
+      "invite_sent": "Na adres e-mail pracownika wysłano link do ustawienia hasła."
     },
     "updated": {
       "success": "Zaktualizowano pracownika {{name}}"
@@ -215,6 +217,8 @@
     "load_error": "Nie udało się pobrać listy pracowników",
     "first_name_required": "Imię jest wymagane",
     "last_name_required": "Nazwisko jest wymagane",
+    "email_required": "Adres e-mail jest wymagany — pracownik otrzyma na niego link do ustawienia hasła",
+    "email_invalid": "Nieprawidłowy adres e-mail",
     "document_name_required": "Nazwa dokumentu jest wymagana",
     "rate_invalid": "Stawka musi być liczbą dodatnią",
     "rate_date_required": "Data wejścia w życie jest wymagana",

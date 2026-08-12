@@ -14,7 +14,7 @@ class RefreshTokenRepository extends BaseRepository
 
     public function revoke(string $jti, int $userId, string $expiresAt): void
     {
-        $sql = "INSERT INTO `{$this->table}` (`jti`, `user_id`, `expires_at`) VALUES (:jti, :user_id, :expires_at)";
+        $sql = "INSERT IGNORE INTO `{$this->table}` (`jti`, `user_id`, `expires_at`) VALUES (:jti, :user_id, :expires_at)";
         $this->executeQuery($sql, [
             ':jti' => $jti,
             ':user_id' => $userId,

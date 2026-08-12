@@ -29,6 +29,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
+  {
+    path: 'logi-audytowe',
+    canActivate: [AuthGuard, PermissionGuard],
+    data: { permission: 'super_admin' },
+    loadComponent: () =>
+      import('./pages/audit-logs/audit-logs.component').then((m) => m.AuditLogsComponent),
+  },
   // Placeholdery dla sekcji — zaimplementowane w kolejnych etapach
   {
     path: 'pracownicy',
@@ -59,6 +66,13 @@ export const routes: Routes = [
       import('./pages/orders/order-new/order-new.component').then((m) => m.OrderNewComponent),
   },
   {
+    path: 'harmonogram/edytuj/:id',
+    canActivate: [AuthGuard, PermissionGuard],
+    data: { permission: 'harmonogram' },
+    loadComponent: () =>
+      import('./pages/orders/order-new/order-new.component').then((m) => m.OrderNewComponent),
+  },
+  {
     path: 'harmonogram',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'harmonogram' },
@@ -68,14 +82,14 @@ export const routes: Routes = [
   {
     path: 'analytics',
     canActivate: [AuthGuard, PermissionGuard],
-    data: { permission: 'analytics' },
+    data: { permission: 'analityka' },
     loadComponent: () =>
       import('./pages/analytics/analytics.component').then((m) => m.AnalyticsComponent),
   },
   {
     path: 'reporting',
     canActivate: [AuthGuard, PermissionGuard],
-    data: { permission: 'reporting' },
+    data: { permission: 'raportowanie' },
     loadComponent: () =>
       import('./pages/reporting/reporting.component').then((m) => m.ReportingComponent),
   },
@@ -92,6 +106,11 @@ export const routes: Routes = [
     data: { permission: 'ustawienia' },
     loadComponent: () =>
       import('./pages/settings/settings.component').then((m) => m.SettingsComponent),
+  },
+  {
+    // Publiczna podstrona kodów QR (Etap 20) — bez AuthGuard, dostępna z naklejki QR
+    path: 'qr/:token',
+    loadComponent: () => import('./pages/qr/qr.component').then((m) => m.QrComponent),
   },
   {
     path: '',

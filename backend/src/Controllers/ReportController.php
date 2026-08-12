@@ -120,6 +120,7 @@ final class ReportController extends Controller
             'equipment_id' => is_string($query['equipment_id'] ?? null) ? (string) $query['equipment_id'] : '',
             'date_from' => is_string($query['date_from'] ?? null) ? (string) $query['date_from'] : '',
             'date_to' => is_string($query['date_to'] ?? null) ? (string) $query['date_to'] : '',
+            'zrodlo' => is_string($query['zrodlo'] ?? null) ? (string) $query['zrodlo'] : '',
             'sort' => is_string($query['sort'] ?? null) ? (string) $query['sort'] : 'id',
             'direction' => is_string($query['direction'] ?? null) ? (string) $query['direction'] : 'asc',
         ];

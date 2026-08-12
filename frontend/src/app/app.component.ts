@@ -65,9 +65,10 @@ export class AppComponent {
     { path: '/sprzet', label: 'common.menu.sprzet', permission: 'sprzet', icon: 'sprzet' },
     { path: '/terminale', label: 'common.menu.terminale', permission: 'terminale', icon: 'terminale' },
     { path: '/harmonogram', label: 'common.menu.harmonogram', permission: 'harmonogram', icon: 'harmonogram' },
-    { path: '/analytics', label: 'common.menu.analytics', permission: 'analytics', icon: 'analytics' },
-    { path: '/reporting', label: 'common.menu.reporting', permission: 'reporting', icon: 'reporting' },
+    { path: '/analytics', label: 'common.menu.analytics', permission: 'analityka', icon: 'analytics' },
+    { path: '/reporting', label: 'common.menu.reporting', permission: 'raportowanie', icon: 'reporting' },
     { path: '/awaria', label: 'common.menu.awaria', permission: 'awaria', icon: 'awaria' },
+    { path: '/logi-audytowe', label: 'common.menu.logi_audytowe', permission: 'super_admin', icon: 'history' },
     { path: '/settings', label: 'common.menu.ustawienia', permission: 'ustawienia', icon: 'settings' },
   ];
 

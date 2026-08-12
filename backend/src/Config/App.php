@@ -7,6 +7,7 @@ namespace App\Config;
 use App\Controllers\AuthController;
 use App\Controllers\AlertSettingsController;
 use App\Controllers\AnalyticsController;
+use App\Controllers\AuditLogController;
 use App\Controllers\DashboardController;
 use App\Controllers\EmployeeController;
 use App\Controllers\EquipmentController;
@@ -16,6 +17,7 @@ use App\Controllers\InvoiceController;
 use App\Controllers\NoteController;
 use App\Controllers\OrderController;
 use App\Controllers\ReportController;
+use App\Controllers\QrController;
 use App\Controllers\TerminalController;
 use App\Controllers\UserController;
 use App\Http\Request;
@@ -26,6 +28,7 @@ use App\Middleware\CsrfMiddleware;
 use App\Middleware\MiddlewarePipeline;
 use App\Middleware\PermissionMiddleware;
 use App\Middleware\RateLimiterMiddleware;
+use App\Middleware\QrRateLimiterMiddleware;
 use App\Middleware\SecurityHeadersMiddleware;
 use App\Repository\AlertConfigRepository;
 use App\Repository\AlertNotificationRepository;
@@ -56,6 +59,7 @@ use App\Security\RateLimitStore;
 use App\Services\AlertSettingsService;
 use App\Services\AuthService;
 use App\Services\AnalyticsService;
+use App\Services\AuditLogService;
 use App\Services\ClamAvScanner;
 use App\Services\CryptoService;
 use App\Services\DashboardService;
@@ -65,6 +69,8 @@ use App\Services\FileUploadService;
 use App\Services\IncidentService;
 use App\Services\InvoiceService;
 use App\Services\OrderService;
+use App\Services\QrCodeService;
+use App\Services\QrService;
 use App\Services\ReportService;
 use App\Services\JwtService;
 use App\Services\MailService;
@@ -211,6 +217,7 @@ final class App
             $employeeRateRepository,
             $employeeVacationRepository,
             $orderRepository,
+            $userService,
         );
         $employeeController = new EmployeeController($employeeService);
 
@@ -222,7 +229,19 @@ final class App
             $equipmentHistoryRepository,
             $auditLogRepository,
         );
-        $equipmentController = new EquipmentController($equipmentService);
+
+        // === Serwis kodów QR dla maszyn (Etap 20) ===
+        $qrCodeService = new QrCodeService();
+        $qrService = new QrService(
+            $equipmentRepository,
+            $incidentRepository,
+            $dailyVehicleReportRepository,
+            $qrCodeService,
+            $config->get('FRONTEND_BASE_URL', 'http://localhost:4200') ?? 'http://localhost:4200',
+        );
+
+        $equipmentController = new EquipmentController($equipmentService, $qrService);
+        $qrController = new QrController($qrService);
 
         // === Serwis zleceń (Etap 9) ===
         $orderService = new OrderService(
@@ -272,6 +291,10 @@ final class App
         // === Serwis konfiguracji alertów (Etap 14) ===
         $alertSettingsService = new AlertSettingsService($alertConfigRepository, $auditLogRepository);
         $alertSettingsController = new AlertSettingsController($alertSettingsService);
+
+        // === Serwis logów audytowych (Dashboard → Logi audytowe) — wyłącznie super_admin ===
+        $auditLogService = new AuditLogService($auditLogRepository);
+        $auditLogController = new AuditLogController($auditLogService);
 
         // === Guard uprawnień per-route ===
         // Opakowuje handler kontrolera sprawdzaniem PermissionMiddleware dla wskazanych sekcji.
@@ -382,6 +405,18 @@ final class App
             };
         };
 
+        // Guard wyłącznie dla roli super_admin (logi audytowe).
+        $superAdminGuard = static function (callable $handler): callable {
+            return static function (Request $request, array $routeParams) use ($handler): Response {
+                $role = $request->attribute('role');
+                if ($role !== 'super_admin') {
+                    return Response::error(403, 'Access denied: super admin only');
+                }
+
+                return $handler($request, $routeParams);
+            };
+        };
+
 
         // === Trasy ===
         $routes = [
@@ -468,6 +503,9 @@ final class App
             ['method' => 'POST', 'path' => '/api/v1/equipment/{id}/service-plans', 'handler' => $sprzetGuard([$equipmentController, 'createServicePlan'])],
             ['method' => 'PUT', 'path' => '/api/v1/service-plans/{id}', 'handler' => $sprzetGuard([$equipmentController, 'updateServicePlan'])],
             ['method' => 'DELETE', 'path' => '/api/v1/service-plans/{id}', 'handler' => $sprzetGuard([$equipmentController, 'deleteServicePlan'])],
+            // Sekcja Sprzęt — kody QR maszyn (Etap 20)
+            ['method' => 'POST', 'path' => '/api/v1/equipment/{id}/qr-token', 'handler' => $sprzetGuard([$equipmentController, 'generateQrToken'])],
+            ['method' => 'GET', 'path' => '/api/v1/equipment/{id}/qr', 'handler' => $sprzetGuard([$equipmentController, 'showQr'])],
 
             // Sekcja Harmonogram / Zlecenia (Etap 9) — wymagane uprawnienie `harmonogram`
             ['method' => 'GET', 'path' => '/api/v1/orders', 'handler' => $harmonogramGuard([$orderController, 'index'])],
@@ -510,6 +548,15 @@ final class App
             ['method' => 'GET', 'path' => '/api/v1/dashboard/alerts', 'handler' => $dashboardGuard([$dashboardController, 'alerts'])],
             ['method' => 'GET', 'path' => '/api/v1/dashboard/charts', 'handler' => $dashboardGuard([$dashboardController, 'charts'])],
 
+            // Sekcja Logi audytowe (Dashboard) — wyłącznie dla roli super_admin
+            ['method' => 'GET', 'path' => '/api/v1/audit-logs', 'handler' => $superAdminGuard([$auditLogController, 'index'])],
+            ['method' => 'DELETE', 'path' => '/api/v1/audit-logs', 'handler' => $superAdminGuard([$auditLogController, 'clear'])],
+
+            // Sekcja Kody QR (Etap 20) — publiczne (bez AuthMiddleware), osobny rate limit
+            ['method' => 'GET', 'path' => '/api/v1/qr/{token}', 'handler' => [$qrController, 'machine']],
+            ['method' => 'POST', 'path' => '/api/v1/qr/{token}/incident', 'handler' => [$qrController, 'createIncident']],
+            ['method' => 'POST', 'path' => '/api/v1/qr/{token}/daily-report', 'handler' => [$qrController, 'createDailyReport']],
+
         ];
 
         $this->router = new Router($routes);
@@ -529,11 +576,18 @@ final class App
                 ],
                 algorithm: $jwtAlgorithm,
                 publicKey: $jwtPublicKey,
+                publicRoutePrefixes: [
+                    '/api/v1/qr/',
+                ],
             ),
             $csrfMiddleware,
             new RateLimiterMiddleware(
                 maxIpRequests: 100,
                 maxUserRequests: 1000,
+                windowSeconds: 60,
+            ),
+            new QrRateLimiterMiddleware(
+                maxIpRequests: 10,
                 windowSeconds: 60,
             ),
         ];

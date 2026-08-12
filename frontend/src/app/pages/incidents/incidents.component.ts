@@ -117,9 +117,15 @@ export class IncidentsComponent {
     { value: 'inne', labelKey: 'awaria.list.type_other' },
   ];
 
+  private readonly zrodloOptions = [
+    { value: 'panel', labelKey: 'awaria.source.panel' },
+    { value: 'qr', labelKey: 'awaria.source.qr' },
+  ];
+
   readonly filterConfigs = computed<FilterConfig[]>(() => [
     { key: 'typ', label: this.t('awaria.filters.type'), type: 'select', options: this.typeOptions.map((o) => ({ value: o.value, label: this.t(o.labelKey) })) },
     { key: 'status', label: this.t('awaria.filters.status'), type: 'select', options: this.statusOptions.map((o) => ({ value: o.value, label: this.t(o.labelKey) })) },
+    { key: 'zrodlo', label: this.t('awaria.filters.source'), type: 'select', options: this.zrodloOptions.map((o) => ({ value: o.value, label: this.t(o.labelKey) })) },
   ]);
 
   readonly columns = computed<DataTableColumn<Incident>[]>(() => [
@@ -127,6 +133,7 @@ export class IncidentsComponent {
     { key: 'opis', label: this.t('awaria.list.description') },
     { key: 'equipment_nazwa', label: this.t('awaria.list.equipment') },
     { key: 'status', label: this.t('awaria.list.status'), sortable: true },
+    { key: 'zrodlo', label: this.t('awaria.list.source') },
     { key: 'data_zgloszenia', label: this.t('awaria.list.reported_date'), sortable: true },
     { key: 'data_zakonczenia', label: this.t('awaria.list.closed_date') },
   ]);

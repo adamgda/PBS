@@ -184,7 +184,7 @@ final class ReportService
     /**
      * Lista raportów pojazdowych z paginacją i filtrami.
      *
-     * @param array{equipment_id?: string, date_from?: string, date_to?: string, sort?: string, direction?: string} $filters
+     * @param array{equipment_id?: string, date_from?: string, date_to?: string, zrodlo?: string, sort?: string, direction?: string} $filters
      * @return array{data: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
     public function listVehicleReports(array $filters, int $page, int $perPage): array
@@ -425,8 +425,9 @@ final class ReportService
             'aktualny_przebieg' => $this->toInt($row['aktualny_przebieg'] ?? 0),
             'przebieg_oc' => is_string($row['przebieg_oc'] ?? null) ? $row['przebieg_oc'] : '',
             'uwagi' => is_string($row['uwagi'] ?? null) ? $row['uwagi'] : null,
-            'utworzony_przez' => $this->toInt($row['utworzony_przez'] ?? 0),
+            'utworzony_przez' => $this->nullableUserId($row['utworzony_przez'] ?? null),
             'utworzony_przez_email' => is_string($row['utworzony_przez_email'] ?? null) ? $row['utworzony_przez_email'] : null,
+            'zrodlo' => is_string($row['zrodlo'] ?? null) ? $row['zrodlo'] : 'panel',
             'created_at' => is_string($row['created_at'] ?? null) ? $row['created_at'] : null,
             'updated_at' => is_string($row['updated_at'] ?? null) ? $row['updated_at'] : null,
         ];
@@ -541,6 +542,21 @@ final class ReportService
         }
 
         return 0;
+    }
+
+    private function nullableUserId(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return null;
     }
 
     private function userId(Request $request): ?int

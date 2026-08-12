@@ -27,6 +27,7 @@ final class AuthMiddleware implements MiddlewareInterface
 
     /**
      * @param array<int, string> $publicRoutes ścieżki niewymagające autoryzacji
+     * @param array<int, string> $publicRoutePrefixes prefiksy ścieżek publicznych (np. `/api/v1/qr/`)
      */
     public function __construct(
         string $jwtSecret,
@@ -34,6 +35,7 @@ final class AuthMiddleware implements MiddlewareInterface
         string $algorithm = 'HS256',
         private readonly ?string $publicKey = null,
         string $issuer = 'pbs-backend',
+        private readonly array $publicRoutePrefixes = [],
     ) {
         $this->secret = $jwtSecret;
         $this->algorithm = $algorithm;
@@ -45,6 +47,11 @@ final class AuthMiddleware implements MiddlewareInterface
         $path = $request->path();
         foreach ($this->publicRoutes as $route) {
             if ($path === $route) {
+                return $next($request);
+            }
+        }
+        foreach ($this->publicRoutePrefixes as $prefix) {
+            if (str_starts_with($path, $prefix)) {
                 return $next($request);
             }
         }

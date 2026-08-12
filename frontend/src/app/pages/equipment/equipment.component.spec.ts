@@ -257,4 +257,36 @@ describe('EquipmentComponent', () => {
     expect(comp.planStatus(inactive).labelKey).toBe('sprzet.service_plans.status_inactive');
     expect(comp.planStatus(inactive).tone).toBe('neutral');
   });
+
+  it('powinien otworzyć modal QR i wyrenderować kod po pobraniu (200)', () => {
+    const fixture = TestBed.createComponent(EquipmentComponent);
+    fixture.detectChanges();
+    flushList();
+
+    const comp = fixture.componentInstance;
+    const eq = { id: 5, kategoria: 'pojazd', nazwa: 'Ford', numer_seryjny: 'FT-1', is_active: true } as never;
+    comp.openQr(eq as never);
+    fixture.detectChanges();
+
+    // Modal powinien być otwarty (top-level, niezależnie od modala planu).
+    expect(comp.qrModalOpen()).toBe(true);
+
+    const qrReq = httpMock.expectOne(`${environment.apiUrl}/equipment/5/qr`);
+    expect(qrReq.request.method).toBe('GET');
+    qrReq.flush({
+      qr_token: 'tok123',
+      public_url: 'http://localhost:4200/qr/tok123',
+      qr_svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#fff"/></svg>',
+      machine: { id: 5, nazwa: 'Ford', numer_seryjny: 'FT-1', kategoria: 'pojazd' },
+    });
+    fixture.detectChanges();
+
+    expect(comp.qrInfo()?.public_url).toBe('http://localhost:4200/qr/tok123');
+    expect(comp.qrSvg()).not.toBeNull();
+
+    const el: HTMLElement = fixture.nativeElement;
+    const dialog = el.querySelector('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+    expect(el.querySelector('.qr-preview svg')).toBeTruthy();
+  });
 });

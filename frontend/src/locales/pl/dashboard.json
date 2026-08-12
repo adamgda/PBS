@@ -3,6 +3,22 @@
   "welcome": "Dzień dobry",
   "welcome_suffix": "w systemie PORTBS",
   "last_update": "Dane na dzień",
+  "audit": {
+    "title": "Logi audytowe",
+    "subtitle": "Rejestr akcji bezpieczeństwa w systemie",
+    "total": "Łączna liczba wpisów",
+    "date": "Data",
+    "user": "Użytkownik",
+    "action": "Akcja",
+    "resource": "Zasób",
+    "ip": "Adres IP",
+    "user_agent": "User-Agent",
+    "clear_button": "Wyczyść logi",
+    "clear_confirm_title": "Wyczyścić logi?",
+    "clear_confirm_message": "Ta operacja trwale usunie wszystkie wpisy z logu audytowego i nie można jej cofnąć. Czy na pewno chcesz kontynuować?",
+    "clear_confirm_button": "Wyczyść logi",
+    "cleared": "Log audytowy został wyczyszczony"
+  },
   "hero": {
     "hours_today": "Przepracowane godziny dziś",
     "employees_on_leave": "Pracownicy na urlopie",

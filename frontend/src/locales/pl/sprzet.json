@@ -133,5 +133,26 @@
     "name_required": "Nazwa jest wymagana",
     "category_required": "Kategoria jest wymagana",
     "inspection_type_required": "Typ przeglądu jest wymagany"
+  },
+  "qr": {
+    "button": "Kod QR",
+    "modal_title": "Kod QR maszyny — {{name}}",
+    "modal_subtitle": "Wydrukuj naklejkę i umieść ją w maszynie, aby operator mógł zgłaszać awarie i raporty OC bez logowania",
+    "scan_hint": "Zeskanuj, aby zgłosić awarię lub raport OC",
+    "regenerate": "Wygeneruj nowy kod",
+    "regenerate_confirm_title": "Nowy kod QR",
+    "regenerate_confirm_message": "Wygenerowanie nowego kodu unieważni poprzednią naklejkę. Czy na pewno chcesz kontynuować?",
+    "regenerated": {
+      "success": "Wygenerowano nowy kod QR"
+    },
+    "not_generated": "Nie wygenerowano jeszcze kodu QR. Kliknij przycisk, aby go utworzyć.",
+    "generate": "Wygeneruj kod QR",
+    "print": "Drukuj naklejkę",
+    "close": "Zamknij",
+    "sticker_name": "Maszyna: {{name}}",
+    "sticker_serial": "Nr seryjny: {{serial}}",
+    "sticker_instruction": "Zeskanuj, aby zgłosić awarię lub raport obsługi codziennej",
+    "sticker_footer": "Port Baltic Shipping (PBS)",
+    "not_eligible": "Kod QR jest dostępny dla pojazdów oraz sprzętu z grupy „inne”"
   }
 }

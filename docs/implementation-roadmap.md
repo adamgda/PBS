@@ -395,27 +395,27 @@ Legenda statusów:
 
 > Generator kodów QR dla maszyn z grupy pojazdów (i opcjonalnie `inne`), prowadzących do publicznej podstrony zgłaszania awarii danej maszyny albo raportowania jej obsługi codziennej (OC). Kod drukowany jako naklejka i przyklejony w maszynie — operator skanuje telefonem i zgłasza bez logowania. Szczegóły w `docs/technical-documentation.md` (10.3 „Kody QR dla maszyn" oraz 11.17).
 
-- [ ] Migracja: rozszerzenie `equipment` o `qr_token` CHAR(64) UNIQUE NULLABLE (publiczny token maszyny, generowany losowo — nie `id`)
-- [ ] Migracja: rozszerzenie `incidents` o `zrodlo` ENUM('panel','qr') DEFAULT 'panel' oraz dopuszczenie `zgloszona_przez` NULLABLE (zgłoszenia anonimowe z QR)
-- [ ] Migracja: rozszerzenie `daily_vehicle_reports` o `zrodlo` ENUM('panel','qr') DEFAULT 'panel' oraz `utworzony_przez` NULLABLE
-- [ ] Indeksy DB: `equipment UNIQUE(qr_token)`, `incidents INDEX(zrodlo)`, `daily_vehicle_reports INDEX(zrodlo)`
-- [ ] Backend (autoryzowane): `POST /api/v1/equipment/{id}/qr-token` — (re)generacja tokena QR (`random_bytes(32)`, hex), unieważnienie starego
-- [ ] Backend (autoryzowane): `GET /api/v1/equipment/{id}/qr` — kod QR (PNG/SVG) + publiczny URL + dane do wydruku naklejki (nazwa, numer, instrukcja)
-- [ ] Backend (publiczne, bez `AuthMiddleware`): `GET /api/v1/qr/{token}` — info o maszynie (nazwa, numer, kategoria) bez danych osobowych; 404 dla nieistniejącego tokena
-- [ ] Backend (publiczne): `POST /api/v1/qr/{token}/incident` — tworzy `incidents` (`typ='sprzet'`, `equipment_id` z tokena, `zrodlo='qr'`, `zgloszona_przez=NULL`) z opisem i opcjonalnym typem
-- [ ] Backend (publiczne): `POST /api/v1/qr/{token}/daily-report` — tworzy `daily_vehicle_reports` (przebieg, opis OC, uwagi, `zrodlo='qr'`, `utworzony_przez=NULL`)
-- [ ] Backend: osobny rate limiting dla publicznych endpointów QR (np. 10 req/min na IP) — ochrona przed spamem
-- [ ] Backend: walidacja wejścia dla zgłoszeń QR (długość opisu, opcjonalne pole kontaktu), sanityzacja, oznaczanie zgłoszeń do weryfikacji w panelu
-- [ ] Frontend (autoryzowane): przycisk „Kod QR" w szczegółach/wierszu sprzętu (grupa pojazdy) → podgląd QR + URL + „Drukuj naklejkę"
-- [ ] Frontend (autoryzowane): widok wydruku naklejki (kod QR + nazwa/numer maszyny + krótka instrukcja „Zeskanuj, aby zgłosić awarię lub raport OC"), zoptymalizowany pod druk (A6/etykieta)
-- [ ] Frontend (publiczne): standalone route `/qr/{token}` (bez `AuthGuard`) — strona wyboru akcji (Zgłoś awarię / Raport obsługi codziennej) + uproszczone formularze mobilne
-- [ ] Frontend (publiczne): formularz zgłoszenia awarii z QR (opis, opcjonalnie telefon) + potwierdzenie z numerem zgłoszenia
-- [ ] Frontend (publiczne): formularz raportu OC z QR (przebieg, opis obsługi, uwagi) + potwierdzenie
-- [ ] Frontend (panel awarii/raportów): oznaczanie zgłoszeń ze źródła `qr` (badge „Z QR") i filtrowanie po `zrodlo`; możliwość weryfikacji/przypisania autora
-- [ ] Lokalizacje: nowy plik `locales/pl/qr.json` (etykiety publicznej strony, instrukcje, potwierdzenia) + rozszerzenie `sprzet.json` (przycisk QR, wydruk)
-- [ ] Testy: backend — (re)generacja tokena, unieważnienie starego, publiczne endpointy (200/404), tworzenie incident/OC z `zrodlo='qr'`, rate limiting, walidacja
-- [ ] Testy: backend — IDOR n/a (publiczne), ale weryfikacja że publiczny endpoint nie zwraca danych osobowych
-- [ ] Testy: frontend — strona `/qr/{token}` (wybór akcji, formularze, potwierdzenia, błąd 404 dla złego tokena), widok wydruku naklejki
+- [x] Migracja: rozszerzenie `equipment` o `qr_token` CHAR(64) UNIQUE NULLABLE (publiczny token maszyny, generowany losowo — nie `id`)
+- [x] Migracja: rozszerzenie `incidents` o `zrodlo` ENUM('panel','qr') DEFAULT 'panel' oraz dopuszczenie `zgloszona_przez` NULLABLE (zgłoszenia anonimowe z QR)
+- [x] Migracja: rozszerzenie `daily_vehicle_reports` o `zrodlo` ENUM('panel','qr') DEFAULT 'panel' oraz `utworzony_przez` NULLABLE
+- [x] Indeksy DB: `equipment UNIQUE(qr_token)`, `incidents INDEX(zrodlo)`, `daily_vehicle_reports INDEX(zrodlo)`
+- [x] Backend (autoryzowane): `POST /api/v1/equipment/{id}/qr-token` — (re)generacja tokena QR (`random_bytes(32)`, hex), unieważnienie starego
+- [x] Backend (autoryzowane): `GET /api/v1/equipment/{id}/qr` — kod QR (PNG/SVG) + publiczny URL + dane do wydruku naklejki (nazwa, numer, instrukcja)
+- [x] Backend (publiczne, bez `AuthMiddleware`): `GET /api/v1/qr/{token}` — info o maszynie (nazwa, numer, kategoria) bez danych osobowych; 404 dla nieistniejącego tokena
+- [x] Backend (publiczne): `POST /api/v1/qr/{token}/incident` — tworzy `incidents` (`typ='sprzet'`, `equipment_id` z tokena, `zrodlo='qr'`, `zgloszona_przez=NULL`) z opisem i opcjonalnym typem
+- [x] Backend (publiczne): `POST /api/v1/qr/{token}/daily-report` — tworzy `daily_vehicle_reports` (przebieg, opis OC, uwagi, `zrodlo='qr'`, `utworzony_przez=NULL`)
+- [x] Backend: osobny rate limiting dla publicznych endpointów QR (np. 10 req/min na IP) — ochrona przed spamem
+- [x] Backend: walidacja wejścia dla zgłoszeń QR (długość opisu, opcjonalne pole kontaktu), sanityzacja, oznaczanie zgłoszeń do weryfikacji w panelu
+- [x] Frontend (autoryzowane): przycisk „Kod QR" w szczegółach/wierszu sprzętu (grupa pojazdy) → podgląd QR + URL + „Drukuj naklejkę"
+- [x] Frontend (autoryzowane): widok wydruku naklejki (kod QR + nazwa/numer maszyny + krótka instrukcja „Zeskanuj, aby zgłosić awarię lub raport OC"), zoptymalizowany pod druk (A6/etykieta)
+- [x] Frontend (publiczne): standalone route `/qr/{token}` (bez `AuthGuard`) — strona wyboru akcji (Zgłoś awarię / Raport obsługi codziennej) + uproszczone formularze mobilne
+- [x] Frontend (publiczne): formularz zgłoszenia awarii z QR (opis, opcjonalnie telefon) + potwierdzenie z numerem zgłoszenia
+- [x] Frontend (publiczne): formularz raportu OC z QR (przebieg, opis obsługi, uwagi) + potwierdzenie
+- [x] Frontend (panel awarii/raportów): oznaczanie zgłoszeń ze źródła `qr` (badge „Z QR") i filtrowanie po `zrodlo`; możliwość weryfikacji/przypisania autora
+- [x] Lokalizacje: nowy plik `locales/pl/qr.json` (etykiety publicznej strony, instrukcje, potwierdzenia) + rozszerzenie `sprzet.json` (przycisk QR, wydruk)
+- [x] Testy: backend — (re)generacja tokena, unieważnienie starego, publiczne endpointy (200/404), tworzenie incident/OC z `zrodlo='qr'`, rate limiting, walidacja
+- [x] Testy: backend — IDOR n/a (publiczne), ale weryfikacja że publiczny endpoint nie zwraca danych osobowych
+- [x] Testy: frontend — strona `/qr/{token}` (wybór akcji, formularze, potwierdzenia, błąd 404 dla złego tokena), widok wydruku naklejki
 
 ---
 

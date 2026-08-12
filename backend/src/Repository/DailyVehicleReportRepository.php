@@ -42,7 +42,7 @@ class DailyVehicleReportRepository extends BaseRepository
     /**
      * Wyszukiwanie raportów pojazdowych z paginacją, filtrowaniem i sortowaniem.
      *
-     * @param array{equipment_id?: string, date_from?: string, date_to?: string} $filters
+     * @param array{equipment_id?: string, date_from?: string, date_to?: string, zrodlo?: string} $filters
      * @return array<int, array<string, mixed>>
      */
     public function search(array $filters, int $limit, int $offset, string $sort, string $direction): array
@@ -72,6 +72,12 @@ class DailyVehicleReportRepository extends BaseRepository
             $params[':date_to'] = $dateTo;
         }
 
+        $zrodlo = is_string($filters['zrodlo'] ?? null) ? $filters['zrodlo'] : '';
+        if ($zrodlo !== '') {
+            $where[] = 'r.`zrodlo` = :zrodlo';
+            $params[':zrodlo'] = $zrodlo;
+        }
+
         $sql = 'SELECT r.*, eq.`nazwa` AS equipment_nazwa, eq.`numer_seryjny` AS equipment_numer_seryjny,
                        eq.`kategoria` AS equipment_kategoria, u.`email` AS utworzony_przez_email
                 FROM `daily_vehicle_reports` r
@@ -89,7 +95,7 @@ class DailyVehicleReportRepository extends BaseRepository
     }
 
     /**
-     * @param array{equipment_id?: string, date_from?: string, date_to?: string} $filters
+     * @param array{equipment_id?: string, date_from?: string, date_to?: string, zrodlo?: string} $filters
      */
     public function countSearch(array $filters): int
     {
@@ -112,6 +118,12 @@ class DailyVehicleReportRepository extends BaseRepository
         if ($dateTo !== '') {
             $where[] = '`data_raportu` <= :date_to';
             $params[':date_to'] = $dateTo;
+        }
+
+        $zrodlo = is_string($filters['zrodlo'] ?? null) ? $filters['zrodlo'] : '';
+        if ($zrodlo !== '') {
+            $where[] = '`zrodlo` = :zrodlo';
+            $params[':zrodlo'] = $zrodlo;
         }
 
         $sql = 'SELECT COUNT(*) FROM `daily_vehicle_reports`';

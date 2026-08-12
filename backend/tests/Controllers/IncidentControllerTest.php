@@ -43,7 +43,7 @@ afterEach(function (): void {
 });
 
 it('index returns paginated list', function (): void {
-    $filters = ['typ' => '', 'status' => '', 'equipment_id' => '', 'sort' => 'id', 'direction' => 'asc'];
+    $filters = ['typ' => '', 'status' => '', 'equipment_id' => '', 'zrodlo' => '', 'sort' => 'id', 'direction' => 'asc'];
     $this->incidentRepository->shouldReceive('search')->with($filters, 25, 0, 'id', 'asc')->andReturn([incidentRow()]);
     $this->incidentRepository->shouldReceive('countSearch')->with($filters)->andReturn(1);
 

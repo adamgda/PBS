@@ -10,6 +10,8 @@ use App\Repository\EquipmentRepository;
 use App\Repository\ServicePlanRepository;
 use App\Repository\VehicleDetailsRepository;
 use App\Services\EquipmentService;
+use App\Services\QrCodeService;
+use App\Services\QrService;
 use PDO;
 use Mockery as m;
 
@@ -31,7 +33,14 @@ beforeEach(function (): void {
         $this->historyRepository,
         $this->auditLogRepository,
     );
-    $this->equipmentController = new EquipmentController($this->equipmentService);
+    $this->qrService = new QrService(
+        $this->equipmentRepository,
+        m::mock(\App\Repository\IncidentRepository::class, [$pdo]),
+        m::mock(\App\Repository\DailyVehicleReportRepository::class, [$pdo]),
+        new QrCodeService(),
+        'http://localhost:4200',
+    );
+    $this->equipmentController = new EquipmentController($this->equipmentService, $this->qrService);
 });
 
 afterEach(function (): void {

@@ -103,8 +103,11 @@ final class UserService
         if (strlen($email) > 255) {
             return ['error' => 'Email is too long', 'code' => 422];
         }
-        if (!in_array($role, self::ALLOWED_ROLES, true)) {
-            return ['error' => 'Invalid role', 'code' => 422];
+        // Role są predefiniowane: z zarządzania użytkownikami (Ustawienia) można
+        // tworzyć wyłącznie konta Administratora. Super Administratorzy oraz konta
+        // „użytkownik" (pracownicy) nie są tworzone z tego poziomu.
+        if ($role !== 'admin') {
+            return ['error' => 'Only admin accounts can be created here', 'code' => 422];
         }
 
         $existing = $this->userRepository->findByEmail($email);
@@ -121,7 +124,7 @@ final class UserService
         $user = $this->userRepository->createUser([
             'email' => $email,
             'password_hash' => $placeholderHash,
-            'role' => $role,
+            'role' => 'admin',
             'permissions' => json_encode($permissions, JSON_THROW_ON_ERROR),
             'is_active' => true,
             'must_change_password' => true,
@@ -129,20 +132,14 @@ final class UserService
 
         $userId = $this->toInt($user['id'] ?? 0);
 
-        // Wygenerowanie jednorazowego tokena set-password (reuse password_reset_tokens).
-        $token = bin2hex(random_bytes(32));
-        $tokenHash = hash('sha256', $token);
-        $expiresAt = date('Y-m-d H:i:s', time() + self::RESET_TOKEN_TTL_MINUTES * 60);
-        $this->passwordResetRepository->createToken($userId, $tokenHash, $expiresAt);
-
-        $this->mailService->sendPasswordResetEmail($email, $token, $this->frontendBaseUrl);
+        $token = $this->issueSetPasswordInvite($userId, $email);
         $this->auditLogRepository->logFromRequest(
             $this->toInt($request->attribute('user_id')),
             'user_created',
             $request,
             'user',
             $userId,
-            ['email' => $email, 'role' => $role],
+            ['email' => $email, 'role' => 'admin'],
         );
 
         $dto = $this->toDto($user);
@@ -151,6 +148,83 @@ final class UserService
         }
 
         return $dto;
+    }
+
+    /**
+     * Tworzy konto użytkownika dla pracownika (rola 'user') z predefiniowanym,
+     * ograniczonym dostępem — wyłącznie sekcje „awaria" oraz „raportowanie"
+     * (raportowanie obsługi codziennej OC, Etap 20). Konto otrzymuje e-mail
+     * z linkiem do ustawienia hasła (status „zaproszony" do pierwszego logowania).
+     *
+     * @return array<string, mixed>|array{error: string, code: int}
+     */
+    public function createEmployeeAccount(string $email, Request $request): array
+    {
+        $email = trim($email);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['error' => 'Invalid email', 'code' => 422];
+        }
+        if (strlen($email) > 255) {
+            return ['error' => 'Email is too long', 'code' => 422];
+        }
+
+        $existing = $this->userRepository->findByEmail($email);
+        if ($existing !== null) {
+            return ['error' => 'Email already registered', 'code' => 409];
+        }
+
+        // Predefiniowane uprawnienia pracownika: zgłaszanie awarii + raportowanie obsługi.
+        $permissions = $this->normalizePermissions([]);
+        $permissions['awaria'] = true;
+        $permissions['raportowanie'] = true;
+
+        $placeholderHash = bin2hex(random_bytes(32));
+
+        $user = $this->userRepository->createUser([
+            'email' => $email,
+            'password_hash' => $placeholderHash,
+            'role' => 'user',
+            'permissions' => json_encode($permissions, JSON_THROW_ON_ERROR),
+            'is_active' => true,
+            'must_change_password' => true,
+        ]);
+
+        $userId = $this->toInt($user['id'] ?? 0);
+
+        $token = $this->issueSetPasswordInvite($userId, $email);
+        $this->auditLogRepository->logFromRequest(
+            $this->toInt($request->attribute('user_id')),
+            'employee_account_created',
+            $request,
+            'user',
+            $userId,
+            ['email' => $email, 'role' => 'user'],
+        );
+
+        $dto = $this->toDto($user);
+        if ($this->debug) {
+            $dto['set_password_url'] = rtrim($this->frontendBaseUrl, '/') . '/set-password?token=' . $token;
+        }
+
+        return $dto;
+    }
+
+    /**
+     * Generuje jednorazowy token set-password (reuse password_reset_tokens),
+     * zapisuje go w bazie i wysyła e-mail z linkiem.
+     *
+     * @return string surowy token (do wstawienia w linku)
+     */
+    private function issueSetPasswordInvite(int $userId, string $email): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
+        $expiresAt = date('Y-m-d H:i:s', time() + self::RESET_TOKEN_TTL_MINUTES * 60);
+        $this->passwordResetRepository->createToken($userId, $tokenHash, $expiresAt);
+
+        $this->mailService->sendPasswordResetEmail($email, $token, $this->frontendBaseUrl);
+
+        return $token;
     }
 
     /**

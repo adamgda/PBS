@@ -80,17 +80,32 @@ describe('SettingsComponent', () => {
     expect(component.total()).toBe(0);
   });
 
-  it('powinien otworzyć modal tworzenia z domyślnymi uprawnieniami (false)', () => {
+  it('powinien otworzyć modal tworzenia z domyślną rolą Administratora i pustymi uprawnieniami do wyboru', () => {
     const { component } = create();
     flushList();
 
     component.openCreate();
     expect(component.modalMode()).toBe('create');
     expect(component.modalEmail()).toBe('');
-    expect(component.modalRole()).toBe('user');
+    expect(component.modalRole()).toBe('admin');
+    // Uprawnienia (sekcje) wybierane ręcznie — start od wyłączonych.
     for (const s of component.sections) {
       expect(component.modalPermissions()[s]).toBe(false);
     }
+    // Checkboxy można przełączać (wybór uprawnień dla administratora).
+    component.togglePermission('pracownicy', { target: { checked: true } } as unknown as Event);
+    expect(component.isPermissionChecked('pracownicy')).toBe(true);
+    expect(component.modalPermissions()['pracownicy']).toBe(true);
+  });
+
+  it('role tworzenia są predefiniowane: tylko Administrator (bez super_admin i user)', () => {
+    const { component } = create();
+    flushList();
+
+    const values = component.roles.map((r) => r.value);
+    expect(values).toEqual(['admin']);
+    expect(values).not.toContain('super_admin');
+    expect(values).not.toContain('user');
   });
 
   it('powinien zablokować tworzenie dla pustego e-maila', () => {
@@ -111,16 +126,16 @@ describe('SettingsComponent', () => {
 
     component.openCreate();
     component.modalEmail.set('new@pbs.local');
-    component.modalRole.set('user');
+    component.modalRole.set('admin');
     component.saveCreate();
     fixture.detectChanges();
 
     const req = httpMock.expectOne(`${environment.apiUrl}/users`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body.email).toBe('new@pbs.local');
-    expect(req.request.body.role).toBe('user');
+    expect(req.request.body.role).toBe('admin');
 
-    req.flush({ id: 5, email: 'new@pbs.local', role: 'user', permissions: {}, is_active: true, must_change_password: true, created_at: null, updated_at: null });
+    req.flush({ id: 5, email: 'new@pbs.local', role: 'admin', permissions: {}, is_active: true, must_change_password: true, created_at: null, updated_at: null });
 
     // Po sukcesie lista przeładowana (GET /users)
     const reload = httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/users`));

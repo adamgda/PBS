@@ -72,4 +72,94 @@ class AuditLogRepository extends BaseRepository
         }
         return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     }
+
+    /**
+     * Lista logów z paginacją, filtrowaniem (akcja, e-mail użytkownika) i sortowaniem.
+     * E-mail użytkownika pobierany jest LEFT JOIN-em z tabeli `users` (user_id może być NULL).
+     *
+     * @param array{action?: string, user_email?: string, sort?: string, direction?: string} $filters
+     * @return array<int, array<string, mixed>>
+     */
+    public function paginate(array $filters, int $limit, int $offset, string $sort, string $direction): array
+    {
+        $allowedSort = ['id', 'action', 'resource_type', 'created_at', 'user_id'];
+        $sortColumn = in_array($sort, $allowedSort, true) ? $sort : 'id';
+        $dir = $direction === 'desc' ? 'DESC' : 'ASC';
+
+        $where = [];
+        $params = [];
+
+        $action = is_string($filters['action'] ?? null) ? trim($filters['action']) : '';
+        if ($action !== '') {
+            $where[] = '`al`.`action` LIKE :action';
+            $params[':action'] = '%' . $action . '%';
+        }
+
+        $userEmail = is_string($filters['user_email'] ?? null) ? trim($filters['user_email']) : '';
+        if ($userEmail !== '') {
+            $where[] = '`u`.`email` LIKE :user_email';
+            $params[':user_email'] = '%' . $userEmail . '%';
+        }
+
+        $sql = 'SELECT `al`.*, `u`.`email` AS `user_email`
+                FROM `audit_log` `al`
+                LEFT JOIN `users` `u` ON `u`.`id` = `al`.`user_id`';
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $sql .= " ORDER BY `al`.`{$sortColumn}` {$dir} LIMIT {$limit} OFFSET {$offset}";
+
+        $stmt = $this->executeQuery($sql, $params);
+
+        /** @var array<int, array<string, mixed>> */
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Licznik logów pasujących do filtrów (dla paginacji).
+     *
+     * @param array{action?: string, user_email?: string} $filters
+     */
+    public function countSearch(array $filters): int
+    {
+        $where = [];
+        $params = [];
+
+        $action = is_string($filters['action'] ?? null) ? trim($filters['action']) : '';
+        if ($action !== '') {
+            $where[] = '`al`.`action` LIKE :action';
+            $params[':action'] = '%' . $action . '%';
+        }
+
+        $userEmail = is_string($filters['user_email'] ?? null) ? trim($filters['user_email']) : '';
+        if ($userEmail !== '') {
+            $where[] = '`u`.`email` LIKE :user_email';
+            $params[':user_email'] = '%' . $userEmail . '%';
+        }
+
+        $sql = 'SELECT COUNT(*) FROM `audit_log` `al`
+                LEFT JOIN `users` `u` ON `u`.`id` = `al`.`user_id`';
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        $stmt = $this->executeQuery($sql, $params);
+
+        /** @var int|string|false $result */
+        $result = $stmt->fetchColumn();
+
+        return $result === false ? 0 : (int) $result;
+    }
+
+    /**
+     * Usuwa wszystkie wpisy z audit_log.
+     *
+     * @return int liczba usuniętych wierszy
+     */
+    public function clear(): int
+    {
+        $stmt = $this->executeQuery('DELETE FROM `audit_log`');
+
+        return $stmt->rowCount();
+    }
 }

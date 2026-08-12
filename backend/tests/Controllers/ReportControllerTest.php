@@ -143,7 +143,7 @@ it('terminalUpdate returns 200 and updates report', function (): void {
 // --- Raporty pojazdowe ---
 
 it('vehicleIndex returns paginated list', function (): void {
-    $filters = ['equipment_id' => '', 'date_from' => '', 'date_to' => '', 'sort' => 'id', 'direction' => 'asc'];
+    $filters = ['equipment_id' => '', 'date_from' => '', 'date_to' => '', 'zrodlo' => '', 'sort' => 'id', 'direction' => 'asc'];
     $this->vehicleReportRepository->shouldReceive('search')->with($filters, 25, 0, 'id', 'asc')->andReturn([vehicleReportRow()]);
     $this->vehicleReportRepository->shouldReceive('countSearch')->with($filters)->andReturn(1);
 

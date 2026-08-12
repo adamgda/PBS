@@ -419,10 +419,14 @@ class OrderRepository extends BaseRepository
                 FROM `orders` o
                 LEFT JOIN `terminals` t ON t.`id` = o.`terminal_id`
                 WHERE o.`terminal_id` = :terminal_id
-                  AND o.`data_rozpoczecia` <= :date
-                  AND o.`data_zakonczenia` >= :date
+                  AND o.`data_rozpoczecia` <= :date_start
+                  AND o.`data_zakonczenia` >= :date_end
                 ORDER BY o.`data_rozpoczecia` ASC, o.`id` ASC';
-        $stmt = $this->executeQuery($sql, [':terminal_id' => $terminalId, ':date' => $date]);
+        $stmt = $this->executeQuery($sql, [
+            ':terminal_id' => $terminalId,
+            ':date_start' => $date,
+            ':date_end' => $date,
+        ]);
 
         /** @var array<int, array<string, mixed>> */
         return $stmt->fetchAll();

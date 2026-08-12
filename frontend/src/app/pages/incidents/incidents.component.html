@@ -28,7 +28,7 @@
     [sortKey]="sortKey()"
     [sortDirection]="sortDirection()"
     [actionsTemplate]="actionsTpl"
-    [cellTemplates]="{ typ: typeCellTpl, status: statusCellTpl, opis: opisCellTpl }"
+    [cellTemplates]="{ typ: typeCellTpl, status: statusCellTpl, opis: opisCellTpl, zrodlo: sourceCellTpl }"
     (sortChange)="onSort($event)"
     (pageChange)="onPageChange($event)"
     (perPageChange)="onPerPageChange($event)"
@@ -46,6 +46,15 @@
 
   <ng-template #statusCellTpl let-inc>
     <app-status-badge [status]="statusBadgeStatus(inc.status)" [labelKey]="statusBadgeKey(inc.status)" />
+  </ng-template>
+
+  <ng-template #sourceCellTpl let-inc>
+    @if (inc.zrodlo === 'qr') {
+      <span class="inline-flex items-center gap-1 rounded-full bg-pbs-primary/10 px-2 py-0.5 text-xs font-semibold text-pbs-primary">
+        <app-svg-icon name="qr" size="sm" />
+        {{ 'awaria.source.qr_badge' | translate }}
+      </span>
+    }
   </ng-template>
 
   <ng-template #actionsTpl let-inc>

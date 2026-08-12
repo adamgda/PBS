@@ -34,8 +34,9 @@ export interface Incident {
   status: IncidentStatus;
   data_zgloszenia: string | null;
   data_zakonczenia: string | null;
-  zgloszona_przez: number;
+  zgloszona_przez: number | null;
   zgloszona_przez_email: string | null;
+  zrodlo: 'panel' | 'qr';
   created_at: string | null;
   updated_at: string | null;
   comments?: IncidentComment[];
@@ -53,6 +54,7 @@ export interface IncidentListParams {
   typ?: string;
   status?: string;
   equipment_id?: string;
+  zrodlo?: string;
   sort?: string;
   direction?: 'asc' | 'desc';
   page?: number;

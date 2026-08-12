@@ -402,6 +402,9 @@ export class EmployeesComponent {
   }
 
   saveModal(): void {
+    const mode = this.modalMode();
+    const editing = this.modalEmployee();
+
     const imie = this.modalImie().trim();
     if (!imie) {
       this.toastService.error(this.t('pracownicy.messages.first_name_required'));
@@ -411,6 +414,20 @@ export class EmployeesComponent {
     if (!nazwisko) {
       this.toastService.error(this.t('pracownicy.messages.last_name_required'));
       return;
+    }
+
+    // E-mail jest wymagany przy tworzeniu nowego pracownika — na ten adres
+    // wysyłany jest link do ustawienia hasła (konto użytkownika z ograniczonym dostępem).
+    if (mode !== 'edit') {
+      const email = this.modalEmail().trim();
+      if (!email) {
+        this.toastService.error(this.t('pracownicy.messages.email_required'));
+        return;
+      }
+      if (!this.isValidEmail(email)) {
+        this.toastService.error(this.t('pracownicy.messages.email_invalid'));
+        return;
+      }
     }
 
     const payload: CreateEmployeeRequest = {
@@ -423,8 +440,6 @@ export class EmployeesComponent {
       is_active: this.modalIsActive(),
     };
 
-    const mode = this.modalMode();
-    const editing = this.modalEmployee();
     if (mode === 'edit' && editing) {
       this.modalSaving.set(true);
       this.employeesService.update(editing.id, payload).subscribe({
@@ -448,6 +463,7 @@ export class EmployeesComponent {
         this.modalSaving.set(false);
         this.closeModal();
         this.toastService.success(this.t('pracownicy.messages.created.success', { name: `${imie} ${nazwisko}` }));
+        this.toastService.info(this.t('pracownicy.messages.created.invite_sent'));
         this.load();
       },
       error: (err) => {
@@ -1088,5 +1104,9 @@ export class EmployeesComponent {
 
   private t(key: string, params?: Record<string, string | number>): string {
     return this.translate.instant(key, params);
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }

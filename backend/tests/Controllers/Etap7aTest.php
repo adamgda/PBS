@@ -12,9 +12,13 @@ use App\Repository\EmployeeRepository;
 use App\Repository\EmployeeVacationRepository;
 use App\Repository\InvoiceRepository;
 use App\Repository\OrderRepository;
+use App\Repository\PasswordResetRepository;
+use App\Repository\UserRepository;
 use App\Services\EmployeeService;
 use App\Services\FileUploadService;
 use App\Services\InvoiceService;
+use App\Services\MailService;
+use App\Services\UserService;
 use App\Services\VirusScannerInterface;
 use PDO;
 use Mockery as m;
@@ -36,6 +40,26 @@ beforeEach(function (): void {
     $this->orderRepository->shouldReceive('currentRolesByDate')->byDefault()->andReturn([]);
     $this->vacationRepository->shouldReceive('findOnLeaveEmployeeIds')->byDefault()->andReturn([]);
 
+    $this->employeeUserRepository = m::mock(UserRepository::class, [$pdo]);
+    $this->employeePasswordResetRepository = m::mock(PasswordResetRepository::class, [$pdo]);
+    $mailService = m::mock(MailService::class);
+    $mailService->shouldReceive('sendPasswordResetEmail')->byDefault();
+    $this->employeeUserRepository->shouldReceive('findByEmail')->byDefault()->andReturnNull();
+    $this->employeeUserRepository->shouldReceive('createUser')->byDefault()->andReturn([
+        'id' => 500, 'email' => 'e@x.pl', 'role' => 'user', 'permissions' => '{}',
+        'is_active' => 1, 'must_change_password' => 1, 'created_at' => null, 'updated_at' => null,
+    ]);
+    $this->employeePasswordResetRepository->shouldReceive('createToken')->byDefault();
+
+    $this->userService = new UserService(
+        $this->employeeUserRepository,
+        $this->employeePasswordResetRepository,
+        $this->auditLogRepository,
+        $mailService,
+        'http://localhost:4200',
+        true,
+    );
+
     $scanner = m::mock(VirusScannerInterface::class);
     $scanner->shouldReceive('isAvailable')->byDefault()->andReturn(false);
     $fileUploadService = new FileUploadService(
@@ -53,6 +77,7 @@ beforeEach(function (): void {
         $this->rateRepository,
         $this->vacationRepository,
         $this->orderRepository,
+        $this->userService,
     );
     $this->employeeController = new EmployeeController($this->employeeService);
 
