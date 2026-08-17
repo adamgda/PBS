@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Dokumentacja Techniczna
 
-> **Wersja dokumentu:** 1.5  
-> **Data:** 2026-08-12  
+> **Wersja dokumentu:** 1.6  
+> **Data:** 2026-08-17  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -263,7 +263,9 @@ Konwencja rozmieszczania szablonów (zgodna ze wzorcem `AppComponent`):
 ### 6.3 Auth & Guards
 
 - `AuthGuard` — chroni wszystkie ścieżki wymagające zalogowania
-- `PermissionGuard` — sprawdza uprawnienia użytkownika do danej sekcji
+- `PermissionGuard` — sprawdza uprawnienia użytkownika do danej sekcji; przy braku uprawnień przekierowuje do pierwszej dostępnej sekcji (`AuthService.firstAvailableRoute()`), a nie sztywno do `/dashboard` (brak pętli)
+- `DefaultRouteGuard` — trasa domyślna (`''`) i wildcard (`**`) kierują do pierwszej dostępnej sekcji na bazie uprawnień (lub `/login` dla niezalogowanych); trasy te używają `RedirectComponent` (komponent-fallback, nigdy się nie renderuje, bo guard zawsze zwraca `UrlTree` — wymagany przez walidację routingu NG04014)
+- `AuthService.refreshCurrentUser()` — wywoływane przy starcie aplikacji (`AppComponent`) i po zalogowaniu; pobiera `GET /api/v1/auth/me` i synchronizuje rolę/uprawnienia w `_currentUser` + `localStorage` (backend jako jedyne źródło prawdy)
 - Token JWT przechowywany w `HttpOnly` cookie lub `localStorage` + refresh token
 
 ### 6.4 Współdzielone komponenty
@@ -555,6 +557,12 @@ Backend oparty na architekturze REST API z warstwami:
 - JWT (JSON Web Token) — token dostępowy + refresh token
 - Role: `super_admin` (konto główne) + custom roles z per-sekcja uprawnieniami
 - Uprawnienia per sekcja: `dashboard`, `pracownicy`, `sprzet`, `terminale`, `harmonogram`, `analityka`, `raportowanie`, `ustawienia`, `awaria`
+
+**Jedno źródło prawdy (back-end):** `PermissionMiddleware` weryfikuje uprawnienia **z bazy danych** (odczyt `users.permissions` po `user_id`), a nie z claima JWT. Dzięki temu backend zawsze egzekwuje *aktualne* uprawnienia — zmiana uprawnień w adminie obowiązuje natychmiast (eliminacja problemu „stale token", czyli rozjazdu między uprawnieniami we froncie a backendem).
+
+**Synchronizacja frontendu:** `GET /api/v1/auth/me` zwraca świeży stan (rola, uprawnienia, `is_active`). Frontend pobiera go przy starcie aplikacji (`AuthService.refreshCurrentUser()`) i po zalogowaniu, przez co menu i guardy zawsze odpowiadają stanowi na backendzie.
+
+**Dane referencyjne:** endpointy zwracające słowniki/dane do filtrów — `GET /api/v1/terminals` i `GET /api/v1/equipment` — są dostępne dla **każdego zalogowanego użytkownika** (tylko odczyt). Mutacje (POST/PUT/DELETE) pozostają pod uprawnieniami sekcji `terminale`/`sprzet`. Dzięki temu strona Pracownicy (która potrzebuje terminali i sprzętu do filtrów) działa dla użytkownika z samym uprawnieniem `pracownicy`.
 
 ### 7.4 Middleware pipeline
 
@@ -972,6 +980,8 @@ Frontend (Angular) dodatkowo:
   - Alternatywa (jeśli cookie niemożliwe): `localStorage` + ochrona przed XSS (CSP, sanityzacja)
   - **Zabronione**: `sessionStorage` (krótszy TTL, podatny na ataki)
 - **Claims**: `sub` (user ID), `role`, `permissions`, `iat`, `exp`, `jti` (unikalne ID do denylist)
+- **Egzekwowanie uprawnień**: `PermissionMiddleware` weryfikuje uprawnienia **z bazy danych** (po `user_id`), a nie z claima JWT — backend zawsze egzekwuje aktualne uprawnienia (eliminacja „stale token")
+- **Odświeżanie uprawnień**: `GET /api/v1/auth/me` zwraca świeży stan (rola, uprawnienia, status) — frontend synchronizuje UI bez re-logowania
 - **Rotacja kluczy**: co 90 dni, z okresem overlap 7 dni (stare i nowe klucze akceptowane)
 - **Audyt**: każde wystawienie/odświeżenie/wylogowanie logowane w `audit_log`
 
@@ -1171,6 +1181,7 @@ Frontend (Angular) dodatkowo:
 | POST | `/api/v1/auth/refresh` | Odświeżenie tokena |
 | POST | `/api/v1/auth/logout` | Wylogowanie |
 | POST | `/api/v1/auth/set-password` | Ustawienie hasła (link z e-maila) |
+| GET | `/api/v1/auth/me` | Aktualny użytkownik (rola, uprawnienia) — świeże dane z bazy |
 
 ### 11.2 Użytkownicy
 
@@ -1213,7 +1224,7 @@ Frontend (Angular) dodatkowo:
 
 | Metoda | Endpoint | Opis |
 |---|---|---|
-| GET | `/api/v1/equipment` | Lista sprzętu (z filtrami) |
+| GET | `/api/v1/equipment` | Lista sprzętu (z filtrami) — dane referencyjne, dostępne dla każdego zalogowanego |
 | POST | `/api/v1/equipment` | Dodanie sprzętu |
 | GET | `/api/v1/equipment/{id}` | Szczegóły sprzętu (z historią) |
 | PUT | `/api/v1/equipment/{id}` | Edycja sprzętu |
@@ -1236,7 +1247,7 @@ Frontend (Angular) dodatkowo:
 
 | Metoda | Endpoint | Opis |
 |---|---|---|
-| GET | `/api/v1/terminals` | Lista terminali |
+| GET | `/api/v1/terminals` | Lista terminali — dane referencyjne, dostępne dla każdego zalogowanego |
 | POST | `/api/v1/terminals` | Dodanie terminala |
 | GET | `/api/v1/terminals/{id}` | Szczegóły terminala |
 | PUT | `/api/v1/terminals/{id}` | Edycja terminala |
@@ -1842,4 +1853,4 @@ Projekt wykorzystuje dwa skille AI zarejestrowane w `skills-lock.json`:
 
 ---
 
-> **Koniec dokumentacji technicznej PBS v1.5**
+> **Koniec dokumentacji technicznej PBS v1.6**

@@ -351,3 +351,37 @@ it('set-password returns 422 for weak password', function (): void {
     $response = $this->authController->setPassword($request);
     expect($response->statusCode())->toBe(422);
 });
+
+it('me returns current user data from DB', function (): void {
+    $this->userRepository->shouldReceive('findById')->with(7)->andReturn([
+        'id' => 7,
+        'email' => 'worker@pbs.local',
+        'role' => 'user',
+        'permissions' => json_encode(['dashboard' => true, 'pracownicy' => false]),
+        'is_active' => true,
+        'must_change_password' => false,
+    ]);
+
+    $request = new Request(query: [], body: [], headers: []);
+    $request->setAttribute('user_id', 7);
+    $response = $this->authController->me($request);
+
+    expect($response->statusCode())->toBe(200);
+    $data = $response->data();
+    expect($data['id'])->toBe(7);
+    expect($data['email'])->toBe('worker@pbs.local');
+    expect($data['role'])->toBe('user');
+    expect($data['permissions']['dashboard'])->toBe(true);
+    expect($data['permissions']['pracownicy'])->toBe(false);
+    expect($data['is_active'])->toBe(true);
+});
+
+it('me returns 404 when user not found', function (): void {
+    $this->userRepository->shouldReceive('findById')->with(99)->andReturnNull();
+
+    $request = new Request(query: [], body: [], headers: []);
+    $request->setAttribute('user_id', 99);
+    $response = $this->authController->me($request);
+
+    expect($response->statusCode())->toBe(404);
+});

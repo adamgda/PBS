@@ -49,6 +49,10 @@ class UserRepository extends BaseRepository
         $where = [];
         $params = [];
 
+        // Zanonimizowani (usunięci) użytkownicy nie są pokazywani na liście (polityka RODO).
+        $where[] = '`email` NOT LIKE :deleted_pattern';
+        $params[':deleted_pattern'] = 'deleted\\_%@pbs.local';
+
         $email = is_string($filters['email'] ?? null) ? trim($filters['email']) : '';
         if ($email !== '') {
             $where[] = '`email` LIKE :email';
@@ -86,6 +90,10 @@ class UserRepository extends BaseRepository
     {
         $where = [];
         $params = [];
+
+        // Zanonimizowani (usunięci) użytkownicy nie są pokazywani na liście (polityka RODO).
+        $where[] = '`email` NOT LIKE :deleted_pattern';
+        $params[':deleted_pattern'] = 'deleted\\_%@pbs.local';
 
         $email = is_string($filters['email'] ?? null) ? trim($filters['email']) : '';
         if ($email !== '') {

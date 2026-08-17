@@ -816,8 +816,13 @@ final class EmployeeService
         $allIds = array_map(fn (array $e): int => $this->toInt($e['id'] ?? 0), $allEmployees);
         $onLeaveCount = $this->vacationRepository->countOnLeave($allIds, $today);
 
-        $settlement = $this->settlement($month, 'all');
-
+        // Agregaty sumujemy z jednego przebiegu settlementDetail + stawki.
+        // Wcześniej wywoływano tu $this->settlement() (który odpytuje settlementDetail,
+        // pobiera stawki i robi N+1 findById) ORAZ osobno ponownie settlementDetail —
+        // przy zdalnej bazie podwajało to czas wykonania i powodowało timeout (abort)
+        // żądania po stronie frontendu (interceptor httpTimeout). Ten sam wynik, 1 przebieg.
+        $godzinyTotal = 0.0;
+        $wynagrodzenieTotal = 0.0;
         $godziny1_15 = 0.0;
         $godziny15_23 = 0.0;
         $wynagrodzenie1_15 = 0.0;
@@ -835,6 +840,9 @@ final class EmployeeService
             $stawka = $this->rateAt($allRates[$empId] ?? [], $date);
             $wage = round($godziny * $stawka, 2);
 
+            $godzinyTotal += $godziny;
+            $wynagrodzenieTotal += $wage;
+
             if ($day < 15) {
                 $godziny1_15 += $godziny;
                 $wynagrodzenie1_15 += $wage;
@@ -846,8 +854,8 @@ final class EmployeeService
 
         return [
             'month' => $month,
-            'godziny_total' => $settlement['total_godziny'],
-            'wynagrodzenie_total' => $settlement['total_wynagrodzenie'],
+            'godziny_total' => round($godzinyTotal, 2),
+            'wynagrodzenie_total' => round($wynagrodzenieTotal, 2),
             'godziny_1_15' => round($godziny1_15, 2),
             'godziny_15_23' => round($godziny15_23, 2),
             'wynagrodzenie_1_15' => round($wynagrodzenie1_15, 2),

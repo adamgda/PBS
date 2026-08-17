@@ -73,6 +73,7 @@
           placeholderKey="common.auth.email"
           [ngModel]="email()"
           (ngModelChange)="email.set($event)"
+          [disableDarkMode]="true"
         />
         <app-form-input
           type="password"
@@ -85,6 +86,7 @@
           placeholderKey="common.auth.password"
           [ngModel]="password()"
           (ngModelChange)="password.set($event)"
+          [disableDarkMode]="true"
         />
 
         <div class="flex items-center justify-between">

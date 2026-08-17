@@ -221,7 +221,7 @@ export class EmployeesComponent {
   readonly columns = computed<DataTableColumn<Employee>[]>(() => [
     { key: 'name', label: this.t('pracownicy.list.name'), isTitle: true, formatter: (e) => `${e.imie} ${e.nazwisko}` },
     { key: 'telefon', label: this.t('pracownicy.list.phone') },
-    { key: 'email', label: this.t('pracownicy.list.email') },
+    { key: 'email', label: this.t('pracownicy.list.email'), minWidth: '150px' },
     { key: 'terminal_nazwa', label: this.t('pracownicy.list.terminal') },
     { key: 'sprzet_nazwa', label: this.t('pracownicy.list.equipment') },
     { key: 'stawka_godzinowa', label: this.t('pracownicy.list.hourly_rate'), minWidth: '110px' },

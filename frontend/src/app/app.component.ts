@@ -100,6 +100,13 @@ export class AppComponent {
         // Po nawigacji zamykamy drawer na mobile.
         this.mobileOpen.set(false);
       });
+
+    // Backend jako źródło prawdy — przy starcie aplikacji odśwież uprawnienia,
+    // aby menu i guardy odzwierciedlały aktualny stan (np. po zmianie w adminie).
+    // Best-effort: błąd (np. brak /auth/me) nie powinien blokować startu aplikacji.
+    if (this.authService.isLoggedIn()) {
+      this.authService.refreshCurrentUser().subscribe({ error: () => {} });
+    }
   }
 
   toggleMobile(): void {

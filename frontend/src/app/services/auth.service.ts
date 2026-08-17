@@ -136,6 +136,39 @@ export class AuthService {
   }
 
   /**
+   * Zwraca pierwszą trasę sekcji, do której aktualny użytkownik ma dostęp
+   * (kolejność zgodna z menu). super_admin zawsze trafia na dashboard.
+   * Używane przez PermissionGuard oraz trasę domyślną/wildcard, aby użytkownik
+   * bez uprawnienia do dashboard nie był zapętlany na /dashboard.
+   */
+  firstAvailableRoute(): string {
+    if (!this.isLoggedIn()) return '/login';
+    const user = this._currentUser();
+    if (!user) return '/login';
+    if (user.role === 'super_admin') return '/dashboard';
+
+    const sectionRoutes: Array<[string, string]> = [
+      ['dashboard', '/dashboard'],
+      ['pracownicy', '/pracownicy'],
+      ['sprzet', '/sprzet'],
+      ['terminale', '/terminale'],
+      ['harmonogram', '/harmonogram'],
+      ['analityka', '/analytics'],
+      ['raportowanie', '/reporting'],
+      ['awaria', '/awaria'],
+      ['ustawienia', '/settings'],
+    ];
+
+    for (const [section, route] of sectionRoutes) {
+      if (user.permissions[section] === true) return route;
+    }
+
+    // Zalogowany użytkownik bez żadnego uprawnienia sekcji — bezpieczny terminal
+    // (strona logowania, bez PermissionGuard, więc brak pętli).
+    return '/login';
+  }
+
+  /**
    * Zwraca aktualny access token (do dołączenia w nagłówku Authorization).
    * Jeśli tokeny są w HttpOnly cookie, zwracamy null — backend odczyta cookie.
    */
@@ -181,6 +214,24 @@ export class AuthService {
   }
 
   // --- Metody pomocnicze ---
+
+  /**
+   * Odświeża aktualnego użytkownika (rola, uprawnienia) z backendu (GET /auth/me).
+   * Backend jest jedynym źródłem prawdy — dzięki temu menu i guardy zawsze
+   * odzwierciedlają aktualne uprawnienia po ich zmianie w adminie, bez re-logowania.
+   */
+  refreshCurrentUser(): Observable<AuthUser> {
+    return this.http.get<AuthUser>(`${this.apiUrl}/auth/me`).pipe(
+      tap((user) => this.setCurrentUser(user)),
+    );
+  }
+
+  /** Ustawia aktualnego użytkownika w signalach i localStorage. */
+  private setCurrentUser(user: AuthUser): void {
+    this._currentUser.set(user);
+    this.currentUser$.next(user);
+    localStorage.setItem('pbs_user', JSON.stringify(user));
+  }
 
   private handleAuthSuccess(res: LoginResponse): void {
     this.storeTokens(res);

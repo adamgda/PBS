@@ -490,6 +490,10 @@ export class EquipmentComponent {
         this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
       },
     });
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth'
+    });
   }
 
   /** Odświeża dane sprzętu w widoku, który go aktualnie pokazuje (sekcja i/lub modal). */

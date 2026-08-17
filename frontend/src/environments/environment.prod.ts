@@ -7,7 +7,7 @@ export const environment = {
   production: true,
   apiUrl: '/api/v1',
   frontendUrl: '',
-  httpTimeout: 10000,
+  httpTimeout: 20000, // 20 s — ciężkie agregacje (np. /employees/summary) przy zdalnej bazie
   httpRetryAttempts: 1,
   cacheTtl: 60000,
   refreshBeforeExpirySeconds: 60,

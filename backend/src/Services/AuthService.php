@@ -191,6 +191,33 @@ final class AuthService
     }
 
     /**
+     * Aktualne dane zalogowanego użytkownika (rola, uprawnienia, status) prosto z bazy.
+     * Używane przez GET /api/v1/auth/me — frontend odświeża stan uprawnień bez re-logowania,
+     * dzięki czemu UI (menu, guardy) jest zawsze zgodne z backendem.
+     *
+     * @return array{id: int, email: string, role: string, permissions: array<string, bool>, is_active: bool, must_change_password: bool}|array{error: string, code: int}
+     */
+    public function me(int $userId): array
+    {
+        $user = $this->userRepository->findById($userId);
+        if ($user === null) {
+            return ['error' => 'User not found', 'code' => 404];
+        }
+
+        $role = is_string($user['role'] ?? null) ? $user['role'] : 'user';
+        $permissions = $this->decodePermissions($user['permissions'] ?? null);
+
+        return [
+            'id' => $userId,
+            'email' => is_string($user['email'] ?? null) ? $user['email'] : '',
+            'role' => $role,
+            'permissions' => $permissions,
+            'is_active' => (bool) ($user['is_active'] ?? false),
+            'must_change_password' => (bool) ($user['must_change_password'] ?? false),
+        ];
+    }
+
+    /**
      * Wylogowanie — dodanie refresh tokena do denylist.
      *
      * @return array{success: bool}

@@ -8,6 +8,7 @@ import { AuthService } from '../services/auth.service';
 class AuthServiceStub {
   isLoggedIn = jasmine.createSpy('isLoggedIn');
   hasPermission = jasmine.createSpy('hasPermission');
+  firstAvailableRoute = jasmine.createSpy('firstAvailableRoute');
 }
 
 describe('PermissionGuard', () => {
@@ -54,15 +55,16 @@ describe('PermissionGuard', () => {
     expect(result).toBe(true);
   });
 
-  it('przekierowuje na /dashboard z error=no_permission, gdy brak uprawnień', () => {
+  it('przekierowuje do pierwszej dostępnej sekcji z error=no_permission, gdy brak uprawnień', () => {
     auth.isLoggedIn.and.returnValue(true);
     auth.hasPermission.and.returnValue(false);
+    auth.firstAvailableRoute.and.returnValue('/pracownicy');
     const result = TestBed.runInInjectionContext(() =>
       PermissionGuard(routeWithPermission('awarie'), state),
     );
     expect(result instanceof UrlTree).toBe(true);
     const tree = result as UrlTree;
-    expect(tree.toString()).toContain('/dashboard');
+    expect(tree.toString()).toContain('/pracownicy');
     expect(tree.queryParams['error']).toBe('no_permission');
   });
 });

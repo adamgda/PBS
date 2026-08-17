@@ -232,6 +232,32 @@ it('settlementByPort returns per-port rows plus total', function (): void {
     expect($totalRow['suma_godzin'])->toBe(12.0);
     expect($totalRow['suma_wynagrodzen'])->toBe(640.0);
 });
+
+it('summary computes KPI aggregates in a single pass (no N+1)', function (): void {
+    $this->employeeRepository->shouldReceive('findAll')->with([], 1000, 0)->andReturn([
+        ['id' => 1], ['id' => 2], ['id' => 3],
+    ]);
+    $this->vacationRepository->shouldReceive('countOnLeave')->andReturn(1);
+    $this->orderRepository->shouldReceive('settlementDetail')->with('2026-02', 'all')->andReturn([
+        ['employee_id' => 1, 'data_zlecenia' => '2026-02-03', 'godziny' => 8, 'terminal_id' => 1, 'rola' => 'operator'],
+        ['employee_id' => 2, 'data_zlecenia' => '2026-02-20', 'godziny' => 6, 'terminal_id' => 2, 'rola' => 'brygadzista'],
+    ]);
+    $this->rateRepository->shouldReceive('findAllByEmployeeIds')->with([1, 2])->andReturn([
+        1 => [['id' => 1, 'employee_id' => 1, 'stawka_godzinowa' => 50, 'data_od' => '2026-01-01', 'data_do' => null, 'created_at' => null, 'updated_at' => null]],
+        2 => [['id' => 2, 'employee_id' => 2, 'stawka_godzinowa' => 60, 'data_od' => '2026-01-01', 'data_do' => null, 'created_at' => null, 'updated_at' => null]],
+    ]);
+
+    $response = $this->employeeController->summary(new Request(query: ['month' => '2026-02'], body: [], headers: []));
+    expect($response->statusCode())->toBe(200);
+    expect($response->data()['month'])->toBe('2026-02');
+    expect($response->data()['godziny_total'])->toBe(14.0);
+    expect($response->data()['wynagrodzenie_total'])->toBe(760.0);
+    expect($response->data()['godziny_1_15'])->toBe(8.0);
+    expect($response->data()['godziny_15_23'])->toBe(6.0);
+    expect($response->data()['wynagrodzenie_1_15'])->toBe(400.0);
+    expect($response->data()['wynagrodzenie_15_23'])->toBe(360.0);
+    expect($response->data()['na_urlopie'])->toBe(1);
+});
 // --- Faktury ---
 
 it('invoice index returns paginated list', function (): void {

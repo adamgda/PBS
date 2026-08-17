@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Plan wdrożenia
 
-> **Wersja:** 1.2  
-> **Data:** 2026-08-09  
+> **Wersja:** 1.3  
+> **Data:** 2026-08-17  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -413,6 +413,23 @@ Legenda statusów:
 - [x] Testy: backend — (re)generacja tokena, unieważnienie starego, publiczne endpointy (200/404), tworzenie incident/OC z `zrodlo='qr'`, rate limiting, walidacja
 - [x] Testy: backend — IDOR n/a (publiczne), ale weryfikacja że publiczny endpoint nie zwraca danych osobowych
 - [x] Testy: frontend — strona `/qr/{token}` (wybór akcji, formularze, potwierdzenia, błąd 404 dla złego tokena), widok wydruku naklejki
+
+## Etap 21 — System uprawnień (jedno źródło prawdy + synchronizacja frontendu)
+
+> Naprawa systemu uprawnień — backend jest jedynym źródłem prawdy o uprawnieniach, a frontend synchronizuje stan przez `GET /api/v1/auth/me`. Eliminuje rozjazd między uprawnieniami we froncie a backendem („stale token") oraz pętle przekierowań. Szczegóły w `docs/technical-documentation.md` (6.3, 7.3, 9.4).
+
+- [x] Backend: `PermissionMiddleware` weryfikuje uprawnienia **z bazy danych** (`users.permissions` po `user_id`) zamiast z claima JWT — aktualne uprawnienia obowiązują natychmiast (single source of truth)
+- [x] Backend: nowy endpoint `GET /api/v1/auth/me` — świeże dane zalogowanego użytkownika (rola, uprawnienia, `is_active`) prosto z bazy (`AuthService::me` / `AuthController::me`)
+- [x] Backend: dane referencyjne — `GET /api/v1/terminals` i `GET /api/v1/equipment` dostępne dla każdego zalogowanego (odczyt); mutacje pozostają pod uprawnieniami sekcji `terminale`/`sprzet` (naprawa strony Pracownicy dla użytkownika z samym `pracownicy`)
+- [x] Backend: przekazanie `UserRepository` do wszystkich guardów uprawnień w `App.php` (ustawienia, terminale, pracownicy, sprzęt, harmonogram, awaria, raportowanie, analityka, dashboard)
+- [x] Frontend: `AuthService.refreshCurrentUser()` — pobiera `GET /api/v1/auth/me` i aktualizuje `_currentUser` + `localStorage`
+- [x] Frontend: wywołanie `refreshCurrentUser()` przy starcie aplikacji (`AppComponent`) — menu i guardy zawsze zgodne z backendem
+- [x] Frontend: `AuthService.firstAvailableRoute()` — pierwsza dostępna sekcja wg uprawnień (lub `/login`)
+- [x] Frontend: `PermissionGuard` przekierowuje do `firstAvailableRoute()` zamiast sztywno do `/dashboard` (brak pętli)
+- [x] Frontend: nowy `DefaultRouteGuard` dla trasy domyślnej (`''`) i wildcard (`**`) — kieruje do pierwszej dostępnej sekcji; trasy używają `RedirectComponent` (komponent-fallback, nigdy się nie renderuje — wymagany przez walidację routingu NG04014)
+- [x] Testy: backend — PHPStan level 9 czysty (370 testów PASS), `AuthControllerTest` (me), testy guardów/uprawnień
+- [x] Testy: frontend — 196 testów PASS (`AuthService.firstAvailableRoute`/`refreshCurrentUser`, `DefaultRouteGuard`, zaktualizowany `PermissionGuard`)
+- [x] Docs: aktualizacja `docs/technical-documentation.md` (6.3, 7.3, 9.4, 11.1, 11.5, 11.7)
 
 ---
 

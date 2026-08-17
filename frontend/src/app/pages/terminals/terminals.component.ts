@@ -103,7 +103,7 @@ export class TerminalsComponent {
     { key: 'adres', label: this.t('terminale.list.address') },
     { key: 'operator', label: this.t('terminale.list.operator'), sortable: true },
     { key: 'telefon_operatora', label: this.t('terminale.list.phone') },
-    { key: 'email_operatora', label: this.t('terminale.list.email') },
+    { key: 'email_operatora', label: this.t('terminale.list.email'), minWidth: '150px' },
     { key: 'is_active', label: this.t('terminale.list.status'), sortable: true },
   ]);
 

@@ -34,8 +34,9 @@ export const PermissionGuard: CanActivateFn = (
     return true;
   }
 
-  // Brak uprawnień — przekierowanie na dashboard lub stronę 403
-  return router.createUrlTree(['/dashboard'], {
+  // Brak uprawnień — przekierowanie do pierwszej dostępnej sekcji (lub /login,
+  // gdy użytkownik nie ma żadnego uprawnienia). Unika pętli na /dashboard.
+  return router.createUrlTree([authService.firstAvailableRoute()], {
     queryParams: { error: 'no_permission' },
   });
 };

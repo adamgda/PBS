@@ -89,6 +89,25 @@ final class AuthController extends Controller
     }
 
     /**
+     * Aktualny użytkownik (rola, uprawnienia) — GET /api/v1/auth/me.
+     * Wymaga zalogowania (AuthMiddleware). Zwraca świeże dane z bazy,
+     * aby frontend mógł zsynchronizować stan uprawnień bez re-logowania.
+     *
+     * @param array<string, string> $params
+     */
+    public function me(Request $request, array $params = []): Response
+    {
+        $userId = $request->attribute('user_id');
+        $result = $this->authService->me(is_int($userId) ? $userId : 0);
+
+        if (isset($result['error'])) {
+            return $this->error($result['code'], $result['error']);
+        }
+
+        return $this->json($result, 200);
+    }
+
+    /**
      * @param array<string, string> $params
      */
     public function logout(Request $request, array $params = []): Response

@@ -308,8 +308,8 @@ final class App
 
         // === Guard uprawnień per-route ===
         // Opakowuje handler kontrolera sprawdzaniem PermissionMiddleware dla wskazanych sekcji.
-        $ustawieniaGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['ustawienia']);
+        $ustawieniaGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['ustawienia'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -320,8 +320,8 @@ final class App
         };
 
         // Guard uprawnień sekcji „terminale" (Etap 6).
-        $terminaleGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['terminale']);
+        $terminaleGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['terminale'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -332,8 +332,8 @@ final class App
         };
 
         // Guard uprawnień sekcji „pracownicy" (Etap 7).
-        $pracownicyGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['pracownicy']);
+        $pracownicyGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['pracownicy'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -344,8 +344,8 @@ final class App
         };
 
         // Guard uprawnień sekcji „sprzet" (Etap 8).
-        $sprzetGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['sprzet']);
+        $sprzetGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['sprzet'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -356,8 +356,8 @@ final class App
         };
 
         // Guard uprawnień sekcji „harmonogram" (Etap 9).
-        $harmonogramGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['harmonogram']);
+        $harmonogramGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['harmonogram'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -368,8 +368,8 @@ final class App
         };
 
         // Guard uprawnień sekcji „awaria" (Etap 10).
-        $awariaGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['awaria']);
+        $awariaGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['awaria'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -380,8 +380,8 @@ final class App
         };
 
         // Guard uprawnień sekcji „raportowanie" (Etap 11).
-        $raportowanieGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['raportowanie']);
+        $raportowanieGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['raportowanie'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -392,8 +392,8 @@ final class App
         };
 
         // Guard uprawnień sekcji „analityka" (Etap 12).
-        $analitykaGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['analityka']);
+        $analitykaGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['analityka'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -404,8 +404,8 @@ final class App
         };
 
         // Guard uprawnień sekcji „dashboard" (Etap 13).
-        $dashboardGuard = static function (callable $handler): callable {
-            $permissionMiddleware = new PermissionMiddleware(['dashboard']);
+        $dashboardGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['dashboard'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -439,6 +439,8 @@ final class App
             ['method' => 'POST', 'path' => '/api/v1/auth/forgot-password', 'handler' => [$authController, 'forgotPassword']],
             ['method' => 'POST', 'path' => '/api/v1/auth/set-password', 'handler' => [$authController, 'setPassword']],
             ['method' => 'GET', 'path' => '/api/v1/auth/csrf', 'handler' => [$authController, 'csrf']],
+            // Aktualny użytkownik (rola, uprawnienia) — wymaga zalogowania, zwraca świeże dane z bazy
+            ['method' => 'GET', 'path' => '/api/v1/auth/me', 'handler' => [$authController, 'me']],
 
             // Szybkie notatki to-do (Etap 19) — globalny widget, wymaga logowania (bez uprawnienia sekcji)
             ['method' => 'GET', 'path' => '/api/v1/notes', 'handler' => [$noteController, 'index']],
@@ -462,8 +464,9 @@ final class App
             ['method' => 'PUT', 'path' => '/api/v1/settings/alert-configs/{id}', 'handler' => $ustawieniaGuard([$alertSettingsController, 'update'])],
             ['method' => 'DELETE', 'path' => '/api/v1/settings/alert-configs/{id}', 'handler' => $ustawieniaGuard([$alertSettingsController, 'destroy'])],
 
-            // Sekcja Terminale (Etap 6) — wymagane uprawnienie `terminale`
-            ['method' => 'GET', 'path' => '/api/v1/terminals', 'handler' => $terminaleGuard([$terminalController, 'index'])],
+            // Sekcja Terminale (Etap 6) — GET (dane referencyjne do filtrów) dostępny dla każdego zalogowanego;
+            // mutacje (POST/PUT/DELETE) wymagają uprawnienia `terminale`
+            ['method' => 'GET', 'path' => '/api/v1/terminals', 'handler' => [$terminalController, 'index']],
             ['method' => 'POST', 'path' => '/api/v1/terminals', 'handler' => $terminaleGuard([$terminalController, 'store'])],
             ['method' => 'GET', 'path' => '/api/v1/terminals/hours-summary', 'handler' => $terminaleGuard([$terminalController, 'hoursSummary'])],
             ['method' => 'GET', 'path' => '/api/v1/terminals/{id}', 'handler' => $terminaleGuard([$terminalController, 'show'])],
@@ -503,8 +506,9 @@ final class App
             ['method' => 'DELETE', 'path' => '/api/v1/invoices/{id}', 'handler' => $pracownicyGuard([$invoiceController, 'destroy'])],
             ['method' => 'PATCH', 'path' => '/api/v1/invoices/{id}/status', 'handler' => $pracownicyGuard([$invoiceController, 'updateStatus'])],
 
-            // Sekcja Sprzęt (Etap 8) — wymagane uprawnienie `sprzet`
-            ['method' => 'GET', 'path' => '/api/v1/equipment', 'handler' => $sprzetGuard([$equipmentController, 'index'])],
+            // Sekcja Sprzęt (Etap 8) — GET (dane referencyjne do filtrów) dostępny dla każdego zalogowanego;
+            // mutacje (POST/PUT/DELETE) wymagają uprawnienia `sprzet`
+            ['method' => 'GET', 'path' => '/api/v1/equipment', 'handler' => [$equipmentController, 'index']],
             ['method' => 'POST', 'path' => '/api/v1/equipment', 'handler' => $sprzetGuard([$equipmentController, 'store'])],
             ['method' => 'GET', 'path' => '/api/v1/equipment/{id}', 'handler' => $sprzetGuard([$equipmentController, 'show'])],
             ['method' => 'PUT', 'path' => '/api/v1/equipment/{id}', 'handler' => $sprzetGuard([$equipmentController, 'update'])],

@@ -171,4 +171,39 @@ describe('AuthService', () => {
     service.setRefreshing(true);
     expect(service.refreshing).toBe(true);
   });
+
+  it('firstAvailableRoute() zwraca pierwszą dostępną sekcję wg uprawnień', () => {
+    service['_currentUser'].set({
+      ...USER,
+      permissions: { dashboard: false, pracownicy: true, sprzet: true },
+    });
+    expect(service.firstAvailableRoute()).toBe('/pracownicy');
+  });
+
+  it('firstAvailableRoute() daje super_admin dostęp do dashboard', () => {
+    service['_currentUser'].set({ ...USER, role: 'super_admin', permissions: {} });
+    expect(service.firstAvailableRoute()).toBe('/dashboard');
+  });
+
+  it('firstAvailableRoute() zwraca /login, gdy użytkownik nie ma żadnego uprawnienia', () => {
+    service['_currentUser'].set({ ...USER, permissions: {} });
+    expect(service.firstAvailableRoute()).toBe('/login');
+  });
+
+  it('firstAvailableRoute() zwraca /login dla niezalogowanego', () => {
+    service['_currentUser'].set(null);
+    expect(service.firstAvailableRoute()).toBe('/login');
+  });
+
+  it('refreshCurrentUser() pobiera /auth/me i aktualizuje użytkownika', () => {
+    const fresh: AuthUser = { ...USER, permissions: { dashboard: true } };
+    service.refreshCurrentUser().subscribe((u) => {
+      expect(u.permissions).toEqual({ dashboard: true });
+    });
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/me`);
+    expect(req.request.method).toBe('GET');
+    req.flush(fresh);
+    expect(service.currentUser).toEqual(fresh);
+    expect(localStorage.getItem('pbs_user')).toBe(JSON.stringify(fresh));
+  });
 });

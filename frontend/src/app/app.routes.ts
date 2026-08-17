@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 
 import { AuthGuard } from './guards/auth.guard';
 import { PermissionGuard } from './guards/permission.guard';
+import { DefaultRouteGuard } from './guards/default-route.guard';
+import { RedirectComponent } from './components/redirect/redirect.component';
 
 /**
  * Routing PBS — wszystkie sekcje lazy-loaded (loadComponent).
@@ -114,11 +116,13 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'dashboard',
+    canActivate: [DefaultRouteGuard],
+    component: RedirectComponent,
     pathMatch: 'full',
   },
   {
     path: '**',
-    redirectTo: 'dashboard',
+    canActivate: [DefaultRouteGuard],
+    component: RedirectComponent,
   },
 ];
