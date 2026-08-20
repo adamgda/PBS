@@ -91,6 +91,38 @@ final class ReportService
     }
 
     /**
+     * Auto-dane z harmonogramu dla formularza nowego raportu terminalowego
+     * (bez zapisywania raportu) — endpoint GET /reports/terminal/auto-data.
+     *
+     * Zwraca dane pracowników, sprzętu i zleceń obecnych w terminalu danego dnia
+     * oraz nazwę terminala (do nagłówków podglądu).
+     *
+     * @return array<string, mixed>|array{error: string, code: int}
+     */
+    public function getTerminalAutoData(int $terminalId, string $date): array
+    {
+        $date = trim($date);
+        if ($terminalId <= 0) {
+            return ['error' => 'Terminal is required', 'code' => 422];
+        }
+        if ($date === '' || strtotime($date) === false) {
+            return ['error' => 'Invalid date', 'code' => 422];
+        }
+
+        $terminal = $this->terminalRepository->findById($terminalId);
+        if ($terminal === null) {
+            return ['error' => 'Terminal not found', 'code' => 422];
+        }
+
+        return [
+            'terminal_id' => $terminalId,
+            'terminal_nazwa' => is_string($terminal['nazwa'] ?? null) ? $terminal['nazwa'] : null,
+            'data_raportu' => $date,
+            'auto_data' => $this->terminalAutoData($terminalId, $date),
+        ];
+    }
+
+    /**
      * Tworzenie raportu terminalowego.
      *
      * @param array<string, mixed> $data

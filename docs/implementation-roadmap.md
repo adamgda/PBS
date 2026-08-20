@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Plan wdrożenia
 
-> **Wersja:** 1.3  
-> **Data:** 2026-08-17  
+> **Wersja:** 1.4  
+> **Data:** 2026-08-20  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -65,7 +65,7 @@ Legenda statusów:
 - [x] Generacja i walidacja JWT (access + refresh), claim `jti` dla denylist
 - [x] Middleware `AuthMiddleware` (weryfikacja tokena, algorytm RS256 na produkcji)
 - [x] Middleware `PermissionMiddleware` (uprawnienia per sekcja + autoryzacja per zasób IDOR)
-- [x] Zarządzanie rolami (`super_admin`, `admin`, `user`)
+- [x] Zarządzanie rolami (`super_admin`, `admin`) — wyłącznie konta administratorów; pracownicy nie mają kont ani dostępu do aplikacji
 - [x] Migracja: `revoked_refresh_tokens` (denylist z TTL)
 - [x] Migracja: `password_reset_tokens` (tokeny resetujące, jednorazowe)
 - [x] Migracja: `audit_log` (logowanie akcji bezpieczeństwa)
@@ -113,6 +113,8 @@ Legenda statusów:
 
 ## Etap 5 — Sekcja: Użytkownicy (Ustawienia → Użytkownicy)
 
+> **Koncepcja (zmiana):** konta dostępu do aplikacji tworzone są wyłącznie tutaj i obejmują role `super_admin` oraz `admin`. Pracownicy nie posiadają kont — są zasobem w sekcji Pracownicy (bez loginu do aplikacji).
+
 - [x] Backend: `GET/POST /api/v1/users`
 - [x] Backend: `GET/PUT/DELETE /api/v1/users/{id}`
 - [x] Backend: `PATCH /api/v1/users/{id}/permissions`
@@ -132,6 +134,8 @@ Legenda statusów:
 - [x] Lokalizacje: `terminale.json` w `locales/pl/`
 
 ## Etap 7 — Sekcja: Pracownicy
+
+> **Koncepcja:** pracownicy są zasobem (jak terminale/sprzęt) — **nie otrzymują kont ani dostępu do aplikacji**. Pole `email` jest **opcjonalne** (dane kontaktowe) i nie generuje konta ani wysyłki linku do ustawienia hasła. Usunięto automatyczne tworzenie konta pracownika (`UserService::createEmployeeAccount`).
 
 - [x] Backend: `GET/POST /api/v1/employees`
 - [x] Backend: `GET/PUT/DELETE /api/v1/employees/{id}`

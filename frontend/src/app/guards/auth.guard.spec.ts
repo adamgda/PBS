@@ -25,7 +25,7 @@ describe('AuthGuard', () => {
   });
 
   const route = {} as ActivatedRouteSnapshot;
-  const state = { url: '/pracownicy' } as RouterStateSnapshot;
+  const state = { url: '/employees' } as RouterStateSnapshot;
 
   it('zezwala, gdy użytkownik jest zalogowany', () => {
     auth.isLoggedIn.and.returnValue(true);
@@ -39,6 +39,6 @@ describe('AuthGuard', () => {
     expect(result instanceof UrlTree).toBe(true);
     const tree = result as UrlTree;
     expect(tree.toString()).toContain('/login');
-    expect(tree.queryParams['returnUrl']).toBe('/pracownicy');
+    expect(tree.queryParams['returnUrl']).toBe('/employees');
   });
 });

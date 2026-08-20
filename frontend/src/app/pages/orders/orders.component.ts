@@ -45,7 +45,7 @@ interface WeekDayColumn {
  * Widok kalendarza (tydzień/miesiąc/dzień) zleceń, panel szczegółów wybranego
  * zlecenia, szybkie przypisywanie pracowników oraz kopiowanie tygodnia jako
  * szablon. Dodawanie/edycja zleceń odbywa się na osobnych podstronach
- * (/harmonogram/nowe oraz /harmonogram/edytuj/:id).
+ * (/schedule/new oraz /schedule/edit/:id).
  */
 @Component({
   selector: 'app-orders',
@@ -203,12 +203,12 @@ export class OrdersComponent {
 
   /** Przejście do podstrony „Nowe zlecenie" (formularz poza modalem). */
   goToNewOrder(): void {
-    this.router.navigate(['/harmonogram/nowe']);
+    this.router.navigate(['/schedule/new']);
   }
 
-  /** Przejście do podstrony edycji zlecenia (/harmonogram/edytuj/:id). */
+  /** Przejście do podstrony edycji zlecenia (/schedule/edit/:id). */
   goToEdit(order: Order): void {
-    this.router.navigate(['/harmonogram/edytuj', order.id]);
+    this.router.navigate(['/schedule/edit', order.id]);
   }
 
   // --- Lista ---
@@ -234,6 +234,7 @@ export class OrdersComponent {
       this.selectedOrder.set(order);
       this.loadDetails(order.id);
     }
+    document.getElementById('details')?.scrollIntoView({ inline: 'start', behavior: 'smooth' });
   }
 
   loadDetails(id: number): void {

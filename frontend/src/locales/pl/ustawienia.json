@@ -30,13 +30,12 @@
     "status_blocked": "Zablokowany",
     "status_invited": "Zaproszony",
     "all_users": "Wszyscy użytkownicy",
-    "roles_info": "Role są predefiniowane: z tego poziomu tworzone są wyłącznie konta Administratora. Super Administrator ma dostęp do wszystkich sekcji i nie jest tworzony z tego poziomu. Pracownicy (konta użytkowników) są dodawani w zakładce Pracownicy — otrzymują dostęp tylko do zgłaszania awarii oraz raportowania obsługi.",
+    "roles_info": "Role są predefiniowane: z tego poziomu tworzone są wyłącznie konta Administratora. Super Administrator ma dostęp do wszystkich sekcji i nie jest tworzony z tego poziomu. Pracownicy nie posiadają kont — są wyłącznie zasobem zarządzanym w sekcji Pracownicy.",
     "invite_info": "Nowy użytkownik otrzyma e-mail z linkiem do ustawienia hasła. Konto pozostaje w statusie „zaproszony” do pierwszego logowania."
   },
   "roles": {
     "super_admin": "Super Administrator",
-    "admin": "Administrator",
-    "user": "Użytkownik"
+    "admin": "Administrator"
   },
   "messages": {
     "user_created": "Utworzono użytkownika — wysłano e-mail z linkiem do ustawienia hasła",

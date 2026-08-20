@@ -1,0 +1,166 @@
+<!-- Nagłówek podstrony -->
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'awaria.detail.title' | translate }}</h1>
+    <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'awaria.subtitle' | translate }}</p>
+  </div>
+  <app-button variant="outline" [label]="'common.buttons.back' | translate" (clicked)="back()" />
+</div>
+
+@if (loading()) {
+  <div class="mt-5 rounded-2xl bg-white p-6 text-center text-gray-500 dark:bg-slate-900 dark:text-slate-400">{{ 'common.table.loading' | translate }}</div>
+} @else if (incident()) {
+  <div class="mt-5 rounded-2xl bg-white p-6 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
+    <!-- Nagłówek awarii -->
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div class="flex min-w-0 items-center gap-2">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
+          <app-svg-icon name="alert" size="md" />
+        </span>
+        <div class="min-w-0">
+          <h3 class="truncate text-lg font-semibold text-gray-900 dark:text-white">
+            #AW-{{ incident()!.id }} · {{ incident()!.equipment_nazwa || incident()!.opis }}
+          </h3>
+          <p class="text-xs text-gray-500 dark:text-slate-400">
+            {{ typeLabel(incident()!) }}
+            @if (incident()!.equipment_nazwa) {
+              <span> · {{ 'awaria.list.equipment' | translate }}: {{ incident()!.equipment_nazwa }}</span>
+            }
+          </p>
+        </div>
+      </div>
+      <div class="flex shrink-0 flex-col items-end gap-2">
+        <app-status-badge [status]="statusBadgeStatus(incident()!.status)" [labelKey]="statusBadgeKey(incident()!.status)" />
+      </div>
+    </div>
+
+    <!-- Lifecycle stepper -->
+    <div class="mb-5">
+      <div class="flex items-start">
+        @for (step of lifecycleSteps; track step.status; let i = $index) {
+          @if (i > 0) {
+            <div
+              class="mt-2.5 h-0.5 flex-1"
+              [class.bg-cyan-500]="i <= lifecycleIndex(incident()!.status)"
+              [class.bg-gray-200]="i > lifecycleIndex(incident()!.status)"
+              [class.dark:bg-slate-700]="i > lifecycleIndex(incident()!.status)"
+            ></div>
+          }
+          <div class="flex min-w-0 flex-col items-center gap-1">
+            <span
+              class="grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs"
+              [class.bg-cyan-500]="i <= lifecycleIndex(incident()!.status)"
+              [class.bg-gray-200]="i > lifecycleIndex(incident()!.status)"
+              [class.dark:bg-slate-700]="i > lifecycleIndex(incident()!.status)"
+              [class.text-white]="i <= lifecycleIndex(incident()!.status)"
+              [class.text-gray-400]="i > lifecycleIndex(incident()!.status)"
+              [class.dark:text-slate-400]="i > lifecycleIndex(incident()!.status)"
+            >
+              @if (i <= lifecycleIndex(incident()!.status)) {
+                <app-svg-icon [name]="lifecycleIcon(step.status)" size="sm" />
+              }
+            </span>
+            <span
+              class="text-center text-[11px] font-medium leading-tight"
+              [class.text-cyan-700]="i === lifecycleIndex(incident()!.status)"
+              [class.dark:text-cyan-400]="i === lifecycleIndex(incident()!.status)"
+              [class.text-gray-400]="i > lifecycleIndex(incident()!.status)"
+              [class.dark:text-slate-500]="i > lifecycleIndex(incident()!.status)"
+            >{{ step.labelKey | translate }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Statystyki -->
+    <div class="mb-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+      <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800">
+        <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'awaria.detail.reported_date' | translate }}</p>
+        <p class="font-medium dark:text-slate-200">{{ incident()!.data_zgloszenia || '—' }}</p>
+      </div>
+      <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800">
+        <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'awaria.detail.downtime' | translate }}</p>
+        <p class="font-medium text-rose-600 dark:text-rose-400">{{ downtime(incident()!) }}</p>
+      </div>
+      <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800">
+        <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'awaria.detail.reported_by' | translate }}</p>
+        <p class="truncate font-medium dark:text-slate-200">{{ incident()!.zgloszona_przez_email || '—' }}</p>
+      </div>
+      <div class="rounded-lg bg-gray-50 p-2 dark:bg-slate-800">
+        <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'awaria.detail.close_date' | translate }}</p>
+        <p class="font-medium text-gray-400 dark:text-slate-500">{{ incident()!.data_zakonczenia || '—' }}</p>
+      </div>
+    </div>
+
+    <p class="mb-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700 dark:bg-slate-800 dark:text-slate-300">{{ incident()!.opis }}</p>
+
+    <!-- Zmiana statusu -->
+    <div class="mb-4 rounded-lg border border-gray-100 p-3 dark:border-slate-800">
+      <label class="block text-sm font-semibold text-gray-700 dark:text-slate-300">{{ 'awaria.detail.status_change' | translate }}</label>
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <app-select
+          size="md"
+          [options]="statusOptions"
+          [ngModel]="newStatus()"
+          (ngModelChange)="newStatus.set($event)"
+        />
+        <app-button variant="primary" [label]="'common.buttons.save'" [disabled]="statusSaving() || newStatus() === incident()!.status" (clicked)="changeStatus()" />
+      </div>
+    </div>
+
+    <!-- Komentarze -->
+    <div class="mb-4">
+      <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-300">{{ 'awaria.detail.comments' | translate }}</h4>
+      @if (comments().length === 0) {
+        <p class="text-sm text-gray-400 dark:text-slate-500">{{ 'awaria.detail.no_comments' | translate }}</p>
+      } @else {
+        <ul class="mb-3 space-y-2">
+          @for (c of comments(); track c.id) {
+            <li class="rounded-lg bg-gray-50 p-3 text-sm dark:bg-slate-800">
+              <div class="mb-1 flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
+                <span>{{ c.user_email || '—' }}</span>
+                <span>{{ c.created_at || '—' }}</span>
+              </div>
+              <p class="text-gray-800 dark:text-slate-200">{{ c.tresc }}</p>
+            </li>
+          }
+        </ul>
+      }
+      <div class="flex flex-col gap-2">
+        <textarea
+          class="block w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          rows="2"
+          [placeholder]="'awaria.detail.comment_placeholder' | translate"
+          [ngModel]="newComment()"
+          (ngModelChange)="newComment.set($event)"
+        ></textarea>
+        <div class="flex justify-end">
+          <app-button variant="primary" [label]="'awaria.detail.send_comment'" [disabled]="commentSaving()" (clicked)="sendComment()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Historia statusów -->
+    <div>
+      <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-slate-300">{{ 'awaria.detail.status_history' | translate }}</h4>
+      @if (history().length === 0) {
+        <p class="text-sm text-gray-400 dark:text-slate-500">{{ 'awaria.detail.no_history' | translate }}</p>
+      } @else {
+        <ul class="space-y-2">
+          @for (h of history(); track h.id) {
+            <li class="flex items-center justify-between rounded-lg border border-gray-100 p-2 text-sm dark:border-slate-800">
+              <span>
+                <app-status-badge [status]="h.status_od === 'zgloszona' ? 'reported' : (h.status_od === 'w_trakcie_naprawy' ? 'under_repair' : (h.status_od === 'naprawiona' ? 'repaired' : 'closed'))" />
+                <span class="mx-1 text-gray-400 dark:text-slate-500">→</span>
+                <app-status-badge [status]="h.status_do === 'zgloszona' ? 'reported' : (h.status_do === 'w_trakcie_naprawy' ? 'under_repair' : (h.status_do === 'naprawiona' ? 'repaired' : 'closed'))" />
+              </span>
+              <span class="text-xs text-gray-500 dark:text-slate-400">{{ h.zmieniony_przez_email || '—' }} · {{ h.created_at || '—' }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+}
+
+

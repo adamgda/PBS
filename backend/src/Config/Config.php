@@ -61,6 +61,17 @@ final class Config
     }
 
     /**
+     * Parser pliku .env.
+     *
+     * Obsługuje:
+     *  - komentarze (linia zaczynająca się od `#`),
+     *  - wartości proste: `KEY=value`,
+     *  - wartości w apostrofach/cudzysłowach jednoliniowe: `KEY="value"`,
+     *  - wartości wieloliniowe w cudzysłowach (np. klucze PEM RS256):
+     *      JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+     *      ...
+     *      -----END PRIVATE KEY-----"
+     *
      * @return array<string, string>
      */
     private static function parseEnvFile(string $path): array
@@ -74,14 +85,19 @@ final class Config
             return [];
         }
 
-        $values = [];
         $lines = preg_split('/\r\n|\r|\n/', $contents);
         if ($lines === false) {
             return [];
         }
 
-        foreach ($lines as $line) {
-            $line = trim($line);
+        $values = [];
+        $count = count($lines);
+        $i = 0;
+
+        while ($i < $count) {
+            $line = trim($lines[$i]);
+            $i++;
+
             if ($line === '' || str_starts_with($line, '#')) {
                 continue;
             }
@@ -92,11 +108,41 @@ final class Config
             }
 
             $key = trim(substr($line, 0, $pos));
-            $value = trim(substr($line, $pos + 1));
-            $value = trim($value, "\"'");
+            if ($key === '') {
+                continue;
+            }
 
-            if ($key !== '') {
-                $values[$key] = $value;
+            $value = ltrim(substr($line, $pos + 1));
+
+            // Wartość ujęta w cudzysłów/apostrof — może być wieloliniowa.
+            if ($value !== '' && ($value[0] === '"' || $value[0] === "'")) {
+                $quote = $value[0];
+                $rest = substr($value, 1);
+
+                // Jednoliniowa wartość cytowana (zamykający znak na tej samej linii).
+                if ($rest !== '' && str_ends_with($rest, $quote)) {
+                    $values[$key] = substr($rest, 0, -1);
+                    continue;
+                }
+
+                // Wieloliniowa wartość cytowana — zbieraj kolejne linie aż do znaku zamykającego.
+                $buffer = $rest;
+                $closed = false;
+                while (!$closed && $i < $count) {
+                    $next = $lines[$i];
+                    $i++;
+                    $rtrimmed = rtrim($next);
+                    if ($rtrimmed !== '' && str_ends_with($rtrimmed, $quote)) {
+                        $buffer .= "\n" . substr($rtrimmed, 0, -1);
+                        $closed = true;
+                    } else {
+                        $buffer .= "\n" . $next;
+                    }
+                }
+                $values[$key] = $buffer;
+            } else {
+                // Wartość prosta — ewentualne otaczające cytoly odcięte (wsteczna kompatybilność).
+                $values[$key] = trim($value, "\"'");
             }
         }
 

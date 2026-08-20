@@ -37,9 +37,9 @@ interface PendingEquipmentAssignment {
 /**
  * Podstrona formularza zlecenia (poza modalem).
  * Bez parametru id działa jako „Nowe zlecenie” (POST /orders + przypisania),
- * a z parametrem id jako „Edytuj zlecenie” (/harmonogram/edytuj/:id) — wczytuje
+ * a z parametrem id jako „Edytuj zlecenie” (/schedule/edit/:id) — wczytuje
  * zlecenie, pozwala edytować dane oraz zarządzać przypisaniami pracowników/sprzętu.
- * Po zapisie wraca do /harmonogram.
+ * Po zapisie wraca do /schedule.
  */
 @Component({
   selector: 'app-order-new',
@@ -80,7 +80,7 @@ export class OrderNewComponent {
   readonly formWartosc = signal<string>('0');
   readonly formStatus = signal<OrderStatus>('nowe');
 
-  // Tryb edycji (podstrona /harmonogram/edytuj/:id)
+  // Tryb edycji (podstrona /schedule/edit/:id)
   readonly editingId = signal<number | null>(null);
   readonly loading = signal<boolean>(false);
   readonly assignedEmployees = signal<OrderEmployee[]>([]);
@@ -186,7 +186,7 @@ export class OrderNewComponent {
         next: () => {
           this.saving.set(false);
           this.toastService.success(this.t('harmonogram.messages.updated.success', { number: numer }));
-          this.router.navigate(['/harmonogram']);
+          this.router.navigate(['/schedule']);
         },
         error: (err) => {
           this.saving.set(false);
@@ -202,7 +202,7 @@ export class OrderNewComponent {
         this.applyPendingAssignments(created.id, () => {
           this.saving.set(false);
           this.toastService.success(this.t('harmonogram.messages.created.success', { number: numer }));
-          this.router.navigate(['/harmonogram']);
+          this.router.navigate(['/schedule']);
         });
       },
       error: (err) => {
@@ -214,7 +214,7 @@ export class OrderNewComponent {
   }
 
   cancel(): void {
-    this.router.navigate(['/harmonogram']);
+    this.router.navigate(['/schedule']);
   }
 
   /** Tryb edycji — pobiera zlecenie i wypełnia formularz oraz listy przypisań. */
@@ -258,7 +258,7 @@ export class OrderNewComponent {
       next: () => {
         this.saving.set(false);
         this.toastService.success(this.t('harmonogram.messages.deleted.success', { number: this.formNumer() }));
-        this.router.navigate(['/harmonogram']);
+        this.router.navigate(['/schedule']);
       },
       error: (err) => {
         this.saving.set(false);

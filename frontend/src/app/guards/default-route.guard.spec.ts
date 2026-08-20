@@ -27,10 +27,10 @@ describe('DefaultRouteGuard', () => {
   const route = {} as ActivatedRouteSnapshot;
 
   it('przekierowuje do pierwszej dostępnej sekcji', () => {
-    auth.firstAvailableRoute.and.returnValue('/pracownicy');
+    auth.firstAvailableRoute.and.returnValue('/employees');
     const result = TestBed.runInInjectionContext(() => DefaultRouteGuard(route, state));
     expect(result instanceof UrlTree).toBe(true);
-    expect((result as UrlTree).toString()).toContain('/pracownicy');
+    expect((result as UrlTree).toString()).toContain('/employees');
   });
 
   it('przekierowuje na /login, gdy użytkownik nie ma uprawnień', () => {

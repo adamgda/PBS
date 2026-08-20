@@ -1,0 +1,42 @@
+# PBS Backend — front controller (Apache / mod_rewrite)
+#
+# Wszystkie żądania do /api/v1/* są przekierowywane do public/index.php,
+# gdzie router PHP (FastRoute) dopasowuje URL do kontrolera.
+# Bez tego Apache zwraca 404 dla ścieżek, które nie są fizycznymi plikami.
+#
+# Wymaga mod_rewrite (domyślnie włączony na większości hostingów).
+#
+# UWAGA: ten plik MUSI znajdować się w document root (folderze, który Apache
+# serwuje), czyli w katalogu public/. Jeśli włożysz go do folderu nadrzędnego
+# (np. pbs-api/), Apache go zignoruje i CORS nie zadziała.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Nie przekierowuj istniejących plików i katalogów (np. statyczne assety)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Front controller — wszystko inne trafia do index.php
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# === CORS — nagłówki na WSZYSTKICH odpowiedziach (niezależnie od PHP) ===
+# "Header always set" (zamiast "set") gwarantuje dodanie nagłówków także do
+# odpowiedzi 204 (preflight) i błędów. Origin jest konkretny (nie "*"), bo
+# frontend używa withCredentials:true, a wtedy "*" jest odrzucane.
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "https://pbs.adammz.pl"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    Header always set Access-Control-Allow-Credentials "true"
+    Header always set Access-Control-Max-Age "86400"
+
+    # Preflight (OPTIONS) — odpowiedź 204 bez dotykania PHP
+    <If "%{REQUEST_METHOD} = 'OPTIONS'">
+        Header set Content-Length "0"
+        Header set Content-Type "text/plain"
+        RewriteRule ^ - [R=204,L]
+    </If>
+</IfModule>
+

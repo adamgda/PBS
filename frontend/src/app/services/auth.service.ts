@@ -149,13 +149,13 @@ export class AuthService {
 
     const sectionRoutes: Array<[string, string]> = [
       ['dashboard', '/dashboard'],
-      ['pracownicy', '/pracownicy'],
-      ['sprzet', '/sprzet'],
-      ['terminale', '/terminale'],
-      ['harmonogram', '/harmonogram'],
+      ['pracownicy', '/employees'],
+      ['sprzet', '/equipment'],
+      ['terminale', '/terminals'],
+      ['harmonogram', '/schedule'],
       ['analityka', '/analytics'],
       ['raportowanie', '/reporting'],
-      ['awaria', '/awaria'],
+      ['awaria', '/incidents'],
       ['ustawienia', '/settings'],
     ];
 

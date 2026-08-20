@@ -80,6 +80,16 @@ export class AnalyticsComponent {
   readonly equipment = this._equipment.asReadonly();
   readonly relations = this._relations.asReadonly();
 
+  /**
+   * Flaga informująca, że dane wykresów zostały załadowane z API.
+   * Wykresy ApexCharts są renderowane dopiero, gdy ta flaga jest true —
+   * zapobiega to problemowi niewyświetlania wykresów przy pierwszym wejściu
+   * / hard refresh (apx-chart źle przebudowuje się z pustych danych → pełne).
+   */
+  readonly chartDataLoaded = computed<boolean>(
+    () => this._terminals().length > 0 || this._equipment().length > 0,
+  );
+
   readonly presets: { key: RangePreset; label: string }[] = [
     { key: '7', label: 'analytics.presets.7' },
     { key: '30', label: 'analytics.presets.30' },

@@ -5,37 +5,13 @@
     "terminal_title": "Raport z terminala",
     "terminal_desc": "Sytuacja w porcie · auto-dane z harmonogramu",
     "vehicle_title": "Raport z pojazdu",
-    "vehicle_desc": "Przebieg + obsługa codzienna (OC)"
+    "vehicle_desc": "Przebieg + obsługa codzienna (OC)",
+    "terminal_pill": "terminal",
+    "vehicle_pill": "pojazd"
   },
   "buttons": {
-    "add_terminal": "Nowy raport terminalowy",
-    "add_vehicle": "Nowy raport pojazdowy",
     "save": "Zapisz raport",
     "edit": "Edytuj"
-  },
-  "list": {
-    "all_terminal": "Raporty terminalowe",
-    "all_vehicle": "Raporty pojazdowe",
-    "date": "Data raportu",
-    "terminal": "Terminal",
-    "equipment": "Pojazd",
-    "opis": "Opis",
-    "przebieg": "Aktualny przebieg",
-    "przebieg_oc": "Przebieg OC",
-    "author": "Autor",
-    "source": "Źródło"
-  },
-  "source": {
-    "panel": "Panel",
-    "qr": "Z QR",
-    "qr_badge": "Z QR"
-  },
-  "filters": {
-    "terminal": "Terminal",
-    "equipment": "Pojazd",
-    "date_from": "Od",
-    "date_to": "Do",
-    "source": "Źródło"
   },
   "form": {
     "add_terminal_title": "Nowy raport — terminal",
@@ -47,6 +23,7 @@
     "equipment": "Pojazd",
     "equipment_placeholder": "Szukaj pojazdu...",
     "date": "Data raportu",
+    "author": "Osoba sporządzająca",
     "opis": "Opis",
     "opis_placeholder": "Opis sytuacji w porcie...",
     "przebieg": "Aktualny przebieg",
@@ -57,11 +34,36 @@
   },
   "auto_data": {
     "title": "Auto-dane z harmonogramu",
+    "attached_title": "Automatycznie załączono",
+    "attached_desc": "Pracownicy i sprzęt obecni w terminalu danego dnia (dane z harmonogramu).",
     "orders": "Zlecenia",
     "employees": "Pracownicy",
     "equipment": "Sprzęt",
     "total_hours": "Suma godzin",
     "total_wages": "Suma wynagrodzeń"
+  },
+  "preview": {
+    "employees_title": "Pracownicy obecni",
+    "equipment_title": "Sprzęt obecny",
+    "employee": "Pracownik",
+    "role": "Rola",
+    "hours": "Godz.",
+    "rate": "Stawka/h",
+    "wage": "Wynagrodz.",
+    "order": "Zlecenie",
+    "sum": "Suma",
+    "total_hours_title": "Suma godzin w porcie",
+    "employees_count": "pracowników",
+    "no_data": "Wybierz terminal i datę, aby zobaczyć auto-dane z harmonogramu."
+  },
+  "recent": {
+    "title": "Ostatnie raporty",
+    "date": "Data",
+    "type": "Typ",
+    "object": "Obiekt",
+    "author": "Autor",
+    "actions": "Akcje",
+    "no_data": "Brak raportów"
   },
   "messages": {
     "terminal_required": "Wybierz terminal",
@@ -78,3 +80,4 @@
     }
   }
 }
+

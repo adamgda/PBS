@@ -58,13 +58,13 @@ describe('PermissionGuard', () => {
   it('przekierowuje do pierwszej dostępnej sekcji z error=no_permission, gdy brak uprawnień', () => {
     auth.isLoggedIn.and.returnValue(true);
     auth.hasPermission.and.returnValue(false);
-    auth.firstAvailableRoute.and.returnValue('/pracownicy');
+    auth.firstAvailableRoute.and.returnValue('/employees');
     const result = TestBed.runInInjectionContext(() =>
       PermissionGuard(routeWithPermission('awarie'), state),
     );
     expect(result instanceof UrlTree).toBe(true);
     const tree = result as UrlTree;
-    expect(tree.toString()).toContain('/pracownicy');
+    expect(tree.toString()).toContain('/employees');
     expect(tree.queryParams['error']).toBe('no_permission');
   });
 });

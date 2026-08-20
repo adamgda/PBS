@@ -47,8 +47,8 @@ export class SettingsComponent {
   readonly activeTab = signal<'users' | 'alerts'>('users');
   readonly sections = PERMISSION_SECTIONS;
   // Role są predefiniowane: z Ustawień tworzone są wyłącznie konta Administratora.
-  // Super Administratorzy nie są tworzeni z tego poziomu, a pracownicy (rola „użytkownik\")
-  // otrzymują konta automatycznie w zakładce Pracownicy (dostęp: awaria + raportowanie).
+  // Konto super_admin jest seedowane i nie jest tworzone z tego poziomu. Pracownicy
+  // nie posiadają kont — są wyłącznie zasobem zarządzanym w sekcji Pracownicy.
   readonly roles: { value: UserRole; labelKey: string }[] = [
     { value: 'admin', labelKey: 'ustawienia.roles.admin' },
   ];

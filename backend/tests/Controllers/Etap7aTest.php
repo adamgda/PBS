@@ -12,13 +12,9 @@ use App\Repository\EmployeeRepository;
 use App\Repository\EmployeeVacationRepository;
 use App\Repository\InvoiceRepository;
 use App\Repository\OrderRepository;
-use App\Repository\PasswordResetRepository;
-use App\Repository\UserRepository;
 use App\Services\EmployeeService;
 use App\Services\FileUploadService;
 use App\Services\InvoiceService;
-use App\Services\MailService;
-use App\Services\UserService;
 use App\Services\VirusScannerInterface;
 use PDO;
 use Mockery as m;
@@ -40,26 +36,6 @@ beforeEach(function (): void {
     $this->orderRepository->shouldReceive('currentRolesByDate')->byDefault()->andReturn([]);
     $this->vacationRepository->shouldReceive('findOnLeaveEmployeeIds')->byDefault()->andReturn([]);
 
-    $this->employeeUserRepository = m::mock(UserRepository::class, [$pdo]);
-    $this->employeePasswordResetRepository = m::mock(PasswordResetRepository::class, [$pdo]);
-    $mailService = m::mock(MailService::class);
-    $mailService->shouldReceive('sendPasswordResetEmail')->byDefault();
-    $this->employeeUserRepository->shouldReceive('findByEmail')->byDefault()->andReturnNull();
-    $this->employeeUserRepository->shouldReceive('createUser')->byDefault()->andReturn([
-        'id' => 500, 'email' => 'e@x.pl', 'role' => 'user', 'permissions' => '{}',
-        'is_active' => 1, 'must_change_password' => 1, 'created_at' => null, 'updated_at' => null,
-    ]);
-    $this->employeePasswordResetRepository->shouldReceive('createToken')->byDefault();
-
-    $this->userService = new UserService(
-        $this->employeeUserRepository,
-        $this->employeePasswordResetRepository,
-        $this->auditLogRepository,
-        $mailService,
-        'http://localhost:4200',
-        true,
-    );
-
     $scanner = m::mock(VirusScannerInterface::class);
     $scanner->shouldReceive('isAvailable')->byDefault()->andReturn(false);
     $fileUploadService = new FileUploadService(
@@ -77,7 +53,6 @@ beforeEach(function (): void {
         $this->rateRepository,
         $this->vacationRepository,
         $this->orderRepository,
-        $this->userService,
     );
     $this->employeeController = new EmployeeController($this->employeeService);
 
@@ -216,8 +191,8 @@ it('settlement applies period filter (1-15)', function (): void {
 
 it('settlementByPort returns per-port rows plus total', function (): void {
     $this->orderRepository->shouldReceive('settlementDetail')->with('2026-02', 'all')->andReturn([
-        ['employee_id' => 1, 'data_zlecenia' => '2026-02-03', 'godziny' => 8, 'terminal_id' => 1, 'rola' => 'operator'],
-        ['employee_id' => 2, 'data_zlecenia' => '2026-02-04', 'godziny' => 4, 'terminal_id' => 2, 'rola' => 'brygadzista'],
+        ['employee_id' => 1, 'data_zlecenia' => '2026-02-03', 'godziny' => 8, 'terminal_id' => 1, 'rola' => 'operator', 'terminal_nazwa' => 'BCT'],
+        ['employee_id' => 2, 'data_zlecenia' => '2026-02-04', 'godziny' => 4, 'terminal_id' => 2, 'rola' => 'brygadzista', 'terminal_nazwa' => 'DCT'],
     ]);
     $this->rateRepository->shouldReceive('findAllByEmployeeIds')->with([1, 2])->andReturn([
         1 => [['id' => 1, 'employee_id' => 1, 'stawka_godzinowa' => 50, 'data_od' => '2026-01-01', 'data_do' => null, 'created_at' => null, 'updated_at' => null]],
@@ -227,6 +202,9 @@ it('settlementByPort returns per-port rows plus total', function (): void {
     $response = $this->employeeController->settlementByPort(new Request(query: ['month' => '2026-02', 'period' => 'all'], body: [], headers: []));
     expect($response->statusCode())->toBe(200);
     expect($response->data()['data'])->toHaveCount(3);
+    // Nazwy portów pochodzą z terminali (poprawka: brak „—")
+    expect($response->data()['data'][0]['terminal_nazwa'])->toBe('BCT');
+    expect($response->data()['data'][1]['terminal_nazwa'])->toBe('DCT');
     $totalRow = $response->data()['data'][2];
     expect($totalRow['terminal_nazwa'])->toBe('Razem (wszystkie porty)');
     expect($totalRow['suma_godzin'])->toBe(12.0);

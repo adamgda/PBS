@@ -13,8 +13,10 @@ import { SvgIconComponent } from '../svg-icon/svg-icon.component';
   standalone: true,
   imports: [CommonModule, SvgIconComponent],
   template: `
+    <!-- Toasty na dole po prawej — nie zasłaniają przycisków w górnym headerze
+         (przełącznik motywu), co na mobile wymuszało drugie kliknięcie. -->
     <div
-      class="fixed right-4 top-4 z-50 flex w-full max-w-sm flex-col gap-2"
+      class="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2"
       role="alert"
       aria-live="polite"
     >

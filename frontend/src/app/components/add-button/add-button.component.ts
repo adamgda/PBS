@@ -23,7 +23,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
       [disabled]="disabled"
       (click)="add.emit()"
     >
-      <app-svg-icon name="plus" />
+      <app-svg-icon name="plus" size="sm" />
       <span>{{ label | translate }}</span>
     </button>
   `,

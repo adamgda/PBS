@@ -33,8 +33,8 @@ final class UserService
         'harmonogram', 'analityka', 'raportowanie', 'ustawienia', 'awaria',
     ];
 
-    /** Dopuszczalne role. */
-    private const array ALLOWED_ROLES = ['super_admin', 'admin', 'user'];
+    /** Dopuszczalne role (kont dostępu do aplikacji — tylko administratorzy). */
+    private const array ALLOWED_ROLES = ['super_admin', 'admin'];
 
     private const int RESET_TOKEN_TTL_MINUTES = 60;
 
@@ -104,8 +104,9 @@ final class UserService
             return ['error' => 'Email is too long', 'code' => 422];
         }
         // Role są predefiniowane: z zarządzania użytkownikami (Ustawienia) można
-        // tworzyć wyłącznie konta Administratora. Super Administratorzy oraz konta
-        // „użytkownik" (pracownicy) nie są tworzone z tego poziomu.
+        // tworzyć wyłącznie konta Administratora. Konto super_admin jest seedowane
+        // i nie jest tworzone z tego poziomu. Pracownicy nie posiadają kont — są
+        // wyłącznie zasobem zarządzanym w sekcji Pracownicy.
         if ($role !== 'admin') {
             return ['error' => 'Only admin accounts can be created here', 'code' => 422];
         }
@@ -140,65 +141,6 @@ final class UserService
             'user',
             $userId,
             ['email' => $email, 'role' => 'admin'],
-        );
-
-        $dto = $this->toDto($user);
-        if ($this->debug) {
-            $dto['set_password_url'] = rtrim($this->frontendBaseUrl, '/') . '/set-password?token=' . $token;
-        }
-
-        return $dto;
-    }
-
-    /**
-     * Tworzy konto użytkownika dla pracownika (rola 'user') z predefiniowanym,
-     * ograniczonym dostępem — wyłącznie sekcje „awaria" oraz „raportowanie"
-     * (raportowanie obsługi codziennej OC, Etap 20). Konto otrzymuje e-mail
-     * z linkiem do ustawienia hasła (status „zaproszony" do pierwszego logowania).
-     *
-     * @return array<string, mixed>|array{error: string, code: int}
-     */
-    public function createEmployeeAccount(string $email, Request $request): array
-    {
-        $email = trim($email);
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return ['error' => 'Invalid email', 'code' => 422];
-        }
-        if (strlen($email) > 255) {
-            return ['error' => 'Email is too long', 'code' => 422];
-        }
-
-        $existing = $this->userRepository->findByEmail($email);
-        if ($existing !== null) {
-            return ['error' => 'Email already registered', 'code' => 409];
-        }
-
-        // Predefiniowane uprawnienia pracownika: zgłaszanie awarii + raportowanie obsługi.
-        $permissions = $this->normalizePermissions([]);
-        $permissions['awaria'] = true;
-        $permissions['raportowanie'] = true;
-
-        $placeholderHash = bin2hex(random_bytes(32));
-
-        $user = $this->userRepository->createUser([
-            'email' => $email,
-            'password_hash' => $placeholderHash,
-            'role' => 'user',
-            'permissions' => json_encode($permissions, JSON_THROW_ON_ERROR),
-            'is_active' => true,
-            'must_change_password' => true,
-        ]);
-
-        $userId = $this->toInt($user['id'] ?? 0);
-
-        $token = $this->issueSetPasswordInvite($userId, $email);
-        $this->auditLogRepository->logFromRequest(
-            $this->toInt($request->attribute('user_id')),
-            'employee_account_created',
-            $request,
-            'user',
-            $userId,
-            ['email' => $email, 'role' => 'user'],
         );
 
         $dto = $this->toDto($user);

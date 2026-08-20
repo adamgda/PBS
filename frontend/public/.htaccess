@@ -1,0 +1,43 @@
+# PBS Frontend — Angular SPA (Apache / mod_rewrite)
+#
+# SPA fallback: wszystkie nieistniejące ścieżki → index.html.
+# Bez tego twarde odświeżenie (Ctrl+Shift+R) na trasie typu /pracownicy
+# zwraca 404, bo Apache szuka fizycznego pliku o tej nazwie.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Jeżeli brakuje konkretnego pliku statycznego (js/css/obrazki/fonty),
+    # zwróć 404 zamiast kierować do index.html. Serwowanie HTML-a pod ścieżką
+    # .js wywołuje błąd przeglądarki „Failed to load module script" (zły MIME).
+    # Istniejące pliki omija to (warunek !-f), więc zwykłe assety działają normalnie.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_URI} \.(?:js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|avif|woff2?|ttf|otf)$ [NC]
+    RewriteRule ^ - [L,R=404]
+
+    # Nie przekierowuj istniejących plików i katalogów (np. statyczne assety)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # SPA fallback — wszystko inne trafia do index.html
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# === Service worker (ngsw) — nie buforuj, żeby aktualizacje działały ===
+<IfModule mod_headers.c>
+    <FilesMatch "^(ngsw\.json|ngsw-worker\.js)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
+
+# === Statyczne pliki z hashem — długi cache (nazwy są hashowane, więc bezpieczne) ===
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>

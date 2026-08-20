@@ -177,7 +177,7 @@ describe('AuthService', () => {
       ...USER,
       permissions: { dashboard: false, pracownicy: true, sprzet: true },
     });
-    expect(service.firstAvailableRoute()).toBe('/pracownicy');
+    expect(service.firstAvailableRoute()).toBe('/employees');
   });
 
   it('firstAvailableRoute() daje super_admin dostęp do dashboard', () => {

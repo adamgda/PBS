@@ -2,7 +2,7 @@
  * Modele danych sekcji Ustawienia → Użytkownicy (frontend PBS).
  */
 
-export type UserRole = 'super_admin' | 'admin' | 'user';
+export type UserRole = 'super_admin' | 'admin';
 
 /** Dopuszczalne sekcje uprawnień (zgodne z menu PBS oraz backendem). */
 export const PERMISSION_SECTIONS = [

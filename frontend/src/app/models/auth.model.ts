@@ -22,7 +22,7 @@ export interface LoginResponse extends AuthTokens {
 export interface AuthUser {
   id: number;
   email: string;
-  role: 'super_admin' | 'admin' | 'user';
+  role: 'super_admin' | 'admin';
   permissions: Record<string, boolean>;
   is_active: boolean;
 }

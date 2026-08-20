@@ -26,6 +26,8 @@ use App\Repository\OrderRepository;
  * - Anonimizacja danych osobowych przy usuwaniu (RODO — prawo do bycia zapomnianym).
  * - Audit log dla każdej akcji mutującej.
  * - Detekcja wygaśnięcia dokumentów (30 dni przed = alert).
+ * - Pracownicy są zasobem (jak terminale/sprzęt) — nie otrzymują konta użytkownika
+ *   ani loginu do aplikacji. Adres e-mail jest polem opcjonalnym (dane kontaktowe).
  */
 final class EmployeeService
 {
@@ -44,7 +46,6 @@ final class EmployeeService
         private readonly EmployeeRateRepository $rateRepository,
         private readonly EmployeeVacationRepository $vacationRepository,
         private readonly OrderRepository $orderRepository,
-        private readonly UserService $userService,
     ) {}
 
     /**
@@ -254,13 +255,9 @@ final class EmployeeService
 
         $this->auditLog($request, 'employee_created', $this->toInt($employee['id'] ?? 0));
 
-        // Nowy pracownik z adresem e-mail otrzymuje konto użytkownika (rola 'user')
-        // z ograniczonym dostępem (awaria + raportowanie obsługi) oraz link do
-        // ustawienia hasła wysyłany na jego adres e-mail.
-        if ($email !== null) {
-            $this->userService->createEmployeeAccount($email, $request);
-        }
-
+        // Pracownicy są zasobem (jak terminale czy sprzęt) — nie otrzymują konta
+        // użytkownika ani loginu do aplikacji. Adres e-mail jest wyłącznie danymi
+        // kontaktowymi (pole opcjonalne) i nie generuje konta ani wysyłki hasła.
         return $this->toDto($employee);
     }
 
@@ -762,7 +759,7 @@ final class EmployeeService
             if (!array_key_exists($termId, $ports)) {
                 $ports[$termId] = [
                     'terminal_id' => $termId,
-                    'terminal_nazwa' => null,
+                    'terminal_nazwa' => $this->nullableString($row['terminal_nazwa'] ?? null),
                     'liczba_pracownikow' => 0,
                     'suma_godzin' => 0.0,
                     'suma_wynagrodzen' => 0.0,

@@ -24,6 +24,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
 import { KpiCardComponent, KpiTone } from '../../components/kpi-card/kpi-card.component';
 import { DashboardSummary, DashboardAlerts, DashboardCharts } from '../../models/dashboard.model';
+import { ButtonComponent } from "../../components/button/button.component";
 
 interface KpiDatum {
   label: string;
@@ -128,7 +129,8 @@ const ACTIVITY_META: Record<string, { label: string; badge: string }> = {
     SvgIconComponent,
     KpiCardComponent,
     NgApexchartsModule,
-  ],
+    ButtonComponent
+],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.component.html',
 })
@@ -158,7 +160,7 @@ export class DashboardComponent {
   userName(): string {
     const email = this.authService.currentUser?.email ?? '';
     const name = email.split('@')[0] ?? '';
-    return (name.charAt(0).toUpperCase() + name.slice(1)) || 'Użytkowniku';
+    return (name.charAt(0) + name.slice(1)) || 'Użytkowniku';
   }
 
   go(route: string): void {
@@ -233,9 +235,9 @@ export class DashboardComponent {
 
   shortcuts(): ShortcutDatum[] {
     return [
-      { key: 'dashboard.shortcuts.report_incident', icon: 'awaria', route: '/awaria' },
+      { key: 'dashboard.shortcuts.report_incident', icon: 'awaria', route: '/incidents/new' },
       { key: 'dashboard.shortcuts.create_report', icon: 'reporting', route: '/reporting' },
-      { key: 'dashboard.shortcuts.add_order', icon: 'harmonogram', route: '/harmonogram' },
+      { key: 'dashboard.shortcuts.add_order', icon: 'harmonogram', route: '/schedule/new' },
     ];
   }
 

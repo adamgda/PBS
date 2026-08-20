@@ -61,14 +61,14 @@ export class AppComponent {
 
   readonly menuItems = [
     { path: '/dashboard', label: 'common.menu.dashboard', permission: 'dashboard', icon: 'dashboard' },
-    { path: '/pracownicy', label: 'common.menu.pracownicy', permission: 'pracownicy', icon: 'pracownicy' },
-    { path: '/sprzet', label: 'common.menu.sprzet', permission: 'sprzet', icon: 'sprzet' },
-    { path: '/terminale', label: 'common.menu.terminale', permission: 'terminale', icon: 'terminale' },
-    { path: '/harmonogram', label: 'common.menu.harmonogram', permission: 'harmonogram', icon: 'harmonogram' },
+    { path: '/employees', label: 'common.menu.pracownicy', permission: 'pracownicy', icon: 'pracownicy' },
+    { path: '/equipment', label: 'common.menu.sprzet', permission: 'sprzet', icon: 'sprzet' },
+    { path: '/terminals', label: 'common.menu.terminale', permission: 'terminale', icon: 'terminale' },
+    { path: '/schedule', label: 'common.menu.harmonogram', permission: 'harmonogram', icon: 'harmonogram' },
     { path: '/analytics', label: 'common.menu.analytics', permission: 'analityka', icon: 'analytics' },
     { path: '/reporting', label: 'common.menu.reporting', permission: 'raportowanie', icon: 'reporting' },
-    { path: '/awaria', label: 'common.menu.awaria', permission: 'awaria', icon: 'awaria' },
-    { path: '/logi-audytowe', label: 'common.menu.logi_audytowe', permission: 'super_admin', icon: 'history' },
+    { path: '/incidents', label: 'common.menu.awaria', permission: 'awaria', icon: 'awaria' },
+    { path: '/audit-logs', label: 'common.menu.logi_audytowe', permission: 'super_admin', icon: 'history' },
     { path: '/settings', label: 'common.menu.ustawienia', permission: 'ustawienia', icon: 'settings' },
   ];
 

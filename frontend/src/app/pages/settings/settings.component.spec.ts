@@ -105,7 +105,7 @@ describe('SettingsComponent', () => {
     const values = component.roles.map((r) => r.value);
     expect(values).toEqual(['admin']);
     expect(values).not.toContain('super_admin');
-    expect(values).not.toContain('user');
+    expect(values).not.toContain('user' as never);
   });
 
   it('powinien zablokować tworzenie dla pustego e-maila', () => {
@@ -153,7 +153,7 @@ describe('SettingsComponent', () => {
     expect(component.isSelf(self)).toBe(true);
     expect(component.canManage(self)).toBe(false);
 
-    const other = { id: 2, email: 'x@pbs.local', role: 'user' as const, permissions: {} as never, is_active: true, must_change_password: false, created_at: null, updated_at: null };
+    const other = { id: 2, email: 'x@pbs.local', role: 'admin' as const, permissions: {} as never, is_active: true, must_change_password: false, created_at: null, updated_at: null };
     expect(component.canManage(other)).toBe(true);
   });
 
@@ -161,9 +161,9 @@ describe('SettingsComponent', () => {
     const { component } = create();
     flushList();
 
-    const active = { id: 1, email: 'a', role: 'user' as const, permissions: {} as never, is_active: true, must_change_password: false, created_at: null, updated_at: null };
-    const invited = { id: 2, email: 'b', role: 'user' as const, permissions: {} as never, is_active: true, must_change_password: true, created_at: null, updated_at: null };
-    const blocked = { id: 3, email: 'c', role: 'user' as const, permissions: {} as never, is_active: false, must_change_password: false, created_at: null, updated_at: null };
+    const active = { id: 1, email: 'a', role: 'admin' as const, permissions: {} as never, is_active: true, must_change_password: false, created_at: null, updated_at: null };
+    const invited = { id: 2, email: 'b', role: 'admin' as const, permissions: {} as never, is_active: true, must_change_password: true, created_at: null, updated_at: null };
+    const blocked = { id: 3, email: 'c', role: 'admin' as const, permissions: {} as never, is_active: false, must_change_password: false, created_at: null, updated_at: null };
 
     expect(component.isActive(active)).toBe(true);
     expect(component.isInvited(invited)).toBe(true);

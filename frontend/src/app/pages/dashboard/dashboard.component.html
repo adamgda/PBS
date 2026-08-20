@@ -67,7 +67,7 @@
     }
   </div>
 
-  <!-- ===== Wykresy: area + donut ===== -->
+  <!-- ===== Wykresy: area + donut (renderowane po załadowaniu danych z API) ===== -->
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
     <div class="app-card p-5 lg:col-span-2">
       <div class="mb-4 flex items-start justify-between gap-3">
@@ -85,19 +85,21 @@
           ></span>{{ areaTrend() >= 0 ? '+' : '' }}{{ areaTrend() }}%
         </span>
       </div>
-      <apx-chart
-        [chart]="area().chart"
-        [series]="area().series"
-        [xaxis]="area().xaxis"
-        [yaxis]="area().yaxis"
-        [stroke]="area().stroke"
-        [fill]="area().fill"
-        [grid]="area().grid"
-        [dataLabels]="area().dataLabels"
-        [tooltip]="area().tooltip"
-        [legend]="area().legend"
-        [colors]="area().colors"
-      />
+      @if (charts()) {
+        <apx-chart
+          [chart]="area().chart"
+          [series]="area().series"
+          [xaxis]="area().xaxis"
+          [yaxis]="area().yaxis"
+          [stroke]="area().stroke"
+          [fill]="area().fill"
+          [grid]="area().grid"
+          [dataLabels]="area().dataLabels"
+          [tooltip]="area().tooltip"
+          [legend]="area().legend"
+          [colors]="area().colors"
+        />
+      }
     </div>
 
     <div class="app-card p-5">
@@ -105,18 +107,20 @@
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.charts.donut_title' | translate }}</h2>
         <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.charts.donut_subtitle' | translate }}</p>
       </div>
-      <apx-chart
-        [chart]="donut().chart"
-        [series]="donut().series"
-        [labels]="donut().labels"
-        [colors]="donut().colors"
-        [legend]="donut().legend"
-        [plotOptions]="donut().plotOptions"
-        [dataLabels]="donut().dataLabels"
-        [stroke]="donut().stroke"
-        [tooltip]="donut().tooltip"
-        [responsive]="donut().responsive"
-      />
+      @if (charts()) {
+        <apx-chart
+          [chart]="donut().chart"
+          [series]="donut().series"
+          [labels]="donut().labels"
+          [colors]="donut().colors"
+          [legend]="donut().legend"
+          [plotOptions]="donut().plotOptions"
+          [dataLabels]="donut().dataLabels"
+          [stroke]="donut().stroke"
+          [tooltip]="donut().tooltip"
+          [responsive]="donut().responsive"
+        />
+      }
     </div>
   </div>
 
@@ -127,19 +131,21 @@
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.charts.bar_title' | translate }}</h2>
         <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.charts.bar_subtitle' | translate }}</p>
       </div>
-      <apx-chart
-        [chart]="bar().chart"
-        [series]="bar().series"
-        [xaxis]="bar().xaxis"
-        [yaxis]="bar().yaxis"
-        [plotOptions]="bar().plotOptions"
-        [colors]="bar().colors"
-        [fill]="bar().fill"
-        [grid]="bar().grid"
-        [dataLabels]="bar().dataLabels"
-        [tooltip]="bar().tooltip"
-        [legend]="bar().legend"
-      />
+      @if (charts()) {
+        <apx-chart
+          [chart]="bar().chart"
+          [series]="bar().series"
+          [xaxis]="bar().xaxis"
+          [yaxis]="bar().yaxis"
+          [plotOptions]="bar().plotOptions"
+          [colors]="bar().colors"
+          [fill]="bar().fill"
+          [grid]="bar().grid"
+          [dataLabels]="bar().dataLabels"
+          [tooltip]="bar().tooltip"
+          [legend]="bar().legend"
+        />
+      }
     </div>
 
     <div class="app-card flex flex-col p-5">
@@ -162,15 +168,6 @@
           </li>
         }
       </ul>
-      <div class="mt-auto pt-4">
-        <button
-          type="button"
-          routerLink="/awaria"
-          class="w-full rounded-lg bg-pbs-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-pbs-navy-600"
-        >
-          {{ 'common.menu.awaria' | translate }}
-        </button>
-      </div>
     </div>
   </div>
 

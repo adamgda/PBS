@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Dokumentacja Techniczna
 
-> **Wersja dokumentu:** 1.6  
-> **Data:** 2026-08-17  
+> **Wersja dokumentu:** 1.8  
+> **Data:** 2026-08-20  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -101,12 +101,16 @@ PBS/
 ├── .gitignore
 ├── README.md
 ├── skills-lock.json              # Konfiguracja skills AI
+├── scripts/                      # Skrypty build/deploy (build-all.sh, build-backend.sh, deploy-backend.sh)
+├── dist/                         # Wynik builda — gotowe do uploadu (backend/, frontend/, *.tar.gz)
 ├── docs/
 │   ├── technical-documentation.md
 │   └── implementation-roadmap.md  # Plan wdrożenia z etapami do odznaczania
 ├── backend/
-│   ├── .env                      # Zmienne środowiskowe (DATABASE_HOST, DATABASE_NAME, DATABASE_LOGIN, DATABASE_PASSWORD)
-│   ├── public/                   # Document root (index.php)
+│   ├── .env                      # Zmienne środowiskowe (czytane przez aplikację)
+│   ├── .env.production           # Wzorzec konfiguracji produkcyjnej (kopiowany do .env przez build)
+│   ├── public/                   # Document root (index.php + .htaccess — front controller)
+│   ├── deploy/                   # Konfiguracja serwera (nginx-https.conf)
 │   ├── src/
 │   │   ├── Controllers/          # Kontrolery REST API
 │   │   ├── Models/               # Modele danych / Entity
@@ -119,6 +123,8 @@ PBS/
 │   ├── seeds/                    # Seedery danych
 │   └── tests/                    # Testy PHP (PHPUnit / Pest)
 ├── frontend/
+│   ├── public/                   # Statyczne assety + .htaccess (SPA fallback)
+│   ├── deploy/                   # Konfiguracja serwera (nginx-https.conf)
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── components/       # Współdzielone komponenty
@@ -129,7 +135,7 @@ PBS/
 │   │   │   ├── directives/       # Dyrektywy Angular
 │   │   │   └── pipes/            # Pipe'y transformujące
 │   │   ├── assets/               # Grafiki, ikony, style globalne
-│   │   └── environments/         # Konfiguracja środowisk
+│   │   └── environments/         # Konfiguracja środowisk (environment.ts, environment.prod.ts)
 │   ├── angular.json
 │   ├── package.json
 │   └── tailwind.config.js
@@ -555,7 +561,8 @@ Backend oparty na architekturze REST API z warstwami:
 ### 7.3 Autoryzacja
 
 - JWT (JSON Web Token) — token dostępowy + refresh token
-- Role: `super_admin` (konto główne) + custom roles z per-sekcja uprawnieniami
+- JWT (JSON Web Token) — token dostępowy + refresh token
+- Role: wyłącznie `super_admin` (konto główne, seedowane) oraz `admin` (konta tworzone w Ustawienia → Użytkownicy). **Pracownicy nie posiadają kont ani dostępu do aplikacji** — są zasobem zarządzanym w sekcji Pracownicy.
 - Uprawnienia per sekcja: `dashboard`, `pracownicy`, `sprzet`, `terminale`, `harmonogram`, `analityka`, `raportowanie`, `ustawienia`, `awaria`
 
 **Jedno źródło prawdy (back-end):** `PermissionMiddleware` weryfikuje uprawnienia **z bazy danych** (odczyt `users.permissions` po `user_id`), a nie z claima JWT. Dzięki temu backend zawsze egzekwuje *aktualne* uprawnienia — zmiana uprawnień w adminie obowiązuje natychmiast (eliminacja problemu „stale token", czyli rozjazdu między uprawnieniami we froncie a backendem).
@@ -591,11 +598,13 @@ Request → CORS Middleware → Auth Middleware → Permission Middleware
 | id | INT UNSIGNED AUTO_INCREMENT PK | |
 | email | VARCHAR(255) UNIQUE | Email użytkownika |
 | password_hash | VARCHAR(255) | Hash hasła (bcrypt/argon2) |
-| role | ENUM('super_admin', 'admin', 'user') | Rola |
+| role | ENUM('super_admin', 'admin', 'user') | Rola (aplikacyjnie: wyłącznie `super_admin`/`admin`) |
 | permissions | JSON | Uprawnienia per sekcja |
 | is_active | BOOLEAN | Czy konto aktywne |
 | created_at | DATETIME | |
 | updated_at | DATETIME | |
+
+> **Uwaga:** Pracownicy (tabela `employees`) **nie posiadają kont** w `users` i nie mają dostępu do aplikacji. Dostęp mają wyłącznie konta `super_admin` i `admin` tworzone w Ustawienia → Użytkownicy. Rola `user` nie jest już tworzona przez żaden przepływ.
 
 #### 8.1.2 Pracownicy (`employees`)
 
@@ -604,8 +613,8 @@ Request → CORS Middleware → Auth Middleware → Permission Middleware
 | id | INT UNSIGNED AUTO_INCREMENT PK | |
 | imie | VARCHAR(100) | |
 | nazwisko | VARCHAR(100) | |
-| telefon | VARCHAR(20) | |
-| email | VARCHAR(255) | |
+| telefon | VARCHAR(20) NULLABLE | Opcjonalne (dane kontaktowe) |
+| email | VARCHAR(255) NULLABLE | Opcjonalne (dane kontaktowe) — nie generuje konta ani hasła |
 | current_terminal_id | INT UNSIGNED FK → terminals.id | NULLABLE |
 | current_sprzet_id | INT UNSIGNED FK → equipment.id | NULLABLE |
 | is_active | BOOLEAN | |
@@ -1026,6 +1035,7 @@ Frontend (Angular) dodatkowo:
 
 ### 10.2 Pracownicy
 
+- **Koncepcja:** pracownicy są zasobem (jak terminale czy sprzęt) — **nie posiadają kont ani dostępu do aplikacji**. Pole **e-mail jest opcjonalne** (wyłącznie dane kontaktowe) i nie generuje konta użytkownika ani wysyłki linku do ustawienia hasła. Konta dostępu tworzy się wyłącznie w Ustawienia → Użytkownicy.
 - Widok: tabela z filtrowaniem (imię, nazwisko, terminal, sprzęt, rola dnia, status urlopu) + wersja mobilna jako karty
 - Akcje: dodaj, edytuj, usuń, szybkie przypisanie terminala/sprzętu, zmiana stawki, zarządzanie urlopami
 - Podstrona edycji: dane podstawowe + zakładka "Certyfikaty i uprawnienia"
@@ -1144,9 +1154,10 @@ Frontend (Angular) dodatkowo:
 
 ### 10.8 Ustawienia
 
-- Zarządzanie użytkownikami: tworzenie (email z linkiem do ustawienia hasła), edycja uprawnień, blokowanie
+- Zarządzanie użytkownikami: tworzenie **wyłącznie kont Administratora** (email z linkiem do ustawienia hasła), edycja uprawnień, blokowanie. Super Administrator jest seedowany i nie jest tworzony z tego poziomu
 - Zarządzanie alertami: konfiguracja e-maili odbiorców, typów alertów, harmonogramów wysyłki
 - Dostęp: tylko `super_admin`
+- Pracownicy nie występują tutaj — nie posiadają kont; ich dane (w tym opcjonalny e-mail) zarządzane są w sekcji Pracownicy
 
 ### 10.9 Awaria!
 
@@ -1195,6 +1206,8 @@ Frontend (Angular) dodatkowo:
 | DELETE | `/api/v1/users/{id}` | Usunięcie użytkownika |
 
 ### 11.3 Pracownicy
+
+> Pracownicy są zasobem — nie posiadają kont ani dostępu do aplikacji. Pole `email` jest **opcjonalne** i służy wyłącznie jako dane kontaktowe (nie tworzy konta ani nie wysyła linku do hasła).
 
 | Metoda | Endpoint | Opis |
 |---|---|---|
@@ -1382,7 +1395,7 @@ Przykładowe interfejsy TypeScript dla kluczowych encji:
 export interface User {
   id: number;
   email: string;
-  role: 'super_admin' | 'admin' | 'user';
+  role: 'super_admin' | 'admin';
   permissions: Record<string, boolean>;
   is_active: boolean;
 }
@@ -1801,14 +1814,15 @@ Aplikacja deklaruje "offline-first" w założeniach — musi być zrealizowana p
 | Środowisko | Cel | URL |
 |---|---|---|
 | Development | Lokalny development | `http://localhost:4200` (frontend) + `http://localhost:8080` (backend) |
-| Staging | Testy QA / UAT | `https://staging.pbs.example.com` |
-| Production | Produkcja | `https://app.pbs.example.com` |
+| Production | Produkcja | `https://pbs.adammz.pl` (frontend) + `https://pbs-api.adammz.pl` (backend) |
 
-### 15.1 Konfiguracja domen w plikach `.env`
+### 15.1 Konfiguracja domen
 
-Domeny, na których działają aplikacja frontendowa i backend API, są konfigurowane w plikach `.env` — **nie są hardcodowane w kodzie**. Pozwala to na łatwe przełączanie między środowiskami (dev/staging/production) bez zmian w kodzie.
+Domeny są konfigurowane **osobno** dla backendu i frontendu — nie są hardcodowane w kodzie (poza wartościami domyślnymi w plikach środowisk).
 
-#### `backend/.env`
+#### Backend — `backend/.env`
+
+Backend czyta konfigurację z pliku **`backend/.env`** (wczytywanego przez `Config::fromEnvFile(__DIR__ . '/../.env')`). Plik **`.env.production` jest wzorcem** konfiguracji produkcyjnej — nie jest czytany bezpośrednio przez aplikację, lecz kopiowany do `.env` przez skrypt build (patrz 15.3).
 
 ```env
 # === Baza danych ===
@@ -1818,9 +1832,9 @@ DATABASE_LOGIN=...
 DATABASE_PASSWORD=...
 
 # === Domeny ===
-API_BASE_URL=https://api.pbs.pl          # Domena backend API (z protokołem, bez końcowego /)
-FRONTEND_BASE_URL=https://app.pbs.pl      # Domena frontend (do linków w e-mailach, CORS)
-CORS_ALLOWED_ORIGINS=https://app.pbs.pl   # Dozwolone originy dla CORS (oddzielone przecinkiem)
+API_BASE_URL=https://pbs-api.adammz.pl   # Domena backend API (z protokołem, bez końcowego /)
+FRONTEND_BASE_URL=https://pbs.adammz.pl   # Domena frontend (do linków w e-mailach, CORS)
+CORS_ALLOWED_ORIGINS=https://pbs.adammz.pl # Dozwolone originy dla CORS (oddzielone przecinkiem)
 
 # === JWT ===
 JWT_SECRET=...                            # Klucz tajny do podpisywania tokenów
@@ -1828,17 +1842,66 @@ JWT_ACCESS_TTL=900                        # Czas życia access tokena (sekundy) 
 JWT_REFRESH_TTL=604800                     # Czas życia refresh tokena (sekundy) — 7 dni
 ```
 
-#### `frontend/.env`
+#### Frontend — `frontend/src/environments/environment.prod.ts`
 
-```env
-# === Domeny i endpointy ===
-API_BASE_URL=https://api.pbs.pl/api/v1     # Pełny adres API, z którego frontend pobiera dane
-FRONTEND_BASE_URL=https://app.pbs.pl        # Domena, na której działa frontend
+Frontend **nie używa pliku `.env`** — konfiguracja środowisk jest w plikach TypeScript (`src/environments/`). Dla builda produkcyjnego `angular.json` podmienia `environment.ts` → `environment.prod.ts` (mechanizm `fileReplacements`). Kluczowe pole to **`apiUrl` — pełny, absolutny adres API** (względna ścieżka `/api/v1` działa tylko, gdy frontend i backend są na tej samej domenie).
+
+```ts
+export const environment = {
+  production: true,
+  apiUrl: 'https://pbs-api.adammz.pl/api/v1',  // pełny adres API
+  frontendUrl: 'https://pbs.adammz.pl',        // domena frontendu
+  httpTimeout: 20000,
+  httpRetryAttempts: 1,
+  cacheTtl: 60000,
+  refreshBeforeExpirySeconds: 60,
+};
 ```
+
+> **Uwaga:** `API_BASE_URL` / `FRONTEND_BASE_URL` z `backend/.env` konfigurują **backend** (CORS, linki w e-mailach) i **nie wpływają** na URL API we frontendzie. URL API frontendu pochodzi wyłącznie z `environment.prod.ts` (`apiUrl`).
 
 ### 15.2 Pliki `.env.example`
 
-W repozytorium znajdują się pliki `.env.example` (`backend/.env.example`, `frontend/.env.example`) z przykładowymi wartościami. Pliki `.env` są ignorowane przez Git (`.gitignore`) i zawierają rzeczywiste, wrażliwe dane. Przy wdrożeniu na nowe środowisko należy skopiować `.env.example` → `.env` i podmienić wartości na właściwe dla danego środowiska.
+W repozytorium znajdują się pliki `.env.example` (`backend/.env.example`) z przykładowymi wartościami. Pliki `.env` są ignorowane przez Git (`.gitignore`) i zawierają rzeczywiste, wrażliwe dane. Przy wdrożeniu na nowe środowisko należy skopiować `.env.example` → `.env` i podmienić wartości na właściwe dla danego środowiska.
+
+### 15.3 Build i wdrożenie
+
+Projekt zawiera skrypty build/deploy w `scripts/`:
+
+| Skrypt | Opis |
+|---|---|
+| `scripts/build-all.sh` | Buduje backend + frontend do `dist/` (gotowe do uploadu). Opcje: `--tar-only` (dodatkowo archiwa `.tar.gz`), `--no-env` (nie kopiuj `.env.production`), `--help` |
+| `scripts/build-backend.sh` | Buduje sam backend do `dist/backend/` (opcje jak wyżej) |
+| `scripts/deploy-backend.sh` | Wgrywa zbudowany backend na FTP przez `curl` (zmienne `FTP_HOST`, `FTP_USER`, `FTP_PASS`, opcjonalnie `FTP_REMOTE_PATH`, `FTP_USE_TLS`) |
+
+**Obsługa środowisk przy buildzie:**
+
+- **Backend:** skrypt build domyślnie kopiuje `backend/.env.production` → `dist/backend/.env`. Dzięki temu pakiet wgrywany na serwer ma konfigurację produkcyjną, a lokalny `backend/.env` (dev) pozostaje nietknięty. Użyj `--no-env`, aby pominąć kopiowanie (np. gdy nie chcesz sekretów w `dist/`).
+- **Frontend:** build produkcyjny (`ng build`) używa `environment.prod.ts` (przez `fileReplacements`). Skrypt czyści cache Angulara (`.angular/cache`) przed buildem, aby uniknąć stale bundle.
+
+**Wynik builda (`dist/`):**
+
+```
+dist/
+├── backend/            # backend PHP (document root: public/)
+│   ├── public/         # index.php + .htaccess (front controller)
+│   ├── .env            # konfiguracja produkcyjna (z .env.production)
+│   ├── src/, vendor/, ...
+├── frontend/           # zbudowana aplikacja Angular (SPA)
+│   ├── index.html
+│   └── .htaccess       # SPA fallback
+└── *.tar.gz            # opcjonalne archiwa
+```
+
+**Routing i SPA fallback (Apache / nginx):**
+
+- **Backend** to front controller — wszystkie żądania `/api/v1/*` muszą trafiać do `public/index.php`. Na Apache robi to `backend/public/.htaccess` (`RewriteRule ^ index.php [QSA,L]`); na nginx — `try_files $uri /index.php?$query_string;` (patrz `backend/deploy/nginx-https.conf`). Document root musi wskazywać na `public/`.
+- **Frontend** to SPA — wszystkie nieistniejące ścieżki muszą trafiać do `index.html` (SPA fallback), inaczej twarde odświeżenie (Ctrl+Shift+R) na trasie typu `/pracownicy` zwraca 404. Na Apache robi to `frontend/public/.htaccess` (`RewriteRule ^ index.html [L]`); na nginx — `try_files $uri $uri/ /index.html;` (patrz `frontend/deploy/nginx-https.conf`).
+
+**CORS:**
+
+- Backend obsługuje CORS w `CorsMiddleware` (whitelist z `CORS_ALLOWED_ORIGINS` w `.env`). Przy niedozwolonym originie loguje diagnostykę `[PBS][CORS] ...` do logów serwera.
+- `backend/public/.htaccess` zawiera dodatkowy fallback dla preflight (OPTIONS) z konkretnym originem (nie `*`, bo frontend używa `withCredentials: true`).
 
 ---
 
@@ -1853,4 +1916,4 @@ Projekt wykorzystuje dwa skille AI zarejestrowane w `skills-lock.json`:
 
 ---
 
-> **Koniec dokumentacji technicznej PBS v1.6**
+> **Koniec dokumentacji technicznej PBS v1.7**

@@ -130,6 +130,7 @@ export class QuickNotesWidgetComponent {
   }
 
   deleteNote(note: Note): void {
+    this.closePanel()
     void this.confirm
       .confirm({
         title: this.t('notatki.confirm.delete_title'),
@@ -147,6 +148,7 @@ export class QuickNotesWidgetComponent {
   }
 
   clearAll(): void {
+    this.closePanel()
     void this.confirm
       .confirm({
         title: this.t('notatki.confirm.clear_all_title'),
@@ -164,6 +166,7 @@ export class QuickNotesWidgetComponent {
   }
 
   clearDone(): void {
+    this.closePanel()
     void this.confirm
       .confirm({
         title: this.t('notatki.confirm.clear_done_title'),

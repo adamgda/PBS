@@ -39,7 +39,8 @@
   }
 </div>
 
-<!-- Wykresy -->
+<!-- Wykresy — renderowane dopiero po załadowaniu danych (naprawa buga apx-chart przy hard refresh) -->
+@if (chartDataLoaded()) {
 <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
   <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
     <h3 class="font-semibold text-gray-800 dark:text-slate-200">{{ 'analytics.charts.terminal_load' | translate }}</h3>
@@ -93,6 +94,11 @@
     />
   </div>
 </div>
+} @else if (!loading() && !error()) {
+  <div class="mt-4 rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500">
+    {{ 'analytics.empty' | translate }}
+  </div>
+}
 
 <!-- Statystyki pracowników -->
 <div class="mt-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">

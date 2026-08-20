@@ -52,8 +52,12 @@ class EmployeeRepository extends BaseRepository
 
         $q = is_string($filters['q'] ?? null) ? trim($filters['q']) : '';
         if ($q !== '') {
-            $where[] = '(e.`imie` LIKE :q OR e.`nazwisko` LIKE :q)';
-            $params[':q'] = '%' . $q . '%';
+            // PDO z natywnymi prepared statements (ATTR_EMULATE_PREPARES=false)
+            // nie pozwala użyć tego samego nazwanego parametru dwukrotnie (HY093),
+            // dlatego używamy dwóch odrębnych parametrów :q1 i :q2.
+            $where[] = '(e.`imie` LIKE :q1 OR e.`nazwisko` LIKE :q2)';
+            $params[':q1'] = '%' . $q . '%';
+            $params[':q2'] = '%' . $q . '%';
         }
 
         $imie = is_string($filters['imie'] ?? null) ? trim($filters['imie']) : '';
@@ -111,8 +115,10 @@ class EmployeeRepository extends BaseRepository
 
         $q = is_string($filters['q'] ?? null) ? trim($filters['q']) : '';
         if ($q !== '') {
-            $where[] = '(`imie` LIKE :q OR `nazwisko` LIKE :q)';
-            $params[':q'] = '%' . $q . '%';
+            // Analogicznie jak w search(): dwa odrębne parametry zamiast :q użytego dwukrotnie.
+            $where[] = '(`imie` LIKE :q1 OR `nazwisko` LIKE :q2)';
+            $params[':q1'] = '%' . $q . '%';
+            $params[':q2'] = '%' . $q . '%';
         }
 
         $imie = is_string($filters['imie'] ?? null) ? trim($filters['imie']) : '';

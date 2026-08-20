@@ -292,9 +292,10 @@ class OrderRepository extends BaseRepository
         [$dayFrom, $dayTo] = $this->periodBounds($month, $period);
 
         $sql = 'SELECT oe.`employee_id`, DATE(o.`data_rozpoczecia`) AS data_zlecenia,
-                       oe.`godziny`, o.`terminal_id`, oe.`rola`
+                       oe.`godziny`, o.`terminal_id`, oe.`rola`, t.`nazwa` AS terminal_nazwa
                 FROM `order_employees` oe
                 INNER JOIN `orders` o ON o.`id` = oe.`order_id`
+                LEFT JOIN `terminals` t ON t.`id` = o.`terminal_id`
                 WHERE DATE(o.`data_rozpoczecia`) BETWEEN :day_from AND :day_to
                   AND oe.`employee_id` IS NOT NULL
                 ORDER BY oe.`employee_id` ASC, o.`data_rozpoczecia` ASC';

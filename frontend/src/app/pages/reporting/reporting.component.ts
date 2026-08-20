@@ -1,15 +1,16 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 import { ReportsService } from '../../services/reports.service';
 import { TerminalsService } from '../../services/terminals.service';
 import { EquipmentService } from '../../services/equipment.service';
 import { ToastService } from '../../services/toast.service';
 import { TranslateService } from '../../services/translate.service';
+import { AuthService } from '../../services/auth.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
-import { AddButtonComponent } from '../../components/add-button/add-button.component';
 import { ButtonComponent } from '../../components/button/button.component';
 import { IconButtonComponent } from '../../components/icon-button/icon-button.component';
 import { FormInputComponent } from '../../components/form-input/form-input.component';
@@ -17,23 +18,23 @@ import {
   AutocompleteSelectComponent,
   AutocompleteOption,
 } from '../../components/autocomplete-select/autocomplete-select.component';
-import { FilterBarComponent, FilterConfig } from '../../components/filter-bar/filter-bar.component';
-import {
-  DataTableComponent,
-  DataTableColumn,
-  DataTableSortEvent,
-  SortDirection,
-} from '../../components/data-table/data-table.component';
 
-import { TerminalReport, VehicleReport } from '../../models/report.model';
+import { TerminalReport, VehicleReport, TerminalReportAutoData } from '../../models/report.model';
 
-type ReportTab = 'terminal' | 'vehicle';
 type ModalMode = 'create' | 'edit' | null;
+type ModalKind = 'terminal' | 'vehicle';
+
+/** Wiersz tabeli „Ostatnie raporty" — łączy raporty terminalowe i pojazdowe. */
+interface RecentReportRow {
+  kind: 'terminal' | 'vehicle';
+  report: TerminalReport | VehicleReport;
+}
 
 /**
- * Sekcja Raportowanie (Etap 11).
- * Przełącznik typu raportu (terminal / pojazd), lista (DataTable + filtry),
- * tworzenie i edycja raportów. Raport terminalowy pokazuje auto-dane z harmonogramu.
+ * Sekcja Raportowanie (Etap 11) — widok zgodny z mockiem (other/mockup5/raportowanie.html):
+ * przełącznik typu raportu, inline formularz raportu terminalowego z podglądem auto-danych
+ * z harmonogramu (pracownicy + sprzęt + suma), tabela „Ostatnie raporty" oraz modal
+ * tworzenia raportu pojazdowego / edycji raportu.
  */
 @Component({
   selector: 'app-reporting',
@@ -43,13 +44,10 @@ type ModalMode = 'create' | 'edit' | null;
     FormsModule,
     TranslatePipe,
     SvgIconComponent,
-    AddButtonComponent,
     ButtonComponent,
     IconButtonComponent,
     FormInputComponent,
     AutocompleteSelectComponent,
-    FilterBarComponent,
-    DataTableComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reporting.component.html',
@@ -60,44 +58,7 @@ export class ReportingComponent {
   private readonly equipmentService = inject(EquipmentService);
   private readonly toastService = inject(ToastService);
   private readonly translate = inject(TranslateService);
-
-  readonly activeTab = signal<ReportTab>('terminal');
-
-  // --- Stan listy raportów terminalowych ---
-  private readonly _terminalReports = signal<TerminalReport[]>([]);
-  private readonly _terminalTotal = signal<number>(0);
-  private readonly _terminalLoading = signal<boolean>(false);
-  readonly _terminalPage = signal<number>(1);
-  readonly _terminalPerPage = signal<number>(25);
-  readonly _terminalSortKey = signal<string>('id');
-  readonly _terminalSortDirection = signal<SortDirection>('asc');
-  private readonly _terminalFilters = signal<Record<string, string>>({});
-
-  readonly terminalReports = this._terminalReports.asReadonly();
-  readonly terminalTotal = this._terminalTotal.asReadonly();
-  readonly terminalLoading = this._terminalLoading.asReadonly();
-  readonly terminalPage = this._terminalPage.asReadonly();
-  readonly terminalPerPage = this._terminalPerPage.asReadonly();
-  readonly terminalSortKey = this._terminalSortKey.asReadonly();
-  readonly terminalSortDirection = this._terminalSortDirection.asReadonly();
-
-  // --- Stan listy raportów pojazdowych ---
-  private readonly _vehicleReports = signal<VehicleReport[]>([]);
-  private readonly _vehicleTotal = signal<number>(0);
-  private readonly _vehicleLoading = signal<boolean>(false);
-  readonly _vehiclePage = signal<number>(1);
-  readonly _vehiclePerPage = signal<number>(25);
-  readonly _vehicleSortKey = signal<string>('id');
-  readonly _vehicleSortDirection = signal<SortDirection>('asc');
-  private readonly _vehicleFilters = signal<Record<string, string>>({});
-
-  readonly vehicleReports = this._vehicleReports.asReadonly();
-  readonly vehicleTotal = this._vehicleTotal.asReadonly();
-  readonly vehicleLoading = this._vehicleLoading.asReadonly();
-  readonly vehiclePage = this._vehiclePage.asReadonly();
-  readonly vehiclePerPage = this._vehiclePerPage.asReadonly();
-  readonly vehicleSortKey = this._vehicleSortKey.asReadonly();
-  readonly vehicleSortDirection = this._vehicleSortDirection.asReadonly();
+  private readonly authService = inject(AuthService);
 
   // --- Opcje autocomplete ---
   private readonly _terminalOptions = signal<AutocompleteOption[]>([]);
@@ -105,21 +66,41 @@ export class ReportingComponent {
   readonly terminalOptions = this._terminalOptions.asReadonly();
   readonly equipmentOptions = this._equipmentOptions.asReadonly();
 
-  // --- Stan modala ---
+  /** Osoba sporządzająca raport — e-mail zalogowanego użytkownika. */
+  readonly currentUserName = computed(() => this.authService.currentUser?.email ?? '');
+
+  // --- Formularz tworzenia raportu terminalowego (inline, lewa kolumna) ---
+  readonly createDate = signal<string>(this.todayDate());
+  readonly createTerminalId = signal<number | null>(null);
+  readonly createTerminalName = signal('');
+  readonly createOpis = signal('');
+  readonly createUwagi = signal('');
+  readonly createSaving = signal(false);
+
+  // --- Auto-dane z harmonogramu (podgląd, prawa kolumna) ---
+  readonly autoData = signal<TerminalReportAutoData | null>(null);
+  readonly autoTerminalName = signal('');
+  readonly autoLoading = signal(false);
+
+  // --- Ostatnie raporty (terminal + pojazd, posortowane po dacie) ---
+  private readonly _recentReports = signal<RecentReportRow[]>([]);
+  private readonly _recentLoading = signal<boolean>(false);
+  readonly recentReports = this._recentReports.asReadonly();
+  readonly recentLoading = this._recentLoading.asReadonly();
+
+  // --- Modal: tworzenie raportu pojazdowego / edycja (terminal lub pojazd) ---
   readonly modalMode = signal<ModalMode>(null);
-  readonly modalSaving = signal<boolean>(false);
+  readonly modalKind = signal<ModalKind>('vehicle');
   readonly modalReport = signal<TerminalReport | VehicleReport | null>(null);
+  readonly modalSaving = signal(false);
 
-  // Pola formularza terminala
   readonly modalTerminalId = signal<number | null>(null);
-  readonly modalDate = signal<string>('');
-  readonly modalOpis = signal<string>('');
-  readonly modalUwagi = signal<string>('');
-
-  // Pola formularza pojazdu
   readonly modalEquipmentId = signal<number | null>(null);
-  readonly modalPrzebieg = signal<string>('');
-  readonly modalPrzebiegOc = signal<string>('');
+  readonly modalDate = signal('');
+  readonly modalOpis = signal('');
+  readonly modalUwagi = signal('');
+  readonly modalPrzebieg = signal('');
+  readonly modalPrzebiegOc = signal('');
 
   /** Auto-dane z harmonogramu (tylko edycja raportu terminalowego). */
   readonly modalAutoData = computed(() => {
@@ -127,117 +108,12 @@ export class ReportingComponent {
     return r && 'auto_data' in r ? r.auto_data : undefined;
   });
 
-  readonly terminalColumns = computed<DataTableColumn<TerminalReport>[]>(() => [
-    { key: 'data_raportu', label: this.t('reporting.list.date'), sortable: true, isTitle: true },
-    { key: 'terminal_nazwa', label: this.t('reporting.list.terminal'), sortable: true },
-    { key: 'opis', label: this.t('reporting.list.opis') },
-    { key: 'utworzony_przez_email', label: this.t('reporting.list.author') },
-  ]);
-
-  readonly vehicleColumns = computed<DataTableColumn<VehicleReport>[]>(() => [
-    { key: 'data_raportu', label: this.t('reporting.list.date'), sortable: true, isTitle: true },
-    { key: 'equipment_nazwa', label: this.t('reporting.list.equipment'), sortable: true },
-    { key: 'aktualny_przebieg', label: this.t('reporting.list.przebieg'), sortable: true },
-    { key: 'przebieg_oc', label: this.t('reporting.list.przebieg_oc') },
-    { key: 'zrodlo', label: this.t('reporting.list.source') },
-    { key: 'utworzony_przez_email', label: this.t('reporting.list.author') },
-  ]);
-
-  readonly terminalFilterConfigs = computed<FilterConfig[]>(() => [
-    {
-      key: 'terminal_id',
-      label: this.t('reporting.filters.terminal'),
-      type: 'select',
-      options: this._terminalOptions().map((o) => ({ value: String(o.value), label: o.label })),
-    },
-    { key: 'date_from', label: this.t('reporting.filters.date_from'), type: 'date' },
-    { key: 'date_to', label: this.t('reporting.filters.date_to'), type: 'date' },
-  ]);
-
-  readonly vehicleFilterConfigs = computed<FilterConfig[]>(() => [
-    {
-      key: 'equipment_id',
-      label: this.t('reporting.filters.equipment'),
-      type: 'select',
-      options: this._equipmentOptions().map((o) => ({ value: String(o.value), label: o.label })),
-    },
-    { key: 'date_from', label: this.t('reporting.filters.date_from'), type: 'date' },
-    { key: 'date_to', label: this.t('reporting.filters.date_to'), type: 'date' },
-    {
-      key: 'zrodlo',
-      label: this.t('reporting.filters.source'),
-      type: 'select',
-      options: [
-        { value: 'panel', label: this.t('reporting.source.panel') },
-        { value: 'qr', label: this.t('reporting.source.qr') },
-      ],
-    },
-  ]);
-
   constructor() {
     this.loadOptions();
-    this.loadTerminalReports();
+    this.loadRecentReports();
   }
 
-  setActiveTab(tab: ReportTab): void {
-    this.activeTab.set(tab);
-    if (tab === 'terminal') {
-      this.loadTerminalReports();
-    } else {
-      this.loadVehicleReports();
-    }
-  }
-
-
-  // --- Wczytywanie list ---
-
-  private loadTerminalReports(): void {
-    this._terminalLoading.set(true);
-    this.reportsService
-      .listTerminalReports({
-        ...this._terminalFilters(),
-        sort: this._terminalSortKey(),
-        direction: this._terminalSortDirection() ?? 'asc',
-        page: this._terminalPage(),
-        per_page: this._terminalPerPage(),
-      })
-      .subscribe({
-        next: (res) => {
-          this._terminalReports.set(res.data);
-          this._terminalTotal.set(res.total);
-          this._terminalLoading.set(false);
-        },
-        error: () => {
-          this._terminalReports.set([]);
-          this._terminalTotal.set(0);
-          this._terminalLoading.set(false);
-        },
-      });
-  }
-
-  private loadVehicleReports(): void {
-    this._vehicleLoading.set(true);
-    this.reportsService
-      .listVehicleReports({
-        ...this._vehicleFilters(),
-        sort: this._vehicleSortKey(),
-        direction: this._vehicleSortDirection() ?? 'asc',
-        page: this._vehiclePage(),
-        per_page: this._vehiclePerPage(),
-      })
-      .subscribe({
-        next: (res) => {
-          this._vehicleReports.set(res.data);
-          this._vehicleTotal.set(res.total);
-          this._vehicleLoading.set(false);
-        },
-        error: () => {
-          this._vehicleReports.set([]);
-          this._vehicleTotal.set(0);
-          this._vehicleLoading.set(false);
-        },
-      });
-  }
+  // --- Inicjalizacja ---
 
   private loadOptions(): void {
     this.terminalsService.list({ per_page: 100 }).subscribe({
@@ -256,129 +132,73 @@ export class ReportingComponent {
     });
   }
 
-
-  // --- Filtry / sortowanie / paginacja (terminal) ---
-
-  onTerminalFilterApply(filters: Record<string, string>): void {
-    this._terminalFilters.set(filters);
-    this._terminalPage.set(1);
-    this.loadTerminalReports();
+  /** Ładuje połączoną listę ostatnich raportów (terminal + pojazd). */
+  private loadRecentReports(): void {
+    this._recentLoading.set(true);
+    forkJoin([
+      this.reportsService.listTerminalReports({ page: 1, per_page: 5, sort: 'data_raportu', direction: 'desc' }),
+      this.reportsService.listVehicleReports({ page: 1, per_page: 5, sort: 'data_raportu', direction: 'desc' }),
+    ]).subscribe({
+      next: ([t, v]) => {
+        const rows: RecentReportRow[] = [
+          ...t.data.map((r) => ({ kind: 'terminal' as const, report: r })),
+          ...v.data.map((r) => ({ kind: 'vehicle' as const, report: r })),
+        ];
+        rows.sort((a, b) => {
+          const da = a.report.data_raportu ?? '';
+          const db = b.report.data_raportu ?? '';
+          return db.localeCompare(da) || b.report.id - a.report.id;
+        });
+        this._recentReports.set(rows.slice(0, 5));
+        this._recentLoading.set(false);
+      },
+      error: () => {
+        this._recentReports.set([]);
+        this._recentLoading.set(false);
+      },
+    });
   }
 
-  onTerminalFilterClear(): void {
-    this._terminalFilters.set({});
-    this._terminalPage.set(1);
-    this.loadTerminalReports();
+  // --- Auto-dane z harmonogramu ---
+
+  onTerminalSelected(opt: AutocompleteOption | null): void {
+    this.createTerminalId.set(opt ? Number(opt.value) : null);
+    this.createTerminalName.set(opt ? opt.label : '');
+    this.loadAutoData();
   }
 
-  onTerminalSort(e: DataTableSortEvent): void {
-    this._terminalSortKey.set(e.key);
-    this._terminalSortDirection.set(e.direction);
-    this.loadTerminalReports();
+  onDateChange(): void {
+    this.loadAutoData();
   }
 
-  onTerminalPageChange(p: number): void {
-    this._terminalPage.set(p);
-    this.loadTerminalReports();
-  }
-
-  onTerminalPerPageChange(p: number): void {
-    this._terminalPerPage.set(p);
-    this._terminalPage.set(1);
-    this.loadTerminalReports();
-  }
-
-  // --- Filtry / sortowanie / paginacja (pojazd) ---
-
-  onVehicleFilterApply(filters: Record<string, string>): void {
-    this._vehicleFilters.set(filters);
-    this._vehiclePage.set(1);
-    this.loadVehicleReports();
-  }
-
-  onVehicleFilterClear(): void {
-    this._vehicleFilters.set({});
-    this._vehiclePage.set(1);
-    this.loadVehicleReports();
-  }
-
-  onVehicleSort(e: DataTableSortEvent): void {
-    this._vehicleSortKey.set(e.key);
-    this._vehicleSortDirection.set(e.direction);
-    this.loadVehicleReports();
-  }
-
-  onVehiclePageChange(p: number): void {
-    this._vehiclePage.set(p);
-    this.loadVehicleReports();
-  }
-
-  onVehiclePerPageChange(p: number): void {
-    this._vehiclePerPage.set(p);
-    this._vehiclePage.set(1);
-    this.loadVehicleReports();
-  }
-
-
-  // --- Modal ---
-
-  openCreate(): void {
-    this.modalMode.set('create');
-    this.modalReport.set(null);
-    this.modalTerminalId.set(null);
-    this.modalEquipmentId.set(null);
-    this.modalDate.set(new Date().toISOString().slice(0, 10));
-    this.modalOpis.set('');
-    this.modalUwagi.set('');
-    this.modalPrzebieg.set('');
-    this.modalPrzebiegOc.set('');
-  }
-
-  openEdit(report: TerminalReport | VehicleReport): void {
-    this.modalMode.set('edit');
-    this.modalReport.set(report);
-    this.modalDate.set(report.data_raportu ?? '');
-    this.modalOpis.set('opis' in report ? report.opis : '');
-    this.modalUwagi.set(report.uwagi ?? '');
-    if ('terminal_id' in report) {
-      this.modalTerminalId.set(report.terminal_id);
-      this.modalEquipmentId.set(null);
-      this.modalPrzebieg.set('');
-      this.modalPrzebiegOc.set('');
-      // Pobierz szczegóły z auto-danymi z harmonogramu.
-      this.reportsService.getTerminalReport(report.id).subscribe({
-        next: (full) => this.modalReport.set(full),
-        error: () => {},
-      });
-    } else {
-      this.modalEquipmentId.set(report.equipment_id);
-      this.modalTerminalId.set(null);
-      this.modalPrzebieg.set(String(report.aktualny_przebieg));
-      this.modalPrzebiegOc.set(report.przebieg_oc);
+  private loadAutoData(): void {
+    const id = this.createTerminalId();
+    const date = this.createDate().trim();
+    if (!id || !date) {
+      this.autoData.set(null);
+      this.autoTerminalName.set('');
+      return;
     }
+    this.autoLoading.set(true);
+    this.reportsService.getTerminalAutoData(id, date).subscribe({
+      next: (res) => {
+        this.autoData.set(res.auto_data);
+        this.autoTerminalName.set(res.terminal_nazwa ?? this.createTerminalName());
+        this.autoLoading.set(false);
+      },
+      error: () => {
+        this.autoData.set(null);
+        this.autoLoading.set(false);
+      },
+    });
   }
 
-  closeModal(): void {
-    this.modalMode.set(null);
-    this.modalReport.set(null);
-    this.modalSaving.set(false);
-  }
+  // --- Zapis raportu terminalowego (inline) ---
 
-  saveModal(): void {
-    const mode = this.modalMode();
-    if (mode === null) return;
-
-    if (this.activeTab() === 'terminal') {
-      this.saveTerminal(mode);
-    } else {
-      this.saveVehicle(mode);
-    }
-  }
-
-  private saveTerminal(mode: ModalMode): void {
-    const terminalId = this.modalTerminalId();
-    const date = this.modalDate().trim();
-    const opis = this.modalOpis().trim();
+  saveTerminal(): void {
+    const terminalId = this.createTerminalId();
+    const date = this.createDate().trim();
+    const opis = this.createOpis().trim();
     if (!terminalId) {
       this.toastService.error(this.t('reporting.messages.terminal_required'));
       return;
@@ -396,28 +216,93 @@ export class ReportingComponent {
       terminal_id: terminalId,
       data_raportu: date,
       opis,
-      uwagi: this.modalUwagi().trim() || null,
+      uwagi: this.createUwagi().trim() || null,
     };
-    const editing = this.modalReport() as TerminalReport | null;
-    this.modalSaving.set(true);
-    const request =
-      mode === 'edit' && editing
-        ? this.reportsService.updateTerminalReport(editing.id, payload)
-        : this.reportsService.createTerminalReport(payload);
-    request.subscribe({
+    this.createSaving.set(true);
+    this.reportsService.createTerminalReport(payload).subscribe({
       next: () => {
-        this.modalSaving.set(false);
-        this.closeModal();
-        this.toastService.success(
-          this.t(mode === 'edit' ? 'reporting.messages.updated.success' : 'reporting.messages.created.success'),
-        );
-        this.loadTerminalReports();
+        this.createSaving.set(false);
+        this.resetTerminalForm();
+        this.toastService.success(this.t('reporting.messages.created.success'));
+        this.loadRecentReports();
       },
       error: (err) => {
-        this.modalSaving.set(false);
+        this.createSaving.set(false);
         this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
       },
     });
+  }
+
+  private resetTerminalForm(): void {
+    this.createTerminalId.set(null);
+    this.createTerminalName.set('');
+    this.createOpis.set('');
+    this.createUwagi.set('');
+    this.createDate.set(this.todayDate());
+    this.autoData.set(null);
+    this.autoTerminalName.set('');
+  }
+
+
+  // --- Modal: pojazd (nowy) / edycja raportu ---
+
+  openVehicleCreate(): void {
+    this.modalMode.set('create');
+    this.modalKind.set('vehicle');
+    this.modalReport.set(null);
+    this.modalEquipmentId.set(null);
+    this.modalTerminalId.set(null);
+    this.modalDate.set(this.todayDate());
+    this.modalOpis.set('');
+    this.modalUwagi.set('');
+    this.modalPrzebieg.set('');
+    this.modalPrzebiegOc.set('');
+  }
+
+  openEdit(row: RecentReportRow): void {
+    const report = row.report;
+    this.modalMode.set('edit');
+    this.modalKind.set(row.kind);
+    this.modalReport.set(report);
+    this.modalDate.set(report.data_raportu ?? '');
+    this.modalUwagi.set(report.uwagi ?? '');
+
+    if (row.kind === 'terminal') {
+      const r = report as TerminalReport;
+      this.modalTerminalId.set(r.terminal_id);
+      this.modalEquipmentId.set(null);
+      this.modalOpis.set(r.opis);
+      this.modalPrzebieg.set('');
+      this.modalPrzebiegOc.set('');
+      // Pobierz szczegóły z auto-danymi z harmonogramu.
+      this.reportsService.getTerminalReport(r.id).subscribe({
+        next: (full) => this.modalReport.set(full),
+        error: () => {},
+      });
+    } else {
+      const r = report as VehicleReport;
+      this.modalEquipmentId.set(r.equipment_id);
+      this.modalTerminalId.set(null);
+      this.modalOpis.set('');
+      this.modalPrzebieg.set(String(r.aktualny_przebieg));
+      this.modalPrzebiegOc.set(r.przebieg_oc);
+    }
+  }
+
+  closeModal(): void {
+    this.modalMode.set(null);
+    this.modalReport.set(null);
+    this.modalSaving.set(false);
+  }
+
+  saveModal(): void {
+    const mode = this.modalMode();
+    if (mode === null) return;
+    if (this.modalKind() === 'vehicle') {
+      this.saveVehicle(mode);
+    } else {
+      this.saveTerminalModal(mode);
+    }
   }
 
   private saveVehicle(mode: ModalMode): void {
@@ -462,7 +347,7 @@ export class ReportingComponent {
         this.toastService.success(
           this.t(mode === 'edit' ? 'reporting.messages.updated.success' : 'reporting.messages.created.success'),
         );
-        this.loadVehicleReports();
+        this.loadRecentReports();
       },
       error: (err) => {
         this.modalSaving.set(false);
@@ -471,14 +356,72 @@ export class ReportingComponent {
     });
   }
 
-  // --- Autocomplete ---
+  private saveTerminalModal(mode: ModalMode): void {
+    const terminalId = this.modalTerminalId();
+    const date = this.modalDate().trim();
+    const opis = this.modalOpis().trim();
+    if (!terminalId) {
+      this.toastService.error(this.t('reporting.messages.terminal_required'));
+      return;
+    }
+    if (!date) {
+      this.toastService.error(this.t('reporting.messages.date_required'));
+      return;
+    }
+    if (!opis) {
+      this.toastService.error(this.t('reporting.messages.opis_required'));
+      return;
+    }
 
-  onTerminalSelected(opt: AutocompleteOption | null): void {
+    const payload = {
+      terminal_id: terminalId,
+      data_raportu: date,
+      opis,
+      uwagi: this.modalUwagi().trim() || null,
+    };
+    const editing = this.modalReport() as TerminalReport | null;
+    this.modalSaving.set(true);
+    const request =
+      mode === 'edit' && editing
+        ? this.reportsService.updateTerminalReport(editing.id, payload)
+        : this.reportsService.createTerminalReport(payload);
+    request.subscribe({
+      next: () => {
+        this.modalSaving.set(false);
+        this.closeModal();
+        this.toastService.success(
+          this.t(mode === 'edit' ? 'reporting.messages.updated.success' : 'reporting.messages.created.success'),
+        );
+        this.loadRecentReports();
+      },
+      error: (err) => {
+        this.modalSaving.set(false);
+        this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
+      },
+    });
+  }
+
+  // --- Autocomplete (modal) ---
+
+  onModalTerminalSelected(opt: AutocompleteOption | null): void {
     this.modalTerminalId.set(opt ? Number(opt.value) : null);
   }
 
-  onEquipmentSelected(opt: AutocompleteOption | null): void {
+  onModalEquipmentSelected(opt: AutocompleteOption | null): void {
     this.modalEquipmentId.set(opt ? Number(opt.value) : null);
+  }
+
+  // --- Pomocnicze ---
+
+  private todayDate(): string {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  /** Oznaczenie obiektu w tabeli „Ostatnie raporty". */
+  recentObject(row: RecentReportRow): string {
+    return row.kind === 'terminal'
+      ? ((row.report as TerminalReport).terminal_nazwa ?? '—')
+      : ((row.report as VehicleReport).equipment_nazwa ?? '—');
   }
 
   private t(key: string, params?: Record<string, string | number>): string {

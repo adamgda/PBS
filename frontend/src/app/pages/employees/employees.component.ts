@@ -15,6 +15,7 @@ import { AddButtonComponent } from '../../components/add-button/add-button.compo
 import { ButtonComponent } from '../../components/button/button.component';
 import { IconButtonComponent } from '../../components/icon-button/icon-button.component';
 import { StatusBadgeComponent } from '../../components/status-badge/status-badge.component';
+import { KpiCardComponent } from '../../components/kpi-card/kpi-card.component';
 import { PhoneLinkComponent } from '../../components/phone-link/phone-link.component';
 import { EmailLinkComponent } from '../../components/email-link/email-link.component';
 import { FormInputComponent } from '../../components/form-input/form-input.component';
@@ -27,6 +28,7 @@ import {
   DataTableSortEvent,
   SortDirection,
 } from '../../components/data-table/data-table.component';
+import { SelectComponent, SelectOption } from '../../components/select/select.component';
 
 import {
   Employee,
@@ -68,6 +70,7 @@ type QuickFilterKey = 'field' | 'available' | 'entitlements' | 'on_leave';
     ButtonComponent,
     IconButtonComponent,
     StatusBadgeComponent,
+    KpiCardComponent,
     PhoneLinkComponent,
     EmailLinkComponent,
     FormInputComponent,
@@ -75,6 +78,7 @@ type QuickFilterKey = 'field' | 'available' | 'entitlements' | 'on_leave';
     AutocompleteSelectComponent,
     DatepickerComponent,
     DataTableComponent,
+    SelectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './employees.component.html',
@@ -197,6 +201,11 @@ export class EmployeesComponent {
   readonly invoicePage = signal<number>(1);
   readonly invoicePerPage = signal<number>(25);
   readonly invoicesLoading = signal<boolean>(false);
+  readonly invoiceStatusOptions: SelectOption[] = [
+    { value: 'wystawiona', labelKey: 'pracownicy.invoices.status_issued' },
+    { value: 'zaplacona', labelKey: 'pracownicy.invoices.status_paid' },
+    { value: 'przeterminowana', labelKey: 'pracownicy.invoices.status_overdue' },
+  ];
   private readonly _missingInvoices = signal<MissingInvoiceRow[]>([]);
   readonly missingInvoices = this._missingInvoices.asReadonly();
 
@@ -229,6 +238,22 @@ export class EmployeesComponent {
     { key: 'wynagrodzenie', label: this.t('pracownicy.list.wage'), minWidth: '120px' },
     { key: 'rola_dzis', label: this.t('pracownicy.list.role_today') },
     { key: 'is_active', label: this.t('pracownicy.list.status'), sortable: true },
+  ]);
+
+  readonly settlementColumns = computed<DataTableColumn<SettlementByPortRow>[]>(() => [
+    { key: 'terminal_nazwa', label: this.t('pracownicy.settlement.port'), isTitle: true },
+    { key: 'liczba_pracownikow', label: this.t('pracownicy.settlement.employees'), width: '120px' },
+    { key: 'suma_godzin', label: this.t('pracownicy.settlement.hours'), width: '130px', formatter: (r) => `${r.suma_godzin} h` },
+    { key: 'suma_wynagrodzen', label: this.t('pracownicy.settlement.wages'), width: '150px', formatter: (r) => `${r.suma_wynagrodzen.toLocaleString('pl-PL')} PLN` },
+  ]);
+
+  readonly invoiceColumns = computed<DataTableColumn<Invoice>[]>(() => [
+    { key: 'numer_faktury', label: this.t('pracownicy.invoices.number'), isTitle: true, minWidth: '120px' },
+    { key: 'klient_nazwa', label: this.t('pracownicy.invoices.client'), minWidth: '160px' },
+    { key: 'kwota_pln', label: this.t('pracownicy.invoices.amount'), minWidth: '120px', formatter: (inv) => `${inv.kwota_pln.toLocaleString('pl-PL')} PLN` },
+    { key: 'data_wystawienia', label: this.t('pracownicy.invoices.issue_date'), minWidth: '120px' },
+    { key: 'typ_wystawienia', label: this.t('pracownicy.invoices.typ'), minWidth: '140px', formatter: (inv) => this.invoiceTypLabel(inv.typ_wystawienia) },
+    { key: 'status', label: this.t('pracownicy.invoices.status'), minWidth: '140px' },
   ]);
 
   readonly filterConfigs = computed<FilterConfig[]>(() => [
@@ -298,6 +323,18 @@ export class EmployeesComponent {
 
   closeActions(): void {
     this.openActionsId.set(null);
+  }
+
+  // --- Menu akcji wiersza Faktur (dropdown jak na pracownikach) ---
+  private readonly _openInvoiceActionsId = signal<number | null>(null);
+  readonly openInvoiceActionsId = this._openInvoiceActionsId.asReadonly();
+
+  toggleInvoiceActions(id: number): void {
+    this._openInvoiceActionsId.update((cur) => (cur === id ? null : id));
+  }
+
+  closeInvoiceActions(): void {
+    this._openInvoiceActionsId.set(null);
   }
 
   constructor() {
@@ -416,18 +453,12 @@ export class EmployeesComponent {
       return;
     }
 
-    // E-mail jest wymagany przy tworzeniu nowego pracownika — na ten adres
-    // wysyłany jest link do ustawienia hasła (konto użytkownika z ograniczonym dostępem).
-    if (mode !== 'edit') {
-      const email = this.modalEmail().trim();
-      if (!email) {
-        this.toastService.error(this.t('pracownicy.messages.email_required'));
-        return;
-      }
-      if (!this.isValidEmail(email)) {
-        this.toastService.error(this.t('pracownicy.messages.email_invalid'));
-        return;
-      }
+    // E-mail jest polem opcjonalnym (dane kontaktowe) — pracownik nie otrzymuje
+    // konta ani loginu do aplikacji. Jeśli podany, sprawdzany jest tylko jego format.
+    const email = this.modalEmail().trim();
+    if (email && !this.isValidEmail(email)) {
+      this.toastService.error(this.t('pracownicy.messages.email_invalid'));
+      return;
     }
 
     const payload: CreateEmployeeRequest = {
@@ -463,7 +494,6 @@ export class EmployeesComponent {
         this.modalSaving.set(false);
         this.closeModal();
         this.toastService.success(this.t('pracownicy.messages.created.success', { name: `${imie} ${nazwisko}` }));
-        this.toastService.info(this.t('pracownicy.messages.created.invite_sent'));
         this.load();
       },
       error: (err) => {
@@ -893,6 +923,17 @@ export class EmployeesComponent {
     });
   }
 
+  onInvoicePage(p: number): void {
+    this.invoicePage.set(p);
+    this.loadInvoices();
+  }
+
+  onInvoicePerPage(n: number): void {
+    this.invoicePerPage.set(n);
+    this.invoicePage.set(1);
+    this.loadInvoices();
+  }
+
   openAddInvoice(): void {
     this.invoiceModalMode.set('create');
     this.invoiceEditing.set(null);
@@ -1064,6 +1105,11 @@ export class EmployeesComponent {
 
   fullName(employee: Employee): string {
     return `${employee.imie} ${employee.nazwisko}`;
+  }
+
+  /** Formatowanie liczb (PL) — do wartości `app-kpi-card`, które nie używają pipe `number`. */
+  formatNumber(value: number): string {
+    return value.toLocaleString('pl-PL');
   }
 
   private loadTerminalOptions(): void {

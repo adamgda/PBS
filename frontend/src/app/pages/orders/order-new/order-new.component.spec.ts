@@ -75,7 +75,7 @@ describe('OrderNewComponent', () => {
     expect(comp.loading()).toBe(false);
   });
 
-  it('zapis w trybie edycji wysyła PUT /orders/:id i wraca do /harmonogram', () => {
+  it('zapis w trybie edycji wysyła PUT /orders/:id i wraca do /schedule', () => {
     routeId = '5';
     const fixture = TestBed.createComponent(OrderNewComponent);
     fixture.detectChanges();
@@ -97,6 +97,6 @@ describe('OrderNewComponent', () => {
     expect(req.request.body.status).toBe('w_realizacji');
     req.flush({ id: 5, numer_zlecenia: 'ZL-EDYCJA', klient_nazwa: 'Klient', terminal_id: 3, terminal_nazwa: 'BCT', data_rozpoczecia: '2026-06-17 08:00:00', data_zakonczenia: '2026-06-17 16:00:00', zakres_prac: 'rozładunek', wartosc_pln: 1234, status: 'w_realizacji', created_at: null, updated_at: null, employees: [], equipment: [] });
 
-    expect(navigate).toHaveBeenCalledWith(['/harmonogram']);
+    expect(navigate).toHaveBeenCalledWith(['/schedule']);
   });
 });

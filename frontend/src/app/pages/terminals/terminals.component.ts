@@ -282,6 +282,18 @@ export class TerminalsComponent {
 
   // --- Pomocnicze ---
 
+  // Menu akcji wiersza (dropdown „kebab") — wzorzec jak na pracownikach/fakturach.
+  private readonly _openTerminalActionsId = signal<number | null>(null);
+  readonly openTerminalActionsId = this._openTerminalActionsId.asReadonly();
+
+  toggleTerminalActions(id: number): void {
+    this._openTerminalActionsId.update((cur) => (cur === id ? null : id));
+  }
+
+  closeTerminalActions(): void {
+    this._openTerminalActionsId.set(null);
+  }
+
   statusLabel(terminal: Terminal): string {
     return this.t(terminal.is_active ? 'terminale.status.active' : 'terminale.status.inactive');
   }

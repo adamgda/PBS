@@ -129,7 +129,7 @@ describe('EmployeesComponent', () => {
     expect(comp.modalMode()).toBeNull();
   });
 
-  it('powinien zablokować tworzenie pracownika bez adresu e-mail (link do hasła)', () => {
+  it('powinien utworzyć pracownika bez e-maila (pole opcjonalne — bez konta)', () => {
     const fixture = TestBed.createComponent(EmployeesComponent);
     fixture.detectChanges();
     flushEmployeeList();
@@ -139,6 +139,37 @@ describe('EmployeesComponent', () => {
     comp.openCreate();
     comp.modalImie.set('Jan');
     comp.modalNazwisko.set('Kowalski');
+    comp.saveModal();
+    fixture.detectChanges();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/employees`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.email).toBeNull();
+
+    req.flush({
+      id: 9, imie: 'Jan', nazwisko: 'Kowalski', telefon: null, email: null,
+      current_terminal_id: null, terminal_nazwa: null, current_sprzet_id: null, sprzet_nazwa: null,
+      is_active: true, created_at: null, updated_at: null,
+    });
+
+    // Po sukcesie lista przeładowana (GET /employees)
+    const reload = httpMock.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${environment.apiUrl}/employees`));
+    reload.flush({ data: [], total: 0, page: 1, per_page: 25 });
+
+    expect(comp.modalMode()).toBeNull();
+  });
+
+  it('powinien zablokować tworzenie przy nieprawidłowym adresie e-mail', () => {
+    const fixture = TestBed.createComponent(EmployeesComponent);
+    fixture.detectChanges();
+    flushEmployeeList();
+    flushTerminalOptions();
+
+    const comp = fixture.componentInstance;
+    comp.openCreate();
+    comp.modalImie.set('Jan');
+    comp.modalNazwisko.set('Kowalski');
+    comp.modalEmail.set('zly-email');
     comp.saveModal();
     // Nie wysłano POST
     const postReqs = httpMock.match((r) => r.method === 'POST');

@@ -10,12 +10,8 @@ use App\Repository\EmployeeRateRepository;
 use App\Repository\EmployeeRepository;
 use App\Repository\EmployeeVacationRepository;
 use App\Repository\OrderRepository;
-use App\Repository\PasswordResetRepository;
-use App\Repository\UserRepository;
 use App\Services\EmployeeService;
 use App\Services\FileUploadService;
-use App\Services\MailService;
-use App\Services\UserService;
 use App\Services\VirusScannerInterface;
 use PDO;
 use Mockery as m;
@@ -37,28 +33,6 @@ beforeEach(function (): void {
     $this->vacationRepository->shouldReceive('findOnLeaveEmployeeIds')->byDefault()->andReturn([]);
     $this->documentRepository->shouldReceive('findForEmployeeIds')->byDefault()->andReturn([]);
 
-    // Realny UserService (final) z zamockowanymi zależnościami — EmployeeService
-    // woła createEmployeeAccount() przy tworzeniu pracownika z adresem e-mail.
-    $this->employeeUserRepository = m::mock(UserRepository::class, [$pdo]);
-    $this->employeePasswordResetRepository = m::mock(PasswordResetRepository::class, [$pdo]);
-    $mailService = m::mock(MailService::class);
-    $mailService->shouldReceive('sendPasswordResetEmail')->byDefault();
-    $this->employeeUserRepository->shouldReceive('findByEmail')->byDefault()->andReturnNull();
-    $this->employeeUserRepository->shouldReceive('createUser')->byDefault()->andReturn([
-        'id' => 500, 'email' => 'jan@x.pl', 'role' => 'user', 'permissions' => '{}',
-        'is_active' => 1, 'must_change_password' => 1, 'created_at' => null, 'updated_at' => null,
-    ]);
-    $this->employeePasswordResetRepository->shouldReceive('createToken')->byDefault();
-
-    $this->userService = new UserService(
-        $this->employeeUserRepository,
-        $this->employeePasswordResetRepository,
-        $this->auditLogRepository,
-        $mailService,
-        'http://localhost:4200',
-        true,
-    );
-
     $this->scanner = m::mock(VirusScannerInterface::class);
     $this->scanner->shouldReceive('isAvailable')->byDefault()->andReturn(false);
 
@@ -78,7 +52,6 @@ beforeEach(function (): void {
         $this->rateRepository,
         $this->vacationRepository,
         $this->orderRepository,
-        $this->userService,
     );
     $this->employeeController = new EmployeeController($this->employeeService);
 });
@@ -204,6 +177,24 @@ it('store creates employee and returns 201', function (): void {
     expect($response->statusCode())->toBe(201);
     expect($response->data()['imie'])->toBe('Jan');
     expect($response->data()['email'])->toBe('jan@x.pl');
+});
+
+it('store creates employee without email (optional) — no account is created', function (): void {
+    $this->employeeRepository->shouldReceive('createEmployee')->with(m::on(function (array $d): bool {
+        return $d['imie'] === 'Anna' && $d['nazwisko'] === 'Nowak' && $d['email'] === null && $d['is_active'] === true;
+    }))->andReturn([
+        'id' => 8, 'imie' => 'Anna', 'nazwisko' => 'Nowak', 'telefon' => null, 'email' => null,
+        'current_terminal_id' => null, 'terminal_nazwa' => null, 'current_sprzet_id' => null, 'sprzet_nazwa' => null,
+        'is_active' => 1, 'created_at' => null, 'updated_at' => null,
+    ]);
+
+    $request = new Request(query: [], body: ['imie' => 'Anna', 'nazwisko' => 'Nowak'], headers: []);
+    $response = $this->employeeController->store($request);
+
+    expect($response->statusCode())->toBe(201);
+    expect($response->data()['email'])->toBeNull();
+    // Pracownik jest zasobem — tworzenie nie wywołuje żadnego konta użytkownika
+    // (brak zależności UserService w EmployeeService).
 });
 
 // --- SHOW ---

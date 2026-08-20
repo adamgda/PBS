@@ -83,6 +83,36 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+/* ===== Zapobieganie auto-zoomowi na urządzeniach dotykowych ===== */
+/* iOS Safari (oraz Android) automatycznie powiększa stronę, gdy klikniesz w pole
+   formularza o czcionce mniejszej niż 16px. Wymuszenie 16px na urządzeniach
+   dotykowych eliminuje ten efekt i dodatkowo poprawia czytelność na telefonie.
+   Na desktopie (wskaźnik precyzyjny) rozmiary pozostają bez zmian. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ===== Natychmiastowa reakcja na dotyk (mobile) =====
+   Eliminuje opóźnienie ~300ms (detekcja double-tap-zoom) oraz „połykanie”
+   pierwszego dotknięcia, które na telefonach wymagało drugiego kliknięcia
+   (np. hamburger menu, przełącznik motywu). Bezpieczne: nie zmienia rozkładu,
+   jedynie sposób interpretacji gestów dotykowych. */
+button,
+[role='button'],
+a,
+[href],
+input,
+select,
+textarea,
+summary,
+label {
+  touch-action: manipulation;
+}
+
 /* ===== Użyteczne klasy pomocnicze @layer components ===== */
 @layer components {
   /* Karta — standardowy pojemnik aplikacji */

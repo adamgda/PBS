@@ -10,7 +10,7 @@ set -euo pipefail
 
 # --- Konfiguracja -----------------------------------------------------------
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[-1]}")" && pwd)"
 BACKEND_DIR="${SCRIPT_DIR}/backend"
 HOST="localhost"
 PORT="8080"

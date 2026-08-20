@@ -184,7 +184,7 @@
             <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'sprzet.service_plans.section_subtitle' | translate }}</p>
           </div>
         </div>
-        <app-button variant="primary" size="sm" [label]="'sprzet.service_plans.new_term'" (clicked)="openPlanCreate()" />
+        <app-add-button variant="primary" size="md" [label]="'sprzet.service_plans.new_term'" (clicked)="openPlanCreate()" />
       </div>
       <div class="overflow-x-auto">
         @if (selectedLoading()) {
@@ -522,7 +522,6 @@
         type="text"
         name="plan_typ"
         labelKey="sprzet.service_plans.inspection_type"
-        [placeholder]="'sprzet.service_plans.inspection_type_placeholder'"
         [ngModel]="planTyp()"
         (ngModelChange)="planTyp.set($event)"
       />

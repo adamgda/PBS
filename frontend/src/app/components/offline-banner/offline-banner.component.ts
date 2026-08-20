@@ -15,7 +15,7 @@ import { SvgIconComponent } from './../svg-icon/svg-icon.component';
   template: `
     @if (!online()) {
       <div
-        class="fixed inset-x-0 top-0 z-40 flex items-center justify-center gap-3 border-b border-amber-300/40 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-center text-sm font-medium text-white shadow-md"
+        class="fixed inset-x-0 top-0 z-[46] flex items-center justify-center gap-3 border-b border-amber-300/40 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-center text-sm font-medium text-white shadow-md"
         role="status"
         aria-live="polite"
       >

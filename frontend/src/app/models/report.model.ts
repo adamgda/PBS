@@ -37,6 +37,14 @@ export interface TerminalReportAutoData {
   total_wages: number;
 }
 
+/** Odpowiedź GET /reports/terminal/auto-data — auto-dane dla nowego raportu (bez zapisu). */
+export interface TerminalReportAutoDataResponse {
+  terminal_id: number;
+  terminal_nazwa: string | null;
+  data_raportu: string;
+  auto_data: TerminalReportAutoData;
+}
+
 export interface TerminalReport {
   id: number;
   terminal_id: number;

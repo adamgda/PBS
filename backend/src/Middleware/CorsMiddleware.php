@@ -28,6 +28,16 @@ final class CorsMiddleware implements MiddlewareInterface
         $origin = $request->header('Origin');
         $isAllowed = $origin !== null && in_array($origin, $this->allowedOrigins, true);
 
+        // Diagnostyka CORS: gdy origin nie jest na whitelistcie, zaloguj szczegóły,
+        // żeby łatwo znaleźć przyczynę blokady (np. zły .env na serwerze).
+        if ($origin !== null && !$isAllowed) {
+            error_log(sprintf(
+                '[PBS][CORS] Origin "%s" NIE jest dozwolony. Whitelista: [%s]',
+                $origin,
+                implode(', ', $this->allowedOrigins),
+            ));
+        }
+
         // Preflight (OPTIONS) — krótka odpowiedź z nagłówkami CORS, bez wywoływania
         // routera i pozostałego pipeline'u. Preflight nigdy nie powinien trafiać
         // do warstwy biznesowej (router zwróciłby 405, a ewentualny wyjątek

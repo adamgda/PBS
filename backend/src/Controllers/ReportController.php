@@ -88,6 +88,28 @@ final class ReportController extends Controller
     }
 
     /**
+     * GET /api/v1/reports/terminal/auto-data?terminal_id=&date=
+     * Auto-dane z harmonogramu dla nowego raportu terminalowego (bez zapisu).
+     *
+     * @param array<string, string> $params
+     */
+    public function terminalAutoData(Request $request, array $params = []): Response
+    {
+        $query = $request->query();
+        $terminalId = $this->toInt($query['terminal_id'] ?? 0, 0);
+        $date = is_string($query['date'] ?? null) ? $query['date'] : '';
+
+        $result = $this->reportService->getTerminalAutoData($terminalId, $date);
+
+        $err = $this->errorResponse($result);
+        if ($err !== null) {
+            return $err;
+        }
+
+        return $this->json($result, 200);
+    }
+
+    /**
      * PUT /api/v1/reports/terminal/{id} — edycja raportu terminalowego.
      *
      * @param array<string, string> $params

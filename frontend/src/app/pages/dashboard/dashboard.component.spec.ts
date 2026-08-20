@@ -114,9 +114,9 @@ describe('DashboardComponent', () => {
 
     const shortcuts = fixture.componentInstance.shortcuts();
     expect(shortcuts).toHaveSize(3);
-    expect(shortcuts[0].route).toBe('/awaria');
+    expect(shortcuts[0].route).toBe('/incidents');
     expect(shortcuts[1].route).toBe('/reporting');
-    expect(shortcuts[2].route).toBe('/harmonogram');
+    expect(shortcuts[2].route).toBe('/schedule');
   });
 
   it('userName() wywodzi imię z e-maila', () => {

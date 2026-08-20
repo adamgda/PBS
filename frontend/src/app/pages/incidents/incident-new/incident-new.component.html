@@ -1,0 +1,64 @@
+<!-- Nagłówek podstrony -->
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'awaria.form.title' | translate }}</h1>
+    <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'awaria.subtitle' | translate }}</p>
+  </div>
+  <app-button variant="outline" [label]="'common.buttons.back' | translate" (clicked)="cancel()" />
+</div>
+
+<!-- Formularz -->
+<div class="mt-5 rounded-2xl bg-white p-6 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
+  <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'awaria.form.what_concerns' | translate }}</label>
+  <div class="mt-1.5 mb-3 flex gap-3">
+    <label class="flex items-center gap-2 text-sm dark:text-slate-300">
+      <input
+        type="radio"
+        name="incTyp"
+        value="sprzet"
+        [checked]="formTyp() === 'sprzet'"
+        (change)="onTypeChange('sprzet')"
+      />
+      {{ 'awaria.form.equipment' | translate }}
+    </label>
+    <label class="flex items-center gap-2 text-sm dark:text-slate-300">
+      <input
+        type="radio"
+        name="incTyp"
+        value="inne"
+        [checked]="formTyp() === 'inne'"
+        (change)="onTypeChange('inne')"
+      />
+      {{ 'awaria.form.other' | translate }}
+    </label>
+  </div>
+
+  @if (formTyp() === 'sprzet') {
+    <div class="mb-3">
+      <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'awaria.form.select_equipment' | translate }}</label>
+      <app-autocomplete-select
+        class="mt-1.5"
+        [options]="equipmentOptions()"
+        [selectedValue]="formEquipmentId()"
+        [placeholder]="'awaria.form.select_equipment' | translate"
+        (selectionChange)="onEquipmentSelected($event)"
+      />
+    </div>
+  }
+
+  <div class="mb-3">
+    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'awaria.form.description' | translate }}</label>
+    <textarea
+      class="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white py-2.5 px-3 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+      rows="4"
+      [placeholder]="'awaria.form.description_placeholder' | translate"
+      [ngModel]="formOpis()"
+      (ngModelChange)="formOpis.set($event)"
+    ></textarea>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <app-button variant="outline" [label]="'common.buttons.cancel'" (clicked)="cancel()" />
+    <app-button variant="primary" [label]="'awaria.form.submit'" [disabled]="saving()" (clicked)="saveCreate()" />
+  </div>
+</div>

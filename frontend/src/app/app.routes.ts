@@ -32,7 +32,7 @@ export const routes: Routes = [
       import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
   {
-    path: 'logi-audytowe',
+    path: 'audit-logs',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'super_admin' },
     loadComponent: () =>
@@ -40,42 +40,42 @@ export const routes: Routes = [
   },
   // Placeholdery dla sekcji — zaimplementowane w kolejnych etapach
   {
-    path: 'pracownicy',
+    path: 'employees',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'pracownicy' },
     loadComponent: () =>
       import('./pages/employees/employees.component').then((m) => m.EmployeesComponent),
   },
   {
-    path: 'sprzet',
+    path: 'equipment',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'sprzet' },
     loadComponent: () =>
       import('./pages/equipment/equipment.component').then((m) => m.EquipmentComponent),
   },
   {
-    path: 'terminale',
+    path: 'terminals',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'terminale' },
     loadComponent: () =>
       import('./pages/terminals/terminals.component').then((m) => m.TerminalsComponent),
   },
   {
-    path: 'harmonogram/nowe',
+    path: 'schedule/new',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'harmonogram' },
     loadComponent: () =>
       import('./pages/orders/order-new/order-new.component').then((m) => m.OrderNewComponent),
   },
   {
-    path: 'harmonogram/edytuj/:id',
+    path: 'schedule/edit/:id',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'harmonogram' },
     loadComponent: () =>
       import('./pages/orders/order-new/order-new.component').then((m) => m.OrderNewComponent),
   },
   {
-    path: 'harmonogram',
+    path: 'schedule',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'harmonogram' },
     loadComponent: () =>
@@ -96,7 +96,21 @@ export const routes: Routes = [
       import('./pages/reporting/reporting.component').then((m) => m.ReportingComponent),
   },
   {
-    path: 'awaria',
+    path: 'incidents/new',
+    canActivate: [AuthGuard, PermissionGuard],
+    data: { permission: 'awaria' },
+    loadComponent: () =>
+      import('./pages/incidents/incident-new/incident-new.component').then((m) => m.IncidentNewComponent),
+  },
+  {
+    path: 'incidents/:id',
+    canActivate: [AuthGuard, PermissionGuard],
+    data: { permission: 'awaria' },
+    loadComponent: () =>
+      import('./pages/incidents/incident-details/incident-details.component').then((m) => m.IncidentDetailsComponent),
+  },
+  {
+    path: 'incidents',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'awaria' },
     loadComponent: () =>

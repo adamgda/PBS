@@ -128,49 +128,6 @@ it('store creates admin user and returns 201', function (): void {
     expect($response->data())->toHaveKey('set_password_url');
 });
 
-// --- EMPLOYEE ACCOUNT (createEmployeeAccount) ---
-
-it('createEmployeeAccount creates user role with limited awaria+raportowanie access', function (): void {
-    $this->userRepository->shouldReceive('findByEmail')->with('pracownik@pbs.local')->andReturnNull();
-    $this->userRepository->shouldReceive('createUser')->with(m::on(function (array $d): bool {
-        if ($d['email'] !== 'pracownik@pbs.local' || $d['role'] !== 'user') {
-            return false;
-        }
-        $permissions = json_decode($d['permissions'], true);
-        return is_array($permissions)
-            && ($permissions['awaria'] ?? false) === true
-            && ($permissions['raportowanie'] ?? false) === true
-            && ($permissions['dashboard'] ?? false) === false
-            && ($permissions['ustawienia'] ?? false) === false;
-    }))->andReturn([
-        'id' => 7,
-        'email' => 'pracownik@pbs.local',
-        'role' => 'user',
-        'permissions' => '{"awaria":true,"raportowanie":true}',
-        'is_active' => 1,
-        'must_change_password' => 1,
-    ]);
-    $this->passwordResetRepository->shouldReceive('createToken')->once();
-
-    $request = new Request(query: [], body: [], headers: []);
-    $request->setAttribute('user_id', 1);
-    $result = $this->userService->createEmployeeAccount('pracownik@pbs.local', $request);
-
-    expect($result['role'])->toBe('user');
-    expect($result['must_change_password'])->toBeTrue();
-    // W trybie debug link set-password jest ujawniony
-    expect($result)->toHaveKey('set_password_url');
-});
-
-it('createEmployeeAccount returns 409 when email already a user', function (): void {
-    $this->userRepository->shouldReceive('findByEmail')->with('istnieje@pbs.local')->andReturn(['id' => 2]);
-
-    $request = new Request(query: [], body: [], headers: []);
-    $result = $this->userService->createEmployeeAccount('istnieje@pbs.local', $request);
-
-    expect($result['code'])->toBe(409);
-});
-
 // --- SHOW ---
 it('show returns 404 for missing user', function (): void {
     $this->userRepository->shouldReceive('findById')->with(99)->andReturnNull();

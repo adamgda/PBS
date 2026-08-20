@@ -79,6 +79,7 @@ export type SelectSize = 'sm' | 'md' | 'lg';
         -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
+        cursor: pointer;
       }
     `,
   ],

@@ -50,19 +50,38 @@
   </ng-template>
 
   <ng-template #actionsTpl let-terminal>
-    <div class="flex justify-end gap-1">
-      <app-icon-button
-        icon="settings"
-        tone="primary"
-        [ariaLabel]="'terminale.buttons.edit' | translate"
-        (clicked)="openEdit(terminal)"
-      />
-      <app-icon-button
-        icon="trash"
-        tone="danger"
-        [ariaLabel]="'terminale.buttons.delete' | translate"
-        (clicked)="deleteTerminal(terminal)"
-      />
+    <div class="relative flex justify-end">
+      <button
+        type="button"
+        class="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+        [attr.aria-label]="'common.buttons.actions' | translate"
+        (click)="toggleTerminalActions(terminal.id)"
+      >
+        <app-svg-icon name="dots-vertical" size="sm" />
+      </button>
+
+      @if (openTerminalActionsId() === terminal.id) {
+        <!-- Tło zamykające po kliknięciu poza menu -->
+        <div class="fixed inset-0 z-10" (click)="closeTerminalActions()"></div>
+        <div class="absolute right-0 top-9 z-20 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
+            (click)="openEdit(terminal); closeTerminalActions()"
+          >
+            <app-svg-icon name="settings" size="sm" class="shrink-0 text-gray-500" />
+            {{ 'terminale.buttons.edit' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+            (click)="closeTerminalActions(); deleteTerminal(terminal)"
+          >
+            <app-svg-icon name="trash" size="sm" class="shrink-0" />
+            {{ 'terminale.buttons.delete' | translate }}
+          </button>
+        </div>
+      }
     </div>
   </ng-template>
 </div>

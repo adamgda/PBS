@@ -160,7 +160,7 @@ export class FormInputComponent implements ControlValueAccessor {
     const base =
       'block w-full rounded-lg border border-gray-200 bg-white py-2 text-sm shadow-sm transition-all duration-150 placeholder:text-gray-400 hover:border-gray-300 focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:hover:border-gray-200';
     return this.disableDarkMode
-      ? base
+      ? base + ' text-gray-900'
       : base +
           ' dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:ring-pbs-secondary/50 dark:disabled:bg-slate-800 dark:disabled:hover:border-slate-700';
   }

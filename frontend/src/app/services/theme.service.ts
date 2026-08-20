@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 /**
  * Serwis zarządzający motywem (jasny / ciemny).
  * - Przechowuje wybór w `localStorage` (klucz `pbs-theme`).
- * - Domyślnie respektuje preferencję systemu (`prefers-color-scheme`).
+ * - Domyślnie (gdy brak zapisanego wyboru) używa trybu jasnego.
  * - Przełącza klasę `dark` na elemencie `<html>` (Tailwind `darkMode: 'class'`).
  */
 @Injectable({ providedIn: 'root' })
@@ -27,8 +27,9 @@ export class ThemeService {
   private readInitial(): boolean {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) return stored === 'dark';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      // Domyślnie tryb jasny — preferencja systemu nie jest respektowana,
+      // chyba że użytkownik jawnie zapisał wybór w localStorage.
+      return stored === 'dark';
     } catch {
       return false;
     }

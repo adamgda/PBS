@@ -116,11 +116,18 @@
     </div>
   </aside>
 
+  <!-- ===== Obszar treści (header + main) obok stałego sidebara ===== -->
+  <!-- Wrapper dostaje md:pl-64, więc header NIE nachodzi na logo/obszar sidebara
+       i nie rozciąga się na całą szerokość okna (regresja w Safari). -->
+  <div class="flex min-h-screen flex-col md:pl-64">
   <!-- ===== Górny app-bar ===== -->
+  <!-- Uwaga: z-[45] — header musi być NAD drawer-overlayem (z-40), aby przyciski
+       (hamburger, przełącznik motywu) pozostały klikalne, gdy drawer jest otwarty na mobile.
+       Jednocześnie z-[45] < z-50, więc modale i toast nadal zasłaniają header. -->
   <header
-    class="sticky top-0 z-20 border-b border-white/10 bg-pbs-primary/95 text-white shadow-sm backdrop-blur supports-[backdrop-filter]:bg-pbs-primary/85"
+    class="sticky top-0 z-[45] border-b border-white/10 bg-pbs-primary/95 text-white shadow-sm backdrop-blur supports-[backdrop-filter]:bg-pbs-primary/85"
   >
-    <div class="flex h-14 items-center justify-between gap-2 px-4 pt-[env(safe-area-inset-top)] md:pl-[calc(16rem+1rem)] md:pr-6">
+    <div class="flex h-14 items-center justify-between gap-2 px-4 pt-[env(safe-area-inset-top)] md:px-6">
       <!-- Po lewej: hamburger (mobile) / tytuł sekcji (desktop) -->
       <div class="flex items-center gap-2">
         <button
@@ -132,7 +139,7 @@
         >
           <app-svg-icon name="menu" />
         </button>
-        <span class="text-base font-semibold tracking-tight md:text-lg pl-4">
+        <span class="text-base font-semibold tracking-tight md:text-lg pl-2">
           @if (activeTitle()) {
             {{ activeTitle() | translate }}
           } @else {
@@ -150,9 +157,9 @@
           class="grid h-9 w-9 place-items-center rounded-lg text-blue-100/90 transition-colors hover:bg-white/15 hover:text-white"
         >
           @if (dark()) {
-            <app-svg-icon name="sun" size="sm" />
+            <app-svg-icon name="sun" size="md" />
           } @else {
-            <app-svg-icon name="moon" size="sm" />
+            <app-svg-icon name="moon" size="md" />
           }
         </button>
         <button
@@ -162,29 +169,27 @@
           [attr.aria-label]="'notatki.actions.open' | translate"
           class="relative inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/15"
         >
-          <app-svg-icon name="notes" size="sm" />
+          <app-svg-icon name="notes" size="md" />
           <span class="hidden sm:inline">{{ 'notatki.button' | translate }}</span>
           @if (notesWidget.pendingCount() > 0) {
             <span
-              class="grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+              class="grid h-4 min-w-4 sm:h-5 sm:min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
             >
               {{ notesWidget.pendingCount() }}
             </span>
           }
         </button>
-        <span
-          class="grid h-8 w-8 place-items-center rounded-full bg-pbs-secondary text-sm font-semibold text-white md:hidden"
-        >{{ userInitial() }}</span>
       </div>
     </div>
   </header>
 
   <!-- ===== Obszar treści ===== -->
-  <main class="md:pl-64">
-    <div class="mx-auto px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-6 lg:px-8">
+  <main>
+    <div class="mx-auto px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-6 lg:px-8">
       <router-outlet />
     </div>
   </main>
+  </div>
 } @else {
   <!-- Tylko router-outlet dla stron publicznych (login) -->
   <router-outlet />

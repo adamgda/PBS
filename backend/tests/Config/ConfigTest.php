@@ -58,3 +58,21 @@ it('strips quotes from env values', function (): void {
     expect($config->get('KEY_DOUBLE'))->toBe('double_value');
     expect($config->get('KEY_SINGLE'))->toBe('single_value');
 });
+
+it('parses multi-line quoted values (e.g. RSA PEM keys)', function (): void {
+    $tmpFile = tmpfile();
+    if ($tmpFile === false) {
+        throw new RuntimeException('Cannot create temp file');
+    }
+    $path = stream_get_meta_data($tmpFile)['uri'];
+    $pem = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQ\n-----END PRIVATE KEY-----";
+    fwrite($tmpFile, "JWT_ALGORITHM=RS256\n");
+    fwrite($tmpFile, 'JWT_PRIVATE_KEY="' . $pem . '"' . "\n");
+    fwrite($tmpFile, "OTHER_KEY=plain\n");
+
+    $config = Config::fromEnvFile($path);
+
+    expect($config->get('JWT_ALGORITHM'))->toBe('RS256');
+    expect($config->get('JWT_PRIVATE_KEY'))->toBe($pem);
+    expect($config->get('OTHER_KEY'))->toBe('plain');
+});

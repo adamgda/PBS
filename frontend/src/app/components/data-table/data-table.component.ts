@@ -115,7 +115,6 @@ export interface DataTableSortEvent {
         <div class="block space-y-3 p-3 md:hidden">
           @for (row of data(); track row) {
             <div
-              class="rounded-lg bg-white p-4 ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800"
               [class.cursor-pointer]="rowClickable"
               (click)="rowClickable && rowClick.emit(row)"
             >

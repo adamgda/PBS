@@ -224,7 +224,6 @@ final class App
             $employeeRateRepository,
             $employeeVacationRepository,
             $orderRepository,
-            $userService,
         );
         $employeeController = new EmployeeController($employeeService);
 
@@ -545,6 +544,8 @@ final class App
             // Sekcja Raportowanie (Etap 11) — wymagane uprawnienie `raportowanie`
             ['method' => 'GET', 'path' => '/api/v1/reports/terminal', 'handler' => $raportowanieGuard([$reportController, 'terminalIndex'])],
             ['method' => 'POST', 'path' => '/api/v1/reports/terminal', 'handler' => $raportowanieGuard([$reportController, 'terminalStore'])],
+            // Auto-dane dla nowego raportu terminalowego (przed trasą `{id}`)
+            ['method' => 'GET', 'path' => '/api/v1/reports/terminal/auto-data', 'handler' => $raportowanieGuard([$reportController, 'terminalAutoData'])],
             ['method' => 'GET', 'path' => '/api/v1/reports/terminal/{id}', 'handler' => $raportowanieGuard([$reportController, 'terminalShow'])],
             ['method' => 'PUT', 'path' => '/api/v1/reports/terminal/{id}', 'handler' => $raportowanieGuard([$reportController, 'terminalUpdate'])],
             ['method' => 'GET', 'path' => '/api/v1/reports/vehicle', 'handler' => $raportowanieGuard([$reportController, 'vehicleIndex'])],

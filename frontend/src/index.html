@@ -6,7 +6,7 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="System zarządzania operacjami portowymi">
-  <meta name="theme-color" content="#1e3a5f">
+  <meta name="theme-color" content="#334155">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -20,11 +20,11 @@
 <body>
   <script>
     // Wczesne ustawienie motywu (przed renderem Angulara) — zapobiega „flash of unstyled content".
+    // Domyślnie tryb jasny; ciemny tylko, gdy użytkownik jawnie zapisał wybór w localStorage.
     (function () {
       try {
         var stored = localStorage.getItem('pbs-theme');
-        var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (dark) document.documentElement.classList.add('dark');
+        if (stored === 'dark') document.documentElement.classList.add('dark');
       } catch (e) {}
     })();
   </script>

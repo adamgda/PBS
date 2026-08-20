@@ -47,7 +47,7 @@
 <!-- ===== Zakładka: Lista pracowników ===== -->
 @if (activeTab() === 'list') {
 <!-- Pasek KPI (Etap 7a) — stała wysokość: skeleton podczas ładowania, bez "skoku" strony -->
-<div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+<div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
   <ng-template #kpiSkeletonSingle>
     <div class="flex animate-pulse items-start justify-between gap-3">
@@ -71,81 +71,57 @@
     </div>
   </ng-template>
 
-  <!-- 1. Godziny -->
-  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
-    @if (summary(); as s) {
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
-          <p class="truncate text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.hours_total' | translate }}</p>
-          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ s.godziny_total }}<span class="ml-1 text-sm font-semibold text-gray-400 dark:text-slate-500">h</span></p>
-        </div>
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-pbs-primary to-pbs-navy-600 text-white shadow-sm">
-          <app-svg-icon name="harmonogram" size="sm" />
-        </span>
-      </div>
-    } @else if (summaryLoading()) {
-      <ng-container [ngTemplateOutlet]="kpiSkeletonSingle" />
-    }
-  </div>
+  @if (summary(); as s) {
+    <!-- 1. Godziny -->
+    <app-kpi-card
+      label="pracownicy.kpi.hours_total"
+      [value]="s.godziny_total + ' h'"
+      icon="harmonogram"
+      tone="primary"
+    />
 
-  <!-- 2. Wynagrodzenie -->
-  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
-    @if (summary(); as s) {
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
-          <p class="truncate text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.wages_total' | translate }}</p>
-          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ s.wynagrodzenie_total | number }}<span class="ml-1 text-sm font-semibold text-gray-400 dark:text-slate-500">PLN</span></p>
-        </div>
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm">
-          <app-svg-icon name="money" size="sm" />
-        </span>
-      </div>
-    } @else if (summaryLoading()) {
-      <ng-container [ngTemplateOutlet]="kpiSkeletonSingle" />
-    }
-  </div>
+    <!-- 2. Wynagrodzenie -->
+    <app-kpi-card
+      label="pracownicy.kpi.wages_total"
+      [value]="formatNumber(s.wynagrodzenie_total) + ' PLN'"
+      icon="money"
+      tone="success"
+    />
 
-  <!-- 3. Podział godzin -->
-  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
-    @if (summary(); as s) {
-      <div class="flex items-start justify-between gap-3">
-        <p class="truncate text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split' | translate }}</p>
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm">
+    <!-- 3. Podział godzin — dedykowana karta (2 wartości × 2 okresy), ale skompresowana tak,
+         by wysokość była zgodna z pozostałymi kartami (tekst-xs, mniejsza ikona, ciaśniejsze odstępy) -->
+    <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
+      <div class="flex items-center justify-between gap-3">
+        <p class="truncate text-sm font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split' | translate }}</p>
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm">
           <app-svg-icon name="analytics" size="sm" />
         </span>
       </div>
-      <div class="mt-3 space-y-2">
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split_1_15' | translate }}</span>
-          <span class="text-sm font-semibold text-gray-800 dark:text-slate-200">{{ s.godziny_1_15 }} h · {{ s.wynagrodzenie_1_15 | number }} PLN</span>
+      <div class="mt-2 space-y-1">
+        <div class="flex items-center justify-between gap-2 text-xs">
+          <span class="text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split_1_15' | translate }}</span>
+          <span class="font-semibold text-gray-800 dark:text-slate-200">{{ s.godziny_1_15 }} h · {{ formatNumber(s.wynagrodzenie_1_15) }} PLN</span>
         </div>
-        <div class="h-px bg-gray-100 dark:bg-slate-800"></div>
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split_15_23' | translate }}</span>
-          <span class="text-sm font-semibold text-gray-800 dark:text-slate-200">{{ s.godziny_15_23 }} h · {{ s.wynagrodzenie_15_23 | number }} PLN</span>
+        <div class="flex items-center justify-between gap-2 text-xs">
+          <span class="text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split_15_23' | translate }}</span>
+          <span class="font-semibold text-gray-800 dark:text-slate-200">{{ s.godziny_15_23 }} h · {{ formatNumber(s.wynagrodzenie_15_23) }} PLN</span>
         </div>
       </div>
-    } @else if (summaryLoading()) {
-      <ng-container [ngTemplateOutlet]="kpiSkeletonSplit" />
-    }
-  </div>
+    </div>
 
-  <!-- 4. Na urlopie -->
-  <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
-    @if (summary(); as s) {
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
-          <p class="truncate text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.on_leave' | translate }}</p>
-          <p class="mt-1.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ s.na_urlopie }}</p>
-        </div>
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm">
-          <app-svg-icon name="calendar" size="sm" />
-        </span>
-      </div>
-    } @else if (summaryLoading()) {
-      <ng-container [ngTemplateOutlet]="kpiSkeletonSingle" />
-    }
-  </div>
+    <!-- 4. Na urlopie -->
+    <app-kpi-card
+      label="pracownicy.kpi.on_leave"
+      [value]="s.na_urlopie"
+      icon="calendar"
+      tone="warning"
+    />
+  } @else if (summaryLoading()) {
+    <ng-container [ngTemplateOutlet]="kpiSkeletonSingle" />
+    <ng-container [ngTemplateOutlet]="kpiSkeletonSingle" />
+    <ng-container [ngTemplateOutlet]="kpiSkeletonSplit" />
+    <ng-container [ngTemplateOutlet]="kpiSkeletonSingle" />
+  }
 </div>
 
 
@@ -249,7 +225,7 @@
   </ng-template>
 
   <ng-template #rateCellTpl let-employee>
-    <span class="font-medium text-gray-900 dark:text-slate-200">{{ employee.stawka_godzinowa | number }} PLN/h</span>
+    <span class="text-gray-800 dark:text-slate-200">{{ employee.stawka_godzinowa | number }} PLN/h</span>
   </ng-template>
 
   <ng-template #hoursCellTpl let-employee>
@@ -257,7 +233,7 @@
   </ng-template>
 
   <ng-template #wageCellTpl let-employee>
-    <span class="font-medium text-gray-900 dark:text-slate-200">{{ employee.wynagrodzenie | number }} PLN</span>
+    <span class="text-gray-800 dark:text-slate-200">{{ employee.wynagrodzenie | number }} PLN</span>
   </ng-template>
 
   <ng-template #roleCellTpl let-employee>
@@ -389,13 +365,6 @@
         [ngModel]="modalEmail()"
         (ngModelChange)="modalEmail.set($event)"
       />
-
-      @if (modalMode() === 'create') {
-        <div class="mb-4 flex items-start gap-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800 dark:bg-blue-500/15 dark:text-blue-300">
-          <app-svg-icon name="alert" />
-          <p>{{ 'pracownicy.form.invite_info' | translate }}</p>
-        </div>
-      }
 
       <div class="mb-3">
         <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'pracownicy.form.assign_terminal' | translate }}</label>
@@ -723,28 +692,23 @@
       </div>
     </div>
 
-    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-800">
-      <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-slate-800">
-        <thead class="bg-gray-50 dark:bg-slate-800/60">
-          <tr>
-            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.settlement.port' | translate }}</th>
-            <th class="px-3 py-2 text-right font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.settlement.employees' | translate }}</th>
-            <th class="px-3 py-2 text-right font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.settlement.hours' | translate }}</th>
-            <th class="px-3 py-2 text-right font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.settlement.wages' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
-          @for (row of portRows(); track $index) {
-            <tr [class.bg-gray-50]="row.terminal_id === null" [class.font-semibold]="row.terminal_id === null" [class.dark:bg-slate-800]="row.terminal_id === null">
-              <td class="px-3 py-2 dark:text-slate-200">{{ row.terminal_nazwa ?? '—' }}</td>
-              <td class="px-3 py-2 text-right dark:text-slate-200">{{ row.liczba_pracownikow }}</td>
-              <td class="px-3 py-2 text-right dark:text-slate-200">{{ row.suma_godzin }} h</td>
-              <td class="px-3 py-2 text-right dark:text-slate-200">{{ row.suma_wynagrodzen | number }} PLN</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <app-data-table
+      [columns]="settlementColumns()"
+      [data]="portRows()"
+      [total]="portRows().length"
+      [page]="1"
+      [perPage]="25"
+      [loading]="settlementLoading()"
+      [cellTemplates]="{ terminal_nazwa: settlementPortTpl }"
+    />
+
+    <ng-template #settlementPortTpl let-row>
+      @if (row.terminal_id === null) {
+        <span class="font-semibold">{{ 'pracownicy.settlement.total_all_ports' | translate }}</span>
+      } @else {
+        <span>{{ row.terminal_nazwa }}</span>
+      }
+    </ng-template>
   </div>
 }
 <!-- ===== Zakładka: Faktury (Etap 7a) ===== -->
@@ -766,51 +730,75 @@
       </div>
     }
 
-    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-800">
-      <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-slate-800">
-        <thead class="bg-gray-50 dark:bg-slate-800/60">
-          <tr>
-            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.number' | translate }}</th>
-            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.client' | translate }}</th>
-            <th class="px-3 py-2 text-right font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.amount' | translate }}</th>
-            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.issue_date' | translate }}</th>
-            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.typ' | translate }}</th>
-            <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-slate-400">{{ 'pracownicy.invoices.status' | translate }}</th>
-            <th class="px-3 py-2"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
-          @for (inv of invoices(); track inv.id) {
-            <tr>
-              <td class="px-3 py-2 font-medium dark:text-slate-200">{{ inv.numer_faktury }}</td>
-              <td class="px-3 py-2 dark:text-slate-200">{{ inv.klient_nazwa }}</td>
-              <td class="px-3 py-2 text-right dark:text-slate-200">{{ inv.kwota_pln | number }} PLN</td>
-              <td class="px-3 py-2 dark:text-slate-200">{{ inv.data_wystawienia }}</td>
-              <td class="px-3 py-2 dark:text-slate-200">{{ invoiceTypLabel(inv.typ_wystawienia) }}</td>
-              <td class="px-3 py-2">
-                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                  [class.bg-green-100]="inv.status==='zaplacona'" [class.text-green-800]="inv.status==='zaplacona'"
-                  [class.bg-amber-100]="inv.status==='wystawiona'" [class.text-amber-800]="inv.status==='wystawiona'"
-                  [class.bg-red-100]="inv.status==='przeterminowana'" [class.text-red-800]="inv.status==='przeterminowana'">
-                  {{ invoiceStatusLabel(inv.status) }}
-                </span>
-              </td>
-              <td class="px-3 py-2">
-                <div class="flex justify-end gap-1">
-                  <select class="rounded-md border border-gray-300 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" [ngModel]="inv.status" (ngModelChange)="changeInvoiceStatus(inv, $event)">
-                    <option value="wystawiona">{{ 'pracownicy.invoices.status_issued' | translate }}</option>
-                    <option value="zaplacona">{{ 'pracownicy.invoices.status_paid' | translate }}</option>
-                    <option value="przeterminowana">{{ 'pracownicy.invoices.status_overdue' | translate }}</option>
-                  </select>
-                  <app-icon-button icon="settings" tone="primary" [ariaLabel]="'common.buttons.edit' | translate" (clicked)="openEditInvoice(inv)" />
-                  <app-icon-button icon="trash" tone="danger" [ariaLabel]="'common.buttons.delete' | translate" (clicked)="deleteInvoice(inv)" />
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <app-data-table
+      [columns]="invoiceColumns()"
+      [data]="invoices()"
+      [total]="invoiceTotal()"
+      [page]="invoicePage()"
+      [perPage]="invoicePerPage()"
+      [loading]="invoicesLoading()"
+      [cellTemplates]="{ status: invoiceStatusTpl }"
+      [actionsTemplate]="invoiceActionsTpl"
+      (pageChange)="onInvoicePage($event)"
+      (perPageChange)="onInvoicePerPage($event)"
+    />
+
+    <ng-template #invoiceStatusTpl let-inv>
+      <span
+        class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+        [class.bg-green-100]="inv.status==='zaplacona'" [class.text-green-800]="inv.status==='zaplacona'"
+        [class.bg-amber-100]="inv.status==='wystawiona'" [class.text-amber-800]="inv.status==='wystawiona'"
+        [class.bg-red-100]="inv.status==='przeterminowana'" [class.text-red-800]="inv.status==='przeterminowana'"
+      >
+        {{ invoiceStatusLabel(inv.status) }}
+      </span>
+    </ng-template>
+
+    <ng-template #invoiceActionsTpl let-inv>
+      <div class="relative flex justify-end">
+        <button
+          type="button"
+          class="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+          [attr.aria-label]="'common.buttons.actions' | translate"
+          (click)="toggleInvoiceActions(inv.id)"
+        >
+          <app-svg-icon name="dots-vertical" size="sm" />
+        </button>
+
+        @if (openInvoiceActionsId() === inv.id) {
+          <!-- Tło zamykające po kliknięciu poza menu -->
+          <div class="fixed inset-0 z-10" (click)="closeInvoiceActions()"></div>
+          <div class="absolute right-0 top-9 z-20 w-60 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+            <div class="px-3 py-2">
+              <label class="mb-1 block text-left text-xs font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.invoices.status' | translate }}</label>
+              <app-select
+                size="lg"
+                [options]="invoiceStatusOptions"
+                [ngModel]="inv.status"
+                (ngModelChange)="changeInvoiceStatus(inv, $event); closeInvoiceActions()"
+              />
+            </div>
+            <div class="my-1 border-t border-gray-100 dark:border-slate-800"></div>
+            <button
+              type="button"
+              class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
+              (click)="openEditInvoice(inv); closeInvoiceActions()"
+            >
+              <app-svg-icon name="settings" size="sm" class="shrink-0 text-gray-500" />
+              {{ 'common.buttons.edit' | translate }}
+            </button>
+            <button
+              type="button"
+              class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+              (click)="closeInvoiceActions(); deleteInvoice(inv)"
+            >
+              <app-svg-icon name="trash" size="sm" class="shrink-0" />
+              {{ 'common.buttons.delete' | translate }}
+            </button>
+          </div>
+        }
+      </div>
+    </ng-template>
   </div>
 }
 <!-- ===== Etap 7a: Modal faktury ===== -->

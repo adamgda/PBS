@@ -13,6 +13,7 @@ import {
   UpdateTerminalReportRequest,
   CreateVehicleReportRequest,
   UpdateVehicleReportRequest,
+  TerminalReportAutoDataResponse,
 } from '../models/report.model';
 import { invalidateCache } from './http.interceptor';
 
@@ -43,6 +44,14 @@ export class ReportsService {
 
   getTerminalReport(id: number): Observable<TerminalReport> {
     return this.http.get<TerminalReport>(`${this.apiUrl}/reports/terminal/${id}`);
+  }
+
+  /** Auto-dane z harmonogramu dla formularza nowego raportu terminalowego. */
+  getTerminalAutoData(terminalId: number, date: string): Observable<TerminalReportAutoDataResponse> {
+    const httpParams = new HttpParams().set('terminal_id', String(terminalId)).set('date', date);
+    return this.http.get<TerminalReportAutoDataResponse>(`${this.apiUrl}/reports/terminal/auto-data`, {
+      params: httpParams,
+    });
   }
 
   createTerminalReport(payload: CreateTerminalReportRequest): Observable<TerminalReport> {
