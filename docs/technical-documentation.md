@@ -1,7 +1,7 @@
 # Port Baltic Shipping (PBS) — Dokumentacja Techniczna
 
-> **Wersja dokumentu:** 1.8  
-> **Data:** 2026-08-20  
+> **Wersja dokumentu:** 1.9  
+> **Data:** 2026-08-21  
 > **Projekt:** Port Baltic Shipping (PBS)
 
 ---
@@ -222,7 +222,8 @@ frontend/
 │           ├── ustawienia.json  # Teksty sekcji Ustawienia
 │           ├── awaria.json      # Teksty sekcji Awaria
 │           ├── notatki.json     # Teksty widgetu szybkich notatek to-do
-│           └── exports.json     # Teksty sekcji Eksport danych (CSV)
+│           ├── exports.json     # Teksty sekcji Eksport danych (CSV)
+│           └── powiadomienia.json # Teksty dzwonka powiadomień (widget globalny)
 ```
 
 Zasady:
@@ -291,6 +292,7 @@ Konwencja rozmieszczania szablonów (zgodna ze wzorcem `AppComponent`):
 | `ToastNotificationComponent` | Powiadomienia toast |
 | `FormInputComponent` | Współdzielone pole formularza (input z opcjonalną ikoną wiodącą, etykietą/placeholderem przez klucze tłumaczeń oraz opcjonalnym przełącznikiem widoczności hasła). Implementuje `ControlValueAccessor` — baza biblioteki elementów UI formularzy (patrz 6.4.1) |
 | `QuickNotesWidgetComponent` | Wysuwany z boku ekranu widget szybkich notatek to-do (dodawanie, odznaczanie jako wykonane, usuwanie, czyszczenie całej listy) — dostępny globalnie na każdej podstronie i w wersji mobilnej, dane przypisane do zalogowanego użytkownika |
+| `NotificationBellComponent` | Globalny dzwonek powiadomień w app-barze — agreguje alerty (certyfikaty, przeglądy, awarie, powroty z urlopów) i ostatnią aktywność z dashboardu; badge z licznikiem, dropdown z backdropem na mobile, dark mode |
 
 ### 6.4.1 Biblioteka elementów UI formularzy
 
@@ -405,7 +407,7 @@ Aktywne stany linków: `routerLinkActive="bg-white/15 text-white"` z `routerLink
 
 `src/app/components/svg-icon/svg-icon.component.ts` — standalone, `OnPush`, brak zewnętrznych zależności. Ikony liniowe SVG `24×24`, `fill="none"`, `stroke="currentColor"`, `stroke-width="1.8"`, przez co dziedziczą kolor tekstu (np. `text-white`, `text-blue-100/80`).
 
-Dostępne nazwy (`@Input() name`): `dashboard`, `pracownicy`, `sprzet`, `terminale`, `harmonogram`, `analityka`, `raportowanie`, `ustawienia`, `awaria`, `menu`, `close`, `logout`.
+Dostępne nazwy (`@Input() name`): `dashboard`, `pracownicy`, `sprzet`, `terminale`, `harmonogram`, `analityka`, `raportowanie`, `ustawienia`, `awaria`, `menu`, `close`, `logout`, `bell`.
 
 ```html
 <span class="text-blue-100/80"><app-svg-icon name="sprzet" /></span>
@@ -1197,6 +1199,23 @@ Frontend (Angular) dodatkowo:
 - Pobieranie: frontend `ExportsService` wykonuje `GET /exports/{type}` z `responseType: 'blob'`, plik zapisywany lokalnie przez przeglądarkę.
 - Odpowiedź `Cache-Control: no-store` — bez cache'owania danych osobowych; frontend dodatkowo pomija cache GET parametrem `_ts`.
 
+### 10.12 Dzwonek powiadomień (widget globalny)
+
+- Globalny dzwonek powiadomień (`NotificationBellComponent`) w app-barze — dostępny z **każdej podstrony** (w tym dashboardu) i w wersji mobilnej (od ≥ 320px).
+- Przycisk z ikoną `bell` (`SvgIconComponent`) i **badge'em z licznikiem** (czerwona kropka z sumą alertów; powyżej 99 → „99+").
+- Kliknięcie otwiera **dropdown** (prawoskrętny, `w-80`, `max-w-[calc(100vw-2rem)]`, `max-h-[60vh]` z przewijaniem); na mobile dodatkowo backdrop z przyciemnieniem. **Kliknięcie poza panelem** (globalny nasłuch `document:click`) oraz **Esc** zamykają panel.
+- **Dane** — agregowane przez `NotificationService` z istniejących endpointów dashboardu (read-only, cache TTL 60 s):
+  - `GET /api/v1/dashboard/alerts` → grupy alertów: certyfikaty bliskie wygaśnięcia, zbliżające się przeglądy, nierozwiązane awarie, powroty z urlopów (każda pozycja z datą, pilnością i odnośnikiem do sekcji),
+  - `GET /api/v1/dashboard/charts` → ostatnia aktywność (zlecenia, awarie, faktury, pracownicy) z relatywnym czasem.
+- **Głęboki link do certyfikatu:** alert o wygasającym certyfikacie prowadzi do `/employees`. Kliknięcie zgłasza intencję przez `NotificationService.openDocument(employeeId, docId)` (sygnał `pendingDocument`), a `EmployeesComponent` nasłuchuje przez `effect`, pobiera pracownika (`GET /employees/{id}`), otwiera panel dokumentów i **modal edycji konkretnego certyfikatu** (`openEditDoc`), po czym czyści sygnał. Podejście przez współdzielony serwis (zamiast query params) eliminuje konflikt z trwającą nawigacją i obsługuje ponowne kliknięcie tego samego alertu.
+- Badge licznika = suma liczników grup alertów (`NotificationService.totalCount`).
+- **Dark mode:** panel i lista używają klas `dark:*` (tło `slate-900`, obramowania `slate-800`, teksty `slate-*`).
+- **Dostępność:** `aria-label`/`aria-expanded` na przycisku, `role="dialog"` + `aria-modal` na panelu, `aria-label` na panelu.
+- **Lokalizacje:** `locales/pl/powiadomienia.json` (tytuł, podtytuł, grupy, aktywność, puste, akcje, „Zobacz wszystkie").
+- **Testy:** `notification.service.spec.ts` (agregacja, `totalCount`, odporność na błąd aktywności) oraz `notification-bell.component.spec.ts` (otwieranie/zamykanie, budowa grup, aktywność, Esc).
+
+
+
 ---
 
 ## 11. API Endpoints
@@ -1352,6 +1371,9 @@ zbudować tabelę „Rozliczenie godzin i wynagrodzeń” bez dodatkowych zapyta
 |---|---|---|
 | GET | `/api/v1/dashboard/summary` | Podsumowanie KPI |
 | GET | `/api/v1/dashboard/alerts` | Lista alertów |
+| GET | `/api/v1/dashboard/charts` | Dane wykresów i ostatniej aktywności |
+
+> **Dzwonek powiadomień (10.12):** `NotificationBellComponent` agreguje dane z `GET /api/v1/dashboard/alerts` (grupy alertów) oraz `GET /api/v1/dashboard/charts` (ostatnia aktywność) — bez nowych endpointów. Dane read-only, cache TTL 60 s.
 
 ### 11.14 Szybkie notatki to-do
 

@@ -1,0 +1,17 @@
+{
+  "title": "Powiadomienia",
+  "subtitle": "Najpilniejsze pozycje wymagające uwagi",
+  "empty": "Brak powiadomień",
+  "activity": "Ostatnia aktywność",
+  "see_all": "Zobacz wszystkie",
+  "actions": {
+    "open": "Otwórz powiadomienia",
+    "close": "Zamknij powiadomienia"
+  },
+  "groups": {
+    "expiring_certs": "Certyfikaty bliskie wygaśnięcia",
+    "upcoming_inspections": "Zbliżające się przeglądy",
+    "unresolved_incidents": "Nierozwiązane awarie",
+    "returning_from_leave": "Powroty z urlopów"
+  }
+}

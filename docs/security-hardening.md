@@ -73,3 +73,9 @@ Aby wymusić pełne tokeny CSRF:
 - **Penetration test / audyt bezpieczeństwa** — wykonać zewnętrznie przed produkcyjnym Go-Live.
 - **Docker Secrets / Vault** — konfiguracja środowiskowa (poza repozytorium).
 - **`slow_query_log`**, Redis cache — należą do **Etapu 15a (Wydajność)**.
+
+## 9. Dzwonek powiadomień (Etap 23)
+
+- `NotificationBellComponent` jest **read-only** — agreguje dane z `GET /api/v1/dashboard/alerts` i `GET /api/v1/dashboard/charts` (te same, co dashboard), **nie wprowadza nowych endpointów ani nowych danych osobowych**.
+- Dane podlegają tej samej polityce co dashboard: cache TTL 60 s, brak `no-store` dla danych osobowych (alerty nie zawierają danych wrażliwych poza nazwiskami pracowników, które i tak są widoczne w sekcji Pracownicy).
+- Dostęp do dzwonka mają wszyscy zalogowani użytkownicy (jak Notatki) — nie wymaga osobnego uprawnienia; treść pozycji prowadzi do sekcji, do których użytkownik ma uprawnienia (odnośniki do `/employees`, `/equipment`, `/incidents`).

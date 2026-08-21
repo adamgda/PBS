@@ -148,7 +148,7 @@
         </span>
       </div>
 
-      <!-- Po prawej: przełącznik motywu + przycisk Notatki + awatar (mobile) -->
+      <!-- Po prawej: przełącznik motywu + dzwonek powiadomień + przycisk Notatki + awatar (mobile) -->
       <div class="flex items-center gap-2">
         <button
           type="button"
@@ -162,6 +162,7 @@
             <app-svg-icon name="moon" size="md" />
           }
         </button>
+        <app-notification-bell />
         <button
           type="button"
           (click)="notesWidget.togglePanel()"

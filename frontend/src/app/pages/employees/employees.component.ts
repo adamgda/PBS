@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { EmployeesService } from '../../services/employees.service';
+import { NotificationService } from '../../services/notification.service';
 import { TerminalsService } from '../../services/terminals.service';
 import { EquipmentService } from '../../services/equipment.service';
 import { InvoicesService } from '../../services/invoices.service';
@@ -85,6 +86,7 @@ type QuickFilterKey = 'field' | 'available' | 'entitlements' | 'on_leave';
 })
 export class EmployeesComponent {
   private readonly employeesService = inject(EmployeesService);
+  private readonly notifications = inject(NotificationService);
   private readonly terminalsService = inject(TerminalsService);
   private readonly equipmentService = inject(EquipmentService);
   private readonly invoicesService = inject(InvoicesService);
@@ -342,6 +344,19 @@ export class EmployeesComponent {
     this.loadTerminalOptions();
     this.loadEquipmentFilterOptions();
     this.loadSummary();
+
+    // Głęboki link z dzwonka powiadomień: gdy NotificationService zgłosi intencję
+    // otwarcia konkretnego certyfikatu, otwieramy panel dokumentów i modal.
+    effect(
+      () => {
+        const pending = this.notifications.pendingDocument();
+        if (pending) {
+          this.openDocumentFromNotification(pending.employeeId, pending.docId);
+          this.notifications.clearPendingDocument();
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   // --- Ładowanie listy ---
@@ -569,6 +584,36 @@ export class EmployeesComponent {
   }
 
   // --- Panel dokumentów (certyfikaty i uprawnienia) ---
+
+  /**
+   * Otwiera panel dokumentów pracownika i modal konkretnego certyfikatu.
+   * Używane przez głęboki link z dzwonka powiadomień (query params employee/document).
+   */
+  private openDocumentFromNotification(employeeId: number, docId: number): void {
+    this.employeesService.get(employeeId).subscribe({
+      next: (employee) => {
+        this.docsEmployee.set(employee);
+        this._docsLoading.set(true);
+        this.employeesService.listDocuments(employeeId).subscribe({
+          next: (res) => {
+            this._documents.set(res.data);
+            this._docsLoading.set(false);
+            const doc = res.data.find((d) => d.id === docId);
+            if (doc) {
+              this.openEditDoc(doc);
+            }
+          },
+          error: () => {
+            this._docsLoading.set(false);
+            this.toastService.error(this.t('common.messages.error.generic'));
+          },
+        });
+      },
+      error: () => {
+        this.toastService.error(this.t('common.messages.error.generic'));
+      },
+    });
+  }
 
   openDocuments(employee: Employee): void {
     this.docsEmployee.set(employee);

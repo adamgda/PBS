@@ -99,6 +99,10 @@ import { CommonModule } from '@angular/common';
           <rect x="5" y="11" width="14" height="9" rx="2" />
           <path d="M8 11V8a4 4 0 0 1 8 0v3" />
         }
+        @case ('lock-open') {
+          <rect x="5" y="11" width="14" height="9" rx="2" />
+          <path d="M8 11V8a4 4 0 0 1 7.9-1" />
+        }
         @case ('eye') {
           <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
           <circle cx="12" cy="12" r="3" />
@@ -179,6 +183,10 @@ import { CommonModule } from '@angular/common';
         @case ('notes') {
           <rect x="6" y="3" width="12" height="18" rx="2" />
           <path d="M9 8h6M9 12h6M9 16h4" />
+        }
+        @case ('bell') {
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
         }
         @case ('pencil') {
           <path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />

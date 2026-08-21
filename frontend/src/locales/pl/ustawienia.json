@@ -22,6 +22,7 @@
     "permissions_title": "Edycja uprawnień",
     "permissions_subtitle": "Wybierz sekcje dostępne dla użytkownika",
     "sections": "Sekcje aplikacji",
+    "select_all": "Zaznacz wszystko",
     "search_placeholder": "Szukaj po e-mailu",
     "filter_role": "Rola",
     "filter_status": "Status",
@@ -30,7 +31,6 @@
     "status_blocked": "Zablokowany",
     "status_invited": "Zaproszony",
     "all_users": "Wszyscy użytkownicy",
-    "roles_info": "Role są predefiniowane: z tego poziomu tworzone są wyłącznie konta Administratora. Super Administrator ma dostęp do wszystkich sekcji i nie jest tworzony z tego poziomu. Pracownicy nie posiadają kont — są wyłącznie zasobem zarządzanym w sekcji Pracownicy.",
     "invite_info": "Nowy użytkownik otrzyma e-mail z linkiem do ustawienia hasła. Konto pozostaje w statusie „zaproszony” do pierwszego logowania."
   },
   "roles": {
@@ -46,6 +46,7 @@
     "user_deleted": "Usunięto użytkownika",
     "delete_confirm_title": "Usuwanie użytkownika",
     "delete_confirm_message": "Czy na pewno chcesz usunąć użytkownika {{email}}? Operacja jest nieodwracalna (anonimizacja danych).",
+    "block_confirm_title": "Blokowanie użytkownika",
     "block_confirm_message": "Czy na pewno chcesz zablokować użytkownika {{email}}?",
     "load_error": "Nie udało się pobrać listy użytkowników",
     "email_required": "E-mail jest wymagany",

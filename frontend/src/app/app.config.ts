@@ -28,6 +28,7 @@ import reportingPl from '../locales/pl/reporting.json';
 import notatkiPl from '../locales/pl/notatki.json';
 import qrPl from '../locales/pl/qr.json';
 import exportsPl from '../locales/pl/exports.json';
+import powiadomieniaPl from '../locales/pl/powiadomienia.json';
 
 /**
  * Factory do inicjalizacji tłumaczeń i IndexedDB przy starcie aplikacji.
@@ -51,6 +52,7 @@ function initializeApp(): () => Promise<void> {
       notatki: notatkiPl,
       qr: qrPl,
       exports: exportsPl,
+      powiadomienia: powiadomieniaPl,
     });
     await indexedDb.init();
   };

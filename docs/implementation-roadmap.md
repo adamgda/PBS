@@ -453,6 +453,24 @@ Legenda statusów:
 - [x] Testy: frontend — `ExportsComponent` (lista zestawów, pobieranie Blob, walidacja zakresu dat); build AOT + PHPStan level 9 przechodzą
 - [x] Docs: aktualizacja `docs/technical-documentation.md` (6.2 routing, 6.1.1 lokalizacje, 7.3 uprawnienia, 10.11 sekcja, 11.18 API), `docs/implementation-roadmap.md` (Etap 22), `docs/security-hardening.md` (export)
 
+
+## Etap 23 — Dzwonek powiadomień (widget globalny)
+
+> Globalny dzwonek powiadomień w app-barze — agreguje alerty i ostatnią aktywność z dashboardu, dostępny z każdej podstrony i w wersji mobilnej. Dane read-only z istniejących endpointów dashboardu (bez nowych tabel/endpointów). Szczegóły w `docs/technical-documentation.md` (6.4, 6.7.1, 6.7.2, 10.12, 11.13).
+
+- [x] Frontend: ikona `bell` w `SvgIconComponent` (liniowa, 24×24, `currentColor`)
+- [x] Frontend: `NotificationService` — agregacja `GET /dashboard/alerts` (grupy alertów) + `GET /dashboard/charts` (ostatnia aktywność); sygnały `alerts`, `activity`, `loading`, `totalCount` (suma liczników grup)
+- [x] Frontend: `NotificationBellComponent` (standalone, OnPush) — przycisk z badge'em licznika (99+), dropdown z grupami alertów i aktywnością, odnośniki do sekcji
+- [x] Frontend: głęboki link certyfikatów — alert prowadzi do `/employees`, kliknięcie zgłasza intencję przez `NotificationService.openDocument` (sygnał `pendingDocument`), `EmployeesComponent` (efekt) otwiera panel dokumentów i modal konkretnego certyfikatu
+- [x] Frontend: dark mode — panel i lista z klasami `dark:*` (tło `slate-900`, obramowania `slate-800`)
+- [x] Frontend: mobile — dropdown prawoskrętny (`max-w-[calc(100vw-2rem)]`, `max-h-[60vh]` z przewijaniem) + backdrop z przyciemnieniem; **kliknięcie poza panelem** (`document:click`) i Esc zamykają panel
+- [x] Frontend: dostępność — `aria-label`/`aria-expanded` na przycisku, `role="dialog"` + `aria-modal` na panelu
+- [x] Frontend: osadzenie w app-barze (`AppComponent`) obok przełącznika motywu i przycisku Notatki
+- [x] Lokalizacje: `locales/pl/powiadomienia.json` (tytuł, podtytuł, grupy, aktywność, puste, akcje, „Zobacz wszystkie") + rejestracja w `app.config.ts`
+- [x] Testy: frontend — `notification.service.spec.ts` (agregacja, `totalCount`, odporność na błąd aktywności), `notification-bell.component.spec.ts` (otwieranie/zamykanie, budowa grup, aktywność, Esc); build AOT przechodzi
+- [x] Docs: aktualizacja `docs/technical-documentation.md` (6.1.1, 6.4, 6.7.2, 10.12, 11.13), `docs/implementation-roadmap.md` (Etap 23)
+
+
 ---
 
 > **Uwaga:** Po wdrożeniu i weryfikacji każdego kroku odznacz go zmieniając `- [ ]` na `- [x]`. Dokument jest źródłem prawdy o postępie projektu PBS.

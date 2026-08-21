@@ -5,6 +5,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 
 import { EmployeesComponent } from './employees.component';
+import { NotificationService } from '../../services/notification.service';
 import { TranslateService } from '../../services/translate.service';
 import { environment } from '../../../environments/environment';
 
@@ -429,5 +430,33 @@ describe('EmployeesComponent', () => {
     expect(keys).toContain('terminal_id');
     expect(keys).toContain('sprzet_id');
     expect(keys).toContain('is_active');
+  });
+
+  it('otwiera modal certyfikatu z głębokiego linku (NotificationService)', () => {
+    const fixture = TestBed.createComponent(EmployeesComponent);
+    fixture.detectChanges();
+    flushEmployeeList();
+    flushTerminalOptions();
+
+    const notifications = TestBed.inject(NotificationService);
+    notifications.openDocument(1, 2);
+    fixture.detectChanges();
+
+    // GET /employees/1 (szczegóły pracownika)
+    const empReq = httpMock.expectOne((r) => r.method === 'GET' && r.url.endsWith('/employees/1'));
+    empReq.flush({ id: 1, imie: 'Jan', nazwisko: 'Kowalski', is_active: true });
+
+    // GET /employees/1/documents
+    const docsReq = httpMock.expectOne((r) => r.method === 'GET' && r.url.endsWith('/employees/1/documents'));
+    docsReq.flush({
+      data: [
+        { id: 2, nazwa: 'Cert A', numer_dokumentu: 'X', data_wydania: null, data_waznosci: '2026-09-01', plik: null },
+      ],
+    });
+
+    const comp = fixture.componentInstance;
+    expect(comp.docsEmployee()?.id).toBe(1);
+    expect(comp.docModalMode()).toBe('edit');
+    expect(comp.docEditing()?.id).toBe(2);
   });
 });

@@ -76,7 +76,7 @@
           (clicked)="openPermissions(user)"
         />
         <app-icon-button
-          [icon]="user.is_active ? 'lock' : 'check'"
+          [icon]="user.is_active ? 'lock' : 'lock-open'"
           tone="warning"
           [ariaLabel]="user.is_active ? ('ustawienia.users.block' | translate) : ('ustawienia.users.unblock' | translate)"
           [disabled]="!canManage(user)"
@@ -227,7 +227,7 @@
         (ngModelChange)="modalEmail.set($event)"
       />
 
-      <div class="mb-4">
+      <!-- <div class="mb-4">
         <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'ustawienia.users.role' | translate }}</label>
         <app-select
           [options]="roles"
@@ -235,11 +235,15 @@
           [ngModel]="modalRole()"
           (ngModelChange)="modalRole.set($event)"
         />
-      </div>
+      </div> -->
 
       <!-- Wybór uprawnień (sekcji) dla roli Administrator -->
       <div class="mb-4">
         <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">{{ 'ustawienia.users.sections' | translate }}</label>
+        <label class="mb-2 flex cursor-pointer items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-slate-400">
+          <input type="checkbox" class="h-3.5 w-3.5 rounded accent-pbs-primary" [checked]="allPermissionsChecked()" (change)="toggleAllPermissions($any($event.target).checked)" />
+          {{ 'ustawienia.users.select_all' | translate }}
+        </label>
         <div class="flex flex-wrap gap-2">
           @for (s of sections; track s) {
             <label class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -253,11 +257,6 @@
       <div class="mb-4 flex items-start gap-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800 dark:bg-blue-500/15 dark:text-blue-300">
         <app-svg-icon name="alert" />
         <p>{{ 'ustawienia.users.invite_info' | translate }}</p>
-      </div>
-
-      <div class="mb-4 flex items-start gap-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
-        <app-svg-icon name="alert" />
-        <p>{{ 'ustawienia.users.roles_info' | translate }}</p>
       </div>
 
       <div class="flex justify-end gap-3">
@@ -282,6 +281,10 @@
         <p class="mb-4 truncate text-sm font-medium text-gray-900 dark:text-slate-200">{{ u.email }}</p>
       }
 
+      <label class="mb-2 flex cursor-pointer items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-slate-400">
+        <input type="checkbox" class="h-3.5 w-3.5 rounded accent-pbs-primary" [checked]="allPermissionsChecked()" (change)="toggleAllPermissions($any($event.target).checked)" />
+        {{ 'ustawienia.users.select_all' | translate }}
+      </label>
       <div class="mb-4 flex flex-wrap gap-2">
         @for (s of sections; track s) {
           <label class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">

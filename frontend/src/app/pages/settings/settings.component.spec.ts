@@ -98,6 +98,29 @@ describe('SettingsComponent', () => {
     expect(component.modalPermissions()['pracownicy']).toBe(true);
   });
 
+  it('toggleAllPermissions zaznacza i odznacza wszystkie sekcje naraz', () => {
+    const { component } = create();
+    flushList();
+    component.openCreate();
+
+    // Na starcie nic nie zaznaczone.
+    expect(component.allPermissionsChecked()).toBe(false);
+
+    // Zaznacz wszystko.
+    component.toggleAllPermissions(true);
+    expect(component.allPermissionsChecked()).toBe(true);
+    for (const s of component.sections) {
+      expect(component.isPermissionChecked(s)).toBe(true);
+    }
+
+    // Odznacz wszystko.
+    component.toggleAllPermissions(false);
+    expect(component.allPermissionsChecked()).toBe(false);
+    for (const s of component.sections) {
+      expect(component.isPermissionChecked(s)).toBe(false);
+    }
+  });
+
   it('role tworzenia są predefiniowane: tylko Administrator (bez super_admin i user)', () => {
     const { component } = create();
     flushList();

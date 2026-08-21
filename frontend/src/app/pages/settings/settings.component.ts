@@ -188,6 +188,22 @@ export class SettingsComponent {
     return this.modalPermissions()[section] === true;
   }
 
+  /** Czy wszystkie sekcje są zaznaczone (dla checkboxa „zaznacz wszystko”). */
+  readonly allPermissionsChecked = computed(() =>
+    PERMISSION_SECTIONS.every((s) => this.modalPermissions()[s] === true)
+  );
+
+  /** Zaznacza / odznacza wszystkie sekcje naraz. */
+  toggleAllPermissions(checked: boolean): void {
+    this.modalPermissions.update((p) => {
+      const next = { ...p };
+      for (const s of PERMISSION_SECTIONS) {
+        next[s] = checked;
+      }
+      return next;
+    });
+  }
+
   saveCreate(): void {
     const email = this.modalEmail().trim();
     if (!email) { this.toastService.error(this.t('ustawienia.messages.email_required')); return; }
@@ -232,6 +248,7 @@ export class SettingsComponent {
     if (user.is_active) {
       // Blokowanie — z potwierdzeniem
       const confirmed = await this.confirmService.confirm({
+        title: this.t('ustawienia.messages.block_confirm_title'),
         message: this.t('ustawienia.messages.block_confirm_message', { email: user.email }),
         danger: true,
       });
