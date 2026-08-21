@@ -94,6 +94,39 @@ class MailService
     }
 
     /**
+     * Wysyła powiadomienie superadminowi o błędzie endpointu (status 5xx).
+     *
+     * Zawiera endpoint, kod statusu, adres IP, czas oraz komunikat błędu
+     * (z opcjonalnym stack trace w trybie debug).
+     *
+     * @return bool true, gdy wysłano (lub zalogowano w trybie dev)
+     */
+    public function sendErrorNotification(
+        string $to,
+        int $status,
+        string $method,
+        string $path,
+        string $message,
+        ?string $trace = null,
+        string $ip = '',
+    ): bool {
+        $subject = sprintf('[PBS] Błąd endpointu %d — %s %s', $status, $method, $path);
+
+        $body = "W systemie PBS wystąpił błąd na endpointcie.\n\n"
+            . "Endpoint: {$method} {$path}\n"
+            . "HTTP status: {$status}\n"
+            . "IP: {$ip}\n"
+            . "Czas: " . date('Y-m-d H:i:s') . "\n\n"
+            . "Komunikat: {$message}\n";
+
+        if ($trace !== null && $trace !== '') {
+            $body .= "\nStack trace:\n{$trace}\n";
+        }
+
+        return $this->send($to, $subject, $body);
+    }
+
+    /**
      * @param string $to Adres odbiorcy
      * @param string $subject Temat wiadomości
      * @param string $body Treść wiadomości

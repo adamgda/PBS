@@ -13,6 +13,15 @@ class TranslateServiceStub {
   }
 }
 
+/** Porównuje, czy dwa `Date` dotyczą tego samego dnia (lokalnie). */
+function sameDayForTest(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 describe('DatepickerComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -31,15 +40,75 @@ describe('DatepickerComponent', () => {
     return { fixture, comp, el: fixture.nativeElement as HTMLElement };
   }
 
-  it('powinien utworzyć komponent z natywnym input type="date"', () => {
+  it('powinien utworzyć komponent z własnym triggerem (bez natywnego input type="date")', () => {
     const { el } = create();
-    const input = el.querySelector<HTMLInputElement>('input[type="date"]');
-    expect(input).not.toBeNull();
+    const native = el.querySelector<HTMLInputElement>('input[type="date"]');
+    expect(native).toBeNull();
+    const trigger = el.querySelector<HTMLButtonElement>('button[type="button"]');
+    expect(trigger).not.toBeNull();
   });
 
   it('powinien mieć domyślną ikonę kalendarza', () => {
     const { comp } = create();
     expect(comp.icon).toBe('calendar');
+  });
+
+  it('powinien otwierać i zamykać kalendarz przez toggle()', () => {
+    const { comp, fixture } = create();
+    expect(comp.open()).toBe(false);
+
+    comp.toggle();
+    fixture.detectChanges();
+    expect(comp.open()).toBe(true);
+
+    comp.toggle();
+    fixture.detectChanges();
+    expect(comp.open()).toBe(false);
+  });
+
+  it('selectDay ustawia wartość ISO, wywołuje onChange i zamyka kalendarz', () => {
+    const { comp, fixture } = create();
+    const calls: string[] = [];
+    comp.registerOnChange((v) => calls.push(v));
+    comp.toggle();
+    fixture.detectChanges();
+
+    comp.selectDay(new Date(2026, 7, 9));
+    expect(comp.value()).toBe('2026-08-09');
+    expect(calls).toContain('2026-08-09');
+    expect(comp.open()).toBe(false);
+    expect(comp.canClear()).toBe(true);
+  });
+
+  it('min/max wyłączają dni poza zakresem', () => {
+    const { comp, fixture } = create();
+    comp.min = '2026-01-01';
+    comp.max = '2026-01-31';
+    comp.viewYear.set(2026);
+    comp.viewMonth.set(0);
+    fixture.detectChanges();
+
+    const cells = comp.cells();
+    const before = cells.find((c) => sameDayForTest(c.date, new Date(2025, 11, 31)));
+    const inside = cells.find((c) => sameDayForTest(c.date, new Date(2026, 0, 15)));
+    const after = cells.find((c) => sameDayForTest(c.date, new Date(2026, 1, 1)));
+    expect(before?.disabled).toBe(true);
+    expect(inside?.disabled).toBe(false);
+    expect(after?.disabled).toBe(true);
+  });
+
+  it('goToday wybiera dzisiejszą datę, gdy jest w zakresie min/max', () => {
+    const { comp, fixture } = create();
+    const calls: string[] = [];
+    comp.registerOnChange((v) => calls.push(v));
+    comp.min = '2000-01-01';
+    comp.max = '2100-01-01';
+
+    comp.goToday();
+    fixture.detectChanges();
+
+    expect(comp.value()).toBeTruthy();
+    expect(calls.length).toBe(1);
   });
 
   it('writeValue ustawia wartość i pokazuje przycisk clear', () => {
@@ -73,22 +142,7 @@ describe('DatepickerComponent', () => {
     expect(cleared).toBe(true);
   });
 
-  it('onInput propaguje wartość do onChange i aktualizuje canClear', () => {
-    const { comp, el } = create();
-    const calls: string[] = [];
-    comp.registerOnChange((v) => calls.push(v));
-    comp.writeValue('');
-
-    const input = el.querySelector<HTMLInputElement>('input[type="date"]')!;
-    input.value = '2027-01-15';
-    input.dispatchEvent(new Event('input'));
-
-    expect(comp.value()).toBe('2027-01-15');
-    expect(comp.canClear()).toBe(true);
-    expect(calls).toContain('2027-01-15');
-  });
-
-  it('setDisabledState blokuje pole i ukrywa przycisk clear', () => {
+  it('setDisabledState blokuje trigger i ukrywa przycisk clear', () => {
     const { comp, fixture, el } = create();
     comp.writeValue('2026-08-09');
     comp.setDisabledState(true);
@@ -96,8 +150,8 @@ describe('DatepickerComponent', () => {
 
     expect(comp.disabledState()).toBe(true);
     expect(comp.canClear()).toBe(false);
-    const input = el.querySelector<HTMLInputElement>('input')!;
-    expect(input.disabled).toBe(true);
+    const trigger = el.querySelector<HTMLButtonElement>('button[type="button"]')!;
+    expect(trigger.disabled).toBe(true);
   });
 
   it('powinien renderować etykietę z labelKey', () => {

@@ -202,6 +202,11 @@ import { CommonModule } from '@angular/common';
           <rect x="3" y="14" width="7" height="7" rx="1.5" />
           <path d="M14 14h3v3h-3zM18 18h3v3h-3z" />
         }
+        @case ('export') {
+          <path d="M12 3v12" />
+          <path d="m7 10 5 5 5-5" />
+          <path d="M4 19h16" />
+        }
         @default {
           <circle cx="12" cy="12" r="9" />
         }

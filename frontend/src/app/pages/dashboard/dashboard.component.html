@@ -24,29 +24,38 @@
       </button>
     </div>
 
-    <!-- Statystyki dnia -->
+    <!-- Statystyki dnia (skeleton podczas ładowania — zamiast pokazywania "0") -->
     <div class="relative mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-      @for (stat of heroStats(); track stat.key) {
-        <div class="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/15 backdrop-blur">
-          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/15 text-white">
-            <app-svg-icon [name]="stat.icon" size="sm" />
-          </span>
-          <div class="min-w-0">
-            <p class="truncate text-xs text-blue-100/70">{{ stat.key | translate }}</p>
-            <p class="text-lg font-bold leading-tight">{{ stat.value }}</p>
+      @if (summaryLoading()) {
+        @for (i of [0, 1, 2]; track i) {
+          <div class="flex animate-pulse items-center gap-3 rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/15 backdrop-blur">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/15">
+              <div class="h-4 w-4 rounded bg-white/30"></div>
+            </span>
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="h-3 w-2/3 rounded bg-white/25"></div>
+              <div class="h-5 w-1/3 rounded bg-white/25"></div>
+            </div>
           </div>
-        </div>
+        }
+      } @else {
+        @for (stat of heroStats(); track stat.key) {
+          <div class="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/15 backdrop-blur">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/15 text-white">
+              <app-svg-icon [name]="stat.icon" size="sm" />
+            </span>
+            <div class="min-w-0">
+              <p class="truncate text-xs text-blue-100/70">{{ stat.key | translate }}</p>
+              <p class="text-lg font-bold leading-tight">{{ stat.value }}</p>
+            </div>
+          </div>
+        }
       }
     </div>
   </section>
 
-  <!-- ===== Stan ładowania / błąd ===== -->
-  @if (loading()) {
-    <div class="flex items-center justify-center gap-3 rounded-xl border border-gray-100 bg-white p-6 text-sm text-gray-500 shadow-card dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-      <span class="h-4 w-4 animate-spin rounded-full border-2 border-pbs-primary border-t-transparent"></span>
-      {{ 'common.table.loading' | translate }}
-    </div>
-  } @else if (error()) {
+  <!-- ===== Błąd ===== -->
+  @if (error()) {
     <div class="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
       <app-svg-icon name="alert" size="sm" />
       {{ error() | translate }}
@@ -56,14 +65,29 @@
 
   <!-- ===== Karty KPI ===== -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    @for (kpi of kpis(); track kpi.label) {
-      <app-kpi-card
-        [label]="kpi.label"
-        [value]="kpi.value"
-        [icon]="kpi.icon"
-        [tone]="kpi.tone"
-        [subtitle]="kpi.subtitle ?? ''"
-      />
+    @if (summaryLoading()) {
+      @for (i of [0, 1, 2, 3]; track i) {
+        <div class="animate-pulse rounded-xl bg-white p-5 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-slate-700"></div>
+              <div class="h-7 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
+            </div>
+            <div class="h-11 w-11 shrink-0 rounded-xl bg-gray-200 dark:bg-slate-700"></div>
+          </div>
+          <div class="mt-3 h-3 w-1/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+        </div>
+      }
+    } @else {
+      @for (kpi of kpis(); track kpi.label) {
+        <app-kpi-card
+          [label]="kpi.label"
+          [value]="kpi.value"
+          [icon]="kpi.icon"
+          [tone]="kpi.tone"
+          [subtitle]="kpi.subtitle ?? ''"
+        />
+      }
     }
   </div>
 
@@ -75,17 +99,26 @@
           <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.charts.area_title' | translate }}</h2>
           <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.charts.area_subtitle' | translate }}</p>
         </div>
-        <span
-          class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
-          [class]="areaTrend() >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
-        >
+        @if (!chartsLoading() && charts()) {
           <span
-            class="h-1.5 w-1.5 rounded-full"
-            [class]="areaTrend() >= 0 ? 'bg-emerald-500' : 'bg-red-500'"
-          ></span>{{ areaTrend() >= 0 ? '+' : '' }}{{ areaTrend() }}%
-        </span>
+            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
+            [class]="areaTrend() >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
+          >
+            <span
+              class="h-1.5 w-1.5 rounded-full"
+              [class]="areaTrend() >= 0 ? 'bg-emerald-500' : 'bg-red-500'"
+            ></span>{{ areaTrend() >= 0 ? '+' : '' }}{{ areaTrend() }}%
+          </span>
+        }
       </div>
-      @if (charts()) {
+      @if (chartsLoading()) {
+        <div class="grid h-[300px] place-items-center">
+          <div class="flex flex-col items-center gap-2">
+            <span class="h-6 w-6 animate-spin rounded-full border-2 border-pbs-primary border-t-transparent"></span>
+            <span class="text-xs text-gray-400 dark:text-slate-500">{{ 'dashboard.charts.loading' | translate }}</span>
+          </div>
+        </div>
+      } @else if (charts()) {
         <apx-chart
           [chart]="area().chart"
           [series]="area().series"
@@ -107,7 +140,14 @@
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.charts.donut_title' | translate }}</h2>
         <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.charts.donut_subtitle' | translate }}</p>
       </div>
-      @if (charts()) {
+      @if (chartsLoading()) {
+        <div class="grid h-[300px] place-items-center">
+          <div class="flex flex-col items-center gap-2">
+            <span class="h-6 w-6 animate-spin rounded-full border-2 border-pbs-primary border-t-transparent"></span>
+            <span class="text-xs text-gray-400 dark:text-slate-500">{{ 'dashboard.charts.loading' | translate }}</span>
+          </div>
+        </div>
+      } @else if (charts()) {
         <apx-chart
           [chart]="donut().chart"
           [series]="donut().series"
@@ -124,14 +164,21 @@
     </div>
   </div>
 
-  <!-- ===== Wykres bar + alerty ===== -->
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-    <div class="app-card p-5 lg:col-span-2">
+  <!-- ===== Wykres bar (obrót per terminal) ===== -->
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <div class="app-card p-5">
       <div class="mb-4">
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.charts.bar_title' | translate }}</h2>
         <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.charts.bar_subtitle' | translate }}</p>
       </div>
-      @if (charts()) {
+      @if (chartsLoading()) {
+        <div class="grid h-[300px] place-items-center">
+          <div class="flex flex-col items-center gap-2">
+            <span class="h-6 w-6 animate-spin rounded-full border-2 border-pbs-primary border-t-transparent"></span>
+            <span class="text-xs text-gray-400 dark:text-slate-500">{{ 'dashboard.charts.loading' | translate }}</span>
+          </div>
+        </div>
+      } @else if (charts()) {
         <apx-chart
           [chart]="bar().chart"
           [series]="bar().series"
@@ -148,72 +195,168 @@
       }
     </div>
 
-    <div class="app-card flex flex-col p-5">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.alerts.title' | translate }}</h2>
-        <span class="grid h-8 w-8 place-items-center rounded-lg bg-amber-50 text-amber-600">
-          <app-svg-icon name="alert" size="sm" />
-        </span>
-      </div>
-      <ul class="space-y-3">
-        @for (alert of alerts(); track alert.key) {
-          <li class="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-2.5 transition-colors hover:bg-gray-50 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:bg-slate-800/70">
-            <span class="text-sm text-gray-700 dark:text-slate-300">{{ alert.key | translate }}</span>
-            <span
-              class="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white"
-              [class]="alertBadgeClass(alert.tone)"
-            >
-              {{ alert.count }}
-            </span>
-          </li>
-        }
-      </ul>
-    </div>
-  </div>
-
-  <!-- ===== Aktywność + skróty ===== -->
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <!-- ===== Ostatnia aktywność — obok obrotów terminali (50/50) ===== -->
     <div class="app-card p-5">
       <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.activity.title' | translate }}</h2>
-      <ol class="relative space-y-5 border-l border-gray-200 pl-5">
-        @for (item of activity(); track $index) {
-          <li class="relative animate-fade-in">
-            <span
-              class="absolute -left-[30px] grid h-5 w-5 place-items-center rounded-full ring-4 ring-white"
-              [class]="item.badge"
-            >
-              <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
-            </span>
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <p class="text-xs text-gray-400 dark:text-slate-500">{{ item.titleKey | translate }}</p>
-                <p class="truncate text-sm font-medium text-gray-800 dark:text-slate-200">{{ item.title }}</p>
+      <ol class="relative space-y-5 border-l border-gray-200 pl-5 dark:border-slate-800">
+        @if (chartsLoading()) {
+          @for (i of [0, 1, 2, 3]; track i) {
+            <li class="relative animate-pulse">
+              <span class="absolute -left-[30px] grid h-5 w-5 place-items-center rounded-full bg-gray-200 ring-4 ring-white dark:bg-slate-700 dark:ring-slate-900">
+                <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+              </span>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1 space-y-1.5">
+                  <div class="h-3 w-1/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+                  <div class="h-4 w-3/4 rounded bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+                <div class="h-3 w-12 shrink-0 rounded bg-gray-200 dark:bg-slate-700"></div>
               </div>
-              <span class="shrink-0 text-xs text-gray-400 dark:text-slate-500">{{ item.time }}</span>
-            </div>
-          </li>
-        } @empty {
-          <li class="text-sm text-gray-400 dark:text-slate-500">{{ 'dashboard.activity.empty' | translate }}</li>
+            </li>
+          }
+        } @else {
+          @for (item of activity(); track $index) {
+            <li class="relative animate-fade-in">
+              <span
+                class="absolute -left-[30px] grid h-5 w-5 place-items-center rounded-full ring-4 ring-white dark:ring-slate-900"
+                [class]="item.badge"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+              </span>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-400 dark:text-slate-500">{{ item.titleKey | translate }}</p>
+                  <p class="truncate text-sm font-medium text-gray-800 dark:text-slate-200">{{ item.title }}</p>
+                </div>
+                <span class="shrink-0 text-xs text-gray-400 dark:text-slate-500">{{ item.time }}</span>
+              </div>
+            </li>
+          } @empty {
+            <li class="text-sm text-gray-400 dark:text-slate-500">{{ 'dashboard.activity.empty' | translate }}</li>
+          }
         }
       </ol>
     </div>
+  </div>
 
-    <div class="app-card p-5">
-      <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.shortcuts.title' | translate }}</h2>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        @for (shortcut of shortcuts(); track shortcut.key) {
-          <button
-            type="button"
-            (click)="go(shortcut.route)"
-            class="group flex flex-col items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-center transition-all hover:-translate-y-0.5 hover:border-pbs-secondary/30 hover:bg-white hover:shadow-card-hover dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-pbs-secondary/40 dark:hover:bg-slate-800"
-          >
-            <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-pbs-primary to-pbs-navy-600 text-white shadow-sm transition-transform group-hover:scale-105">
-              <app-svg-icon [name]="shortcut.icon" />
-            </span>
-            <span class="text-sm font-medium text-gray-700 dark:text-slate-300">{{ shortcut.key | translate }}</span>
-          </button>
+  <!-- ===== Alerty i uwagi — szczegółowe pozycje z odnośnikami ===== -->
+  <div class="app-card p-5">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.alerts.title' | translate }}</h2>
+        <p class="text-xs text-gray-500 dark:text-slate-400">{{ 'dashboard.alerts.subtitle' | translate }}</p>
+      </div>
+      <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-50 text-amber-600">
+        <app-svg-icon name="alert" size="sm" />
+      </span>
+    </div>
+
+    @if (alertsLoading()) {
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        @for (i of [0, 1, 2, 3]; track i) {
+          <div class="flex animate-pulse flex-col overflow-hidden rounded-xl border border-gray-100 bg-gray-50/50 dark:border-slate-800 dark:bg-slate-800/40">
+            <div class="flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-2.5 dark:border-slate-800">
+              <div class="flex min-w-0 items-center gap-2">
+                <span class="h-8 w-8 shrink-0 rounded-lg bg-gray-200 dark:bg-slate-700"></span>
+                <div class="min-w-0 flex-1 space-y-1.5">
+                  <div class="h-3 w-2/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+                  <div class="h-2.5 w-1/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+              </div>
+              <div class="h-6 w-6 rounded-full bg-gray-200 dark:bg-slate-700"></div>
+            </div>
+            <div class="flex-1 space-y-2 p-3">
+              @for (j of [0, 1, 2]; track j) {
+                <div class="h-9 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+              }
+            </div>
+            <div class="h-8 border-t border-gray-100 dark:border-slate-800"></div>
+          </div>
         }
       </div>
+    } @else {
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      @for (group of alertGroups(); track group.key) {
+        <div class="flex flex-col overflow-hidden rounded-xl border border-gray-100 bg-gray-50/50 dark:border-slate-800 dark:bg-slate-800/40">
+          <div class="flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-2.5 dark:border-slate-800">
+            <div class="flex min-w-0 items-center gap-2">
+              <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white" [class]="alertBadgeClass(group.tone)">
+                <app-svg-icon [name]="group.icon" size="sm" />
+              </span>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-gray-800 dark:text-slate-200">{{ group.key | translate }}</p>
+                <p class="text-[11px] text-gray-400 dark:text-slate-500">{{ group.count }} {{ 'dashboard.alerts.position' | translate }}</p>
+              </div>
+            </div>
+            <span
+              class="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white"
+              [class]="alertBadgeClass(group.tone)"
+            >
+              {{ group.count }}
+            </span>
+          </div>
+
+          <ul class="flex-1 space-y-2 p-3">
+            @for (item of group.items.slice(0, 4); track item.id) {
+              <li>
+                <a
+                  [routerLink]="item.route"
+                  class="group block rounded-lg border border-gray-100 bg-white px-3 py-2.5 transition-colors hover:border-pbs-secondary/40 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-pbs-secondary/40"
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="min-w-0 flex-1 truncate text-sm font-medium text-gray-800 group-hover:text-pbs-secondary dark:text-slate-200">
+                      {{ item.title }}
+                    </p>
+                    @if (item.urgency) {
+                      <span class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                        {{ item.urgency }}
+                      </span>
+                    }
+                  </div>
+                  @if (item.meta) {
+                    <p class="mt-0.5 truncate text-xs text-gray-500 dark:text-slate-400">{{ item.meta }}</p>
+                  }
+                  @if (item.date) {
+                    <p class="mt-0.5 text-[11px] text-gray-400 dark:text-slate-500">{{ item.date }}</p>
+                  }
+                </a>
+              </li>
+            } @empty {
+              <li class="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-center text-xs text-gray-400 dark:border-slate-700 dark:text-slate-500">
+                {{ 'dashboard.alerts.empty' | translate }}
+              </li>
+            }
+          </ul>
+
+          <a
+            [routerLink]="group.route"
+            class="mt-auto flex items-center justify-center gap-1 border-t border-gray-100 px-3 py-2 text-xs font-semibold text-pbs-secondary transition-colors hover:bg-white hover:bg-pbs-secondary/5 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-pbs-secondary"
+          >
+            {{ 'dashboard.alerts.see_all' | translate }}
+            <app-svg-icon name="arrow-left" size="sm" class="rotate-180" />
+          </a>
+        </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- ===== Szybkie akcje — na całą szerokość, jak alerty i uwagi ===== -->
+  <div class="app-card p-5">
+    <h2 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">{{ 'dashboard.shortcuts.title' | translate }}</h2>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      @for (shortcut of shortcuts(); track shortcut.key) {
+        <button
+          type="button"
+          (click)="go(shortcut.route)"
+          class="group flex flex-col items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-center transition-all hover:-translate-y-0.5 hover:border-pbs-secondary/30 hover:bg-white hover:shadow-card-hover dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-pbs-secondary/40 dark:hover:bg-slate-800"
+        >
+          <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-pbs-primary to-pbs-navy-600 text-white shadow-sm transition-transform group-hover:scale-105">
+            <app-svg-icon [name]="shortcut.icon" />
+          </span>
+          <span class="text-sm font-medium text-gray-700 dark:text-slate-300">{{ shortcut.key | translate }}</span>
+        </button>
+      }
     </div>
   </div>
 </div>

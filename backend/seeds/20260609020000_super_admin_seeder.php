@@ -20,6 +20,7 @@ final class SuperAdminSeeder implements SeederInterface
             'raportowanie' => true,
             'ustawienia' => true,
             'awaria' => true,
+            'export_csv' => true,
         ]);
 
         $stmt = $pdo->prepare(

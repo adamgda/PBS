@@ -19,6 +19,7 @@ import {
 
 import { AnalyticsService } from '../../services/analytics.service';
 import { TranslateService } from '../../services/translate.service';
+import { ThemeService } from '../../services/theme.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
 import { KpiCardComponent, KpiTone } from '../../components/kpi-card/kpi-card.component';
@@ -27,6 +28,7 @@ import {
   AnalyticsTerminal,
   AnalyticsEmployee,
   AnalyticsEquipment,
+  AnalyticsOrderInTime,
   AnalyticsRelation,
 } from '../../models/analytics.model';
 
@@ -63,6 +65,7 @@ type RangePreset = '7' | '30' | '90' | '365';
 export class AnalyticsComponent {
   private readonly analyticsService = inject(AnalyticsService);
   private readonly translate = inject(TranslateService);
+  private readonly themeService = inject(ThemeService);
 
   readonly activePreset = signal<RangePreset>('30');
   readonly loading = signal<boolean>(false);
@@ -72,12 +75,14 @@ export class AnalyticsComponent {
   private readonly _terminals = signal<AnalyticsTerminal[]>([]);
   private readonly _employees = signal<AnalyticsEmployee[]>([]);
   private readonly _equipment = signal<AnalyticsEquipment[]>([]);
+  private readonly _ordersInTime = signal<AnalyticsOrderInTime[]>([]);
   private readonly _relations = signal<AnalyticsRelation[]>([]);
 
   readonly overview = this._overview.asReadonly();
   readonly terminals = this._terminals.asReadonly();
   readonly employees = this._employees.asReadonly();
   readonly equipment = this._equipment.asReadonly();
+  readonly ordersInTime = this._ordersInTime.asReadonly();
   readonly relations = this._relations.asReadonly();
 
   /**
@@ -118,7 +123,7 @@ export class AnalyticsComponent {
       date_to: this.toDate(dateTo),
     };
 
-    let pending = 5;
+    let pending = 6;
     const done = (): void => {
       pending -= 1;
       if (pending <= 0) {
@@ -143,6 +148,11 @@ export class AnalyticsComponent {
     });
     this.analyticsService.equipment(params).subscribe({
       next: (d) => this._equipment.set(d.data),
+      error: () => this.handleError(),
+      complete: done,
+    });
+    this.analyticsService.ordersInTime(params).subscribe({
+      next: (d) => this._ordersInTime.set(d.data),
       error: () => this.handleError(),
       complete: done,
     });
@@ -179,16 +189,19 @@ export class AnalyticsComponent {
 
   readonly terminalBar = computed(() => {
     const rows = this._terminals();
+    const dark = this.themeService.dark();
+    // Ten sam kolor słupków co w dashboard (ujednolicenie) — reaguje na darkmode.
+    const barColor = dark ? '#60a5fa' : '#2563eb';
     return {
       chart: { type: 'bar', height: 300, fontFamily: 'Inter, sans-serif', toolbar: { show: false }, parentHeightOffset: 0 } as ApexChart,
       series: [{ name: this.t('analytics.charts.orders'), data: rows.map((r) => r.order_count) }] as ApexAxisChartSeries,
       xaxis: { categories: rows.map((r) => r.nazwa ?? '—'), axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#94a3b8', fontSize: '12px' } } } as ApexXAxis,
       yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } } as ApexYAxis,
       plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } } as ApexPlotOptions,
-      colors: ['#0891b2'],
+      colors: [barColor],
       grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } } as ApexGrid,
       dataLabels: { enabled: false } as ApexDataLabels,
-      tooltip: { theme: 'light' } as ApexTooltip,
+      tooltip: { theme: dark ? 'dark' : 'light' } as ApexTooltip,
       legend: { show: false } as ApexLegend,
     };
   });
@@ -196,17 +209,39 @@ export class AnalyticsComponent {
   // --- Wykres: rozkład sprzętu (donut) ---
 
   readonly equipmentDonut = computed(() => {
-    const rows = this._equipment();
+    // „Najczęściej przypisany sprzęt" — pokazujemy tylko sprzęt z co najmniej
+    // jednym przypisaniem (bez pustych wycinków) i ograniczamy do top 6.
+    const used = this._equipment()
+      .filter((r) => (r.assignment_count ?? 0) > 0)
+      .slice(0, 6);
+    const dark = this.themeService.dark();
+    // Kolory czytelne w obu motywach: jasny font wartości na ciemnym tle.
+    const centerValueColor = dark ? '#e2e8f0' : '#172d49';
+    const mutedColor = dark ? '#94a3b8' : '#64748b';
+    const legendColor = dark ? '#cbd5e1' : '#475569';
     return {
       chart: { type: 'donut', height: 300, fontFamily: 'Inter, sans-serif' } as ApexChart,
-      series: rows.map((r) => r.assignment_count) as ApexNonAxisChartSeries,
-      labels: rows.map((r) => r.nazwa ?? '—'),
+      series: used.map((r) => r.assignment_count) as ApexNonAxisChartSeries,
+      labels: used.map((r) => r.nazwa ?? '—'),
       colors: ['#0891b2', '#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
-      legend: { position: 'bottom', fontFamily: 'Inter, sans-serif', labels: { colors: '#475569' } } as ApexLegend,
-      plotOptions: { pie: { donut: { size: '72%', labels: { show: true, name: { show: false }, value: { show: true, fontSize: '22px', fontWeight: '700', color: '#172d49' }, total: { show: true, label: this.t('analytics.charts.assignments'), color: '#64748b', fontSize: '12px' } } } } } as ApexPlotOptions,
+      legend: { position: 'bottom', fontFamily: 'Inter, sans-serif', labels: { colors: legendColor } } as ApexLegend,
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '72%',
+            labels: {
+              show: true,
+              name: { show: false },
+              value: { show: true, fontSize: '22px', fontWeight: '700', color: centerValueColor },
+              total: { show: true, label: this.t('analytics.charts.assignments'), color: mutedColor, fontSize: '12px' },
+            },
+          },
+        },
+      } as ApexPlotOptions,
       dataLabels: { enabled: false } as ApexDataLabels,
-      stroke: { width: 0 },
-      tooltip: { theme: 'light' } as ApexTooltip,
+      // Obrys segmentów dopasowany do motywu — w dark mode ciemny zamiast białego.
+      stroke: { width: 2, colors: [dark ? '#0f172a' : '#ffffff'] },
+      tooltip: { theme: dark ? 'dark' : 'light' } as ApexTooltip,
       responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }] as ApexResponsive[],
     };
   });
@@ -214,19 +249,31 @@ export class AnalyticsComponent {
   // --- Wykres: zlecenia w czasie (line) ---
 
   readonly ordersLine = computed(() => {
-    const rows = this._terminals();
+    const days = this._ordersInTime();
+    const dark = this.themeService.dark();
+    // Kolor linii reagujący na darkmode (spójny ze słupkami) — jaśniejszy odcień
+    // w ciemnym motywie, aby linia była wyraźnie widoczna.
+    const lineColor = dark ? '#60a5fa' : '#2563eb';
     return {
       chart: { type: 'line', height: 300, fontFamily: 'Inter, sans-serif', toolbar: { show: false }, parentHeightOffset: 0 } as ApexChart,
-      series: [{ name: this.t('analytics.charts.orders'), data: rows.map((r) => r.order_count) }] as ApexAxisChartSeries,
-      xaxis: { categories: rows.map((r) => r.nazwa ?? '—'), axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#94a3b8', fontSize: '12px' } } } as ApexXAxis,
+      series: [{ name: this.t('analytics.charts.orders'), data: days.map((d) => d.count) }] as ApexAxisChartSeries,
+      xaxis: {
+        categories: days.map((d) => this.shortDate(d.day)),
+        axisBorder: { show: false },
+        axisTicks: { show: false },
+        labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
+        tickAmount: 8,
+      } as ApexXAxis,
       yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } } as ApexYAxis,
-      stroke: { curve: 'smooth', width: 2.5 } as ApexStroke,
-      fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.03, stops: [0, 90, 100] } } as ApexFill,
+      stroke: { curve: 'smooth', width: 3, lineCap: 'round' } as ApexStroke,
+      // Jednolite, subtelne wypełnienie obszaru pod linią — bez gradientu,
+      // który rozmywał i rozjaśniał samą linię (stąd „niewidoczna”).
+      fill: { type: 'solid', opacity: 0.12 } as ApexFill,
       grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } } as ApexGrid,
       dataLabels: { enabled: false } as ApexDataLabels,
-      tooltip: { theme: 'light', marker: { show: true } } as ApexTooltip,
+      tooltip: { theme: dark ? 'dark' : 'light', marker: { show: true } } as ApexTooltip,
       legend: { show: false } as ApexLegend,
-      colors: ['#3b82f6'],
+      colors: [lineColor],
     };
   });
 
@@ -243,6 +290,15 @@ export class AnalyticsComponent {
   initials(name: string): string {
     const parts = name.split(' ').filter(Boolean);
     return (parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '');
+  }
+
+  /** Formatuje ISO (Y-m-d) do czytelnej etykiety osi: DD.MM */
+  private shortDate(iso: string): string {
+    const parts = iso.split('-');
+    if (parts.length !== 3) {
+      return iso;
+    }
+    return `${parts[2]}.${parts[1]}`;
   }
 
   private toDate(d: Date): string {

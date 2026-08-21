@@ -1,0 +1,39 @@
+{
+  "title": "Eksport danych",
+  "subtitle": "Generowanie plików CSV na podstawie danych systemu",
+  "range": {
+    "from": "Data od",
+    "to": "Data do",
+    "hint": "Pole opcjonalne — bez zakresu eksportowane są wszystkie rekordy."
+  },
+  "buttons": {
+    "export": "Eksportuj CSV"
+  },
+  "datasets": {
+    "orders": {
+      "title": "Zlecenia i rozliczenia",
+      "desc": "Zlecenia z rozliczeniem godzin i wynagrodzeń (per przypisanie)"
+    },
+    "employees": {
+      "title": "Pracownicy",
+      "desc": "Lista pracowników z terminalem i sprzętem"
+    },
+    "equipment": {
+      "title": "Sprzęt",
+      "desc": "Sprzęt i pojazdy z przebiegiem, OC i planowanymi przeglądami"
+    },
+    "incidents": {
+      "title": "Awarie",
+      "desc": "Zgłoszenia awarii z czasem trwania"
+    },
+    "daily_reports": {
+      "title": "Raporty dzienne",
+      "desc": "Raporty z terminali i pojazdów"
+    }
+  },
+  "messages": {
+    "date_range_invalid": "Data „od\" nie może być późniejsza niż „do\"",
+    "downloaded": "Plik CSV został pobrany",
+    "download_failed": "Nie udało się wygenerować pliku CSV"
+  }
+}

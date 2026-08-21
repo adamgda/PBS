@@ -46,10 +46,15 @@
     "donut_title": "Struktura floty",
     "donut_subtitle": "Udział typów pojazdów",
     "bar_title": "Obrót per terminal",
-    "bar_subtitle": "Wartość zleceń obsługiwanych w tym miesiącu (PLN)"
+    "bar_subtitle": "Wartość zleceń obsługiwanych w tym miesiącu (PLN)",
+    "loading": "Ładowanie danych…"
   },
   "alerts": {
     "title": "Alerty i uwagi",
+    "subtitle": "Najpilniejsze pozycje wymagające uwagi — kliknij, aby zarządzać",
+    "position": "pozycji",
+    "see_all": "Zobacz wszystkie",
+    "empty": "Brak pozycji",
     "expiring_certs": "Certyfikaty bliskie wygaśnięcia",
     "upcoming_inspections": "Zbliżające się przeglądy",
     "unresolved_incidents": "Nierozwiązane awarie",

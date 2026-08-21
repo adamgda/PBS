@@ -14,6 +14,7 @@ use App\Services\AnalyticsService;
  * GET    /api/v1/analytics/terminals
  * GET    /api/v1/analytics/employees
  * GET    /api/v1/analytics/equipment
+ * GET    /api/v1/analytics/orders-in-time
  * GET    /api/v1/analytics/relations
  *
  * Wymaga uprawnienia sekcji `analityka` (PermissionMiddleware na trasie).
@@ -63,6 +64,16 @@ final class AnalyticsController extends Controller
     public function equipment(Request $request, array $params = []): Response
     {
         return $this->serviceResponse($this->analyticsService->equipment($this->filters($request)));
+    }
+
+    /**
+     * GET /api/v1/analytics/orders-in-time — zlecenia w czasie (per dzień).
+     *
+     * @param array<string, string> $params
+     */
+    public function ordersInTime(Request $request, array $params = []): Response
+    {
+        return $this->serviceResponse($this->analyticsService->ordersInTime($this->filters($request)));
     }
 
     /**

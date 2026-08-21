@@ -155,6 +155,7 @@ export class AuthService {
       ['harmonogram', '/schedule'],
       ['analityka', '/analytics'],
       ['raportowanie', '/reporting'],
+      ['export_csv', '/exports'],
       ['awaria', '/incidents'],
       ['ustawienia', '/settings'],
     ];

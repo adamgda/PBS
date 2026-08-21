@@ -89,6 +89,13 @@ export const routes: Routes = [
       import('./pages/analytics/analytics.component').then((m) => m.AnalyticsComponent),
   },
   {
+    path: 'exports',
+    canActivate: [AuthGuard, PermissionGuard],
+    data: { permission: 'export_csv' },
+    loadComponent: () =>
+      import('./pages/exports/exports.component').then((m) => m.ExportsComponent),
+  },
+  {
     path: 'reporting',
     canActivate: [AuthGuard, PermissionGuard],
     data: { permission: 'raportowanie' },

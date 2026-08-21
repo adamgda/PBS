@@ -121,6 +121,48 @@ describe('OrdersComponent', () => {
     httpMock.expectOne((r) => r.method === 'GET' && r.url === `${environment.apiUrl}/orders/9`).flush({ id: 9, numer_zlecenia: 'ZL-009', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'T', data_rozpoczecia: null, data_zakonczenia: null, zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null, employees: [], equipment: [] });
   });
 
+  it('startAssign/confirmAssign otwiera wybór roli i przypisuje z wybraną rolą', () => {
+    const fixture = TestBed.createComponent(OrdersComponent);
+    fixture.detectChanges();
+    flushAllInitial();
+
+    const comp = fixture.componentInstance;
+    const emp = { id: 11, imie: 'Jan', nazwisko: 'Kruk', rola_dzis: null } as never;
+    comp.selectedOrder.set({ id: 9, numer_zlecenia: 'ZL-009', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'T', data_rozpoczecia: null, data_zakonczenia: null, zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null, employees: [], equipment: [] } as never);
+
+    // startAssign otwiera wybór i domyślnie ustawia rolę dnia (null -> '')
+    comp.startAssign(emp);
+    expect(comp.assigningEmployee()?.id).toBe(11);
+    expect(comp.assignRole()).toBe('');
+    // roleOptions zawierają wszystkie role z etykietami tłumaczeniowymi
+    expect(comp.roleOptions().length).toBe(5);
+
+    comp.assignRole.set('brygadzista');
+    comp.confirmAssign();
+
+    const req = httpMock.expectOne((r) => r.method === 'POST' && r.url.endsWith('/orders/9/assign-employee'));
+    expect(req.request.body.employee_id).toBe(11);
+    expect(req.request.body.rola).toBe('brygadzista');
+    req.flush({ assigned: true });
+
+    httpMock.expectOne((r) => r.method === 'GET' && r.url === `${environment.apiUrl}/orders/9`).flush({ id: 9, numer_zlecenia: 'ZL-009', klient_nazwa: 'K', terminal_id: 1, terminal_nazwa: 'T', data_rozpoczecia: null, data_zakonczenia: null, zakres_prac: '', wartosc_pln: 0, status: 'nowe', created_at: null, updated_at: null, employees: [], equipment: [] });
+
+    expect(comp.assigningEmployee()).toBeNull();
+  });
+
+  it('cancelAssign zamyka wybór roli bez przypisania', () => {
+    const fixture = TestBed.createComponent(OrdersComponent);
+    fixture.detectChanges();
+    flushAllInitial();
+
+    const comp = fixture.componentInstance;
+    comp.startAssign({ id: 11, imie: 'Jan', nazwisko: 'Kruk', rola_dzis: 'operator' } as never);
+    expect(comp.assigningEmployee()).not.toBeNull();
+    comp.cancelAssign();
+    expect(comp.assigningEmployee()).toBeNull();
+    expect(comp.assignRole()).toBe('');
+  });
+
   it('wagesSummary sumuje godziny i wynagrodzenia', () => {
     const fixture = TestBed.createComponent(OrdersComponent);
     fixture.detectChanges();

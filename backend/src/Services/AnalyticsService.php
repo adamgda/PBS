@@ -167,6 +167,31 @@ final class AnalyticsService
     }
 
     /**
+     * Zlecenia w czasie — liczba zleceń per dzień w zakresie dat.
+     *
+     * @param array{date_from?: string, date_to?: string} $filters
+     * @return array<string, mixed>|array{error: string, code: int}
+     */
+    public function ordersInTime(array $filters): array
+    {
+        $range = $this->resolveRange($filters);
+        if ($range['ok'] === false) {
+            return ['error' => $range['error'], 'code' => $range['code']];
+        }
+
+        $rows = $this->analyticsRepository->ordersInTime($range['date_from'], $range['date_to']);
+
+        return [
+            'date_from' => $range['date_from'],
+            'date_to' => $range['date_to'],
+            'data' => array_map(fn (array $row): array => [
+                'day' => (string) $row['day'],
+                'count' => $this->toInt($row['count']),
+            ], $rows),
+        ];
+    }
+
+    /**
      * Wyznacza zakres dat z filtrów (domyślnie ostatnie 30 dni).
      *
      * @param array{date_from?: string, date_to?: string} $filters

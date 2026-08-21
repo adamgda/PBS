@@ -31,6 +31,7 @@ final class UserService
     private const array ALLOWED_SECTIONS = [
         'dashboard', 'pracownicy', 'sprzet', 'terminale',
         'harmonogram', 'analityka', 'raportowanie', 'ustawienia', 'awaria',
+        'export_csv',
     ];
 
     /** Dopuszczalne role (kont dostępu do aplikacji — tylko administratorzy). */

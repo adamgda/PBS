@@ -8,6 +8,7 @@ import {
   AnalyticsTerminal,
   AnalyticsEmployee,
   AnalyticsEquipment,
+  AnalyticsOrderInTime,
   AnalyticsRelation,
   AnalyticsListResponse,
   AnalyticsRangeParams,
@@ -43,6 +44,12 @@ export class AnalyticsService {
 
   equipment(params: AnalyticsRangeParams = {}): Observable<AnalyticsListResponse<AnalyticsEquipment>> {
     return this.http.get<AnalyticsListResponse<AnalyticsEquipment>>(`${this.apiUrl}/analytics/equipment`, {
+      params: this.toParams(params),
+    });
+  }
+
+  ordersInTime(params: AnalyticsRangeParams = {}): Observable<AnalyticsListResponse<AnalyticsOrderInTime>> {
+    return this.http.get<AnalyticsListResponse<AnalyticsOrderInTime>>(`${this.apiUrl}/analytics/orders-in-time`, {
       params: this.toParams(params),
     });
   }

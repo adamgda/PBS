@@ -91,12 +91,14 @@
           (ngModelChange)="createUwagi.set($event)"
         ></textarea>
       </div>
-      <div class="rounded-lg bg-cyan-50 p-3 text-xs text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200">
-        <p class="mb-1 flex items-center gap-1.5 font-semibold">
-          <app-svg-icon name="alert" size="sm" />
-          {{ 'reporting.auto_data.attached_title' | translate }}
-        </p>
-        <p>{{ 'reporting.auto_data.attached_desc' | translate }}</p>
+      <div class="pb-3">
+        <div class="rounded-lg bg-cyan-50 p-3 text-xs text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200">
+          <p class="mb-1 flex items-center gap-1.5 font-semibold">
+            <app-svg-icon name="alert" size="sm" />
+            {{ 'reporting.auto_data.attached_title' | translate }}
+          </p>
+          <p>{{ 'reporting.auto_data.attached_desc' | translate }}</p>
+        </div>
       </div>
       <app-button variant="block" [label]="'reporting.buttons.save'" [disabled]="createSaving()" (clicked)="saveTerminal()" />
     </div>
@@ -230,7 +232,7 @@
             <th class="px-4 py-3 font-medium">{{ 'reporting.recent.type' | translate }}</th>
             <th class="px-4 py-3 font-medium">{{ 'reporting.recent.object' | translate }}</th>
             <th class="px-4 py-3 font-medium">{{ 'reporting.recent.author' | translate }}</th>
-            <th class="px-4 py-3 text-right font-medium">{{ 'reporting.recent.actions' | translate }}</th>
+            <th class="px-4 py-3 font-medium">{{ 'reporting.recent.actions' | translate }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">

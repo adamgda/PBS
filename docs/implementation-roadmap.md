@@ -435,6 +435,24 @@ Legenda statusów:
 - [x] Testy: frontend — 196 testów PASS (`AuthService.firstAvailableRoute`/`refreshCurrentUser`, `DefaultRouteGuard`, zaktualizowany `PermissionGuard`)
 - [x] Docs: aktualizacja `docs/technical-documentation.md` (6.3, 7.3, 9.4, 11.1, 11.5, 11.7)
 
+## Etap 22 — Eksport danych (CSV)
+
+> Nowa sekcja „Eksport danych" (`/exports`) — generowanie plików CSV na podstawie danych systemu. Dostępna pod uprawnieniem sekcji `export_csv` (super_admin ma bypass). Wszystkie zapytania read-only; odpowiedź to surowy CSV (`Response::raw()`), a nie JSON.
+
+- [x] Backend: `Response::raw()` — odpowiedź z surowym ciałem (CSV) z własnymi nagłówkami, bez serializacji JSON (`src/Http/Response.php`)
+- [x] Backend: `ExportRepository` (read-only) — zestawy: `orders` (zlecenie + rozliczenie godzin/wynagrodzeń per przypisanie), `employees`, `equipment` (przebieg, OC, planowane przeglądy), `incidents` (czas trwania), `daily_reports` (terminalowe + pojazdowe, UNION)
+- [x] Backend: `ExportService` — biała lista typów, serializacja CSV wg RFC 4180 (CRLF, ucieczka podwójnym cudzysłowem, BOM UTF-8 dla Excela), nazwy plików per typ
+- [x] Backend: `ExportController` — `GET /api/v1/exports/{type}?from=&to=` z walidacją zakresu dat i `Content-Disposition: attachment`
+- [x] Backend: sekcja uprawnień `export_csv` — `UserService::ALLOWED_SECTIONS`, seeder super_admin, `seed_full.php`
+- [x] Backend: rejestracja trasy i guarda `export_csv` w `App.php`
+- [x] Frontend: strona `/exports` (`ExportsComponent`) — zakres dat (od/do) + siatka kart zestawów + pobieranie pliku
+- [x] Frontend: `ExportsService` — `GET /exports/{type}` z `responseType: 'blob'`, pomijanie cache GET (parametr `_ts`)
+- [x] Frontend: pozycja menu „Eksport danych", ikona `export` (`SvgIconComponent`), lokalizacja `exports.json`, rejestracja w `app.config.ts`
+- [x] Frontend: sekcja `export_csv` w `PERMISSION_SECTIONS` (`user.model.ts`) i `firstAvailableRoute` (`auth.service.ts`)
+- [x] Testy: backend — `ExportControllerTest` (walidacja typu/dat, nagłówki, surowe CSV), `ExportServiceTest` (budowa CSV, BOM, ucieczka, zestaw sprzętu)
+- [x] Testy: frontend — `ExportsComponent` (lista zestawów, pobieranie Blob, walidacja zakresu dat); build AOT + PHPStan level 9 przechodzą
+- [x] Docs: aktualizacja `docs/technical-documentation.md` (6.2 routing, 6.1.1 lokalizacje, 7.3 uprawnienia, 10.11 sekcja, 11.18 API), `docs/implementation-roadmap.md` (Etap 22), `docs/security-hardening.md` (export)
+
 ---
 
 > **Uwaga:** Po wdrożeniu i weryfikacji każdego kroku odznacz go zmieniając `- [ ]` na `- [x]`. Dokument jest źródłem prawdy o postępie projektu PBS.

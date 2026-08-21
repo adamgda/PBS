@@ -1,0 +1,56 @@
+<!-- Nagłówek sekcji -->
+<div>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'exports.title' | translate }}</h1>
+  <p class="mt-1 text-gray-600 dark:text-slate-400">{{ 'exports.subtitle' | translate }}</p>
+</div>
+
+<!-- Filtr zakresu dat -->
+<div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+  <div class="flex flex-wrap items-end gap-4">
+    <div class="flex w-52 flex-col gap-1">
+      <label class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ 'exports.range.from' | translate }}</label>
+      <input
+        type="date"
+        class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        [ngModel]="from()"
+        (ngModelChange)="from.set($event)"
+      />
+    </div>
+    <div class="flex w-52 flex-col gap-1">
+      <label class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ 'exports.range.to' | translate }}</label>
+      <input
+        type="date"
+        class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm transition-colors focus:border-transparent focus:ring-2 focus:ring-pbs-secondary/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        [ngModel]="to()"
+        (ngModelChange)="to.set($event)"
+      />
+    </div>
+    <p class="ml-1 flex h-10 items-center text-xs text-slate-500 dark:text-slate-400">{{ 'exports.range.hint' | translate }}</p>
+  </div>
+</div>
+
+<!-- Siatka zestawów eksportu -->
+<div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  @for (dataset of datasets; track dataset.type) {
+    <div class="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+      <div class="flex items-center gap-3">
+        <span
+          class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400"
+        >
+          <app-svg-icon [name]="dataset.icon" />
+        </span>
+        <div>
+          <p class="font-semibold text-slate-800 dark:text-slate-200">{{ dataset.titleKey | translate }}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">{{ dataset.descKey | translate }}</p>
+        </div>
+      </div>
+      <div class="mt-4 flex justify-end">
+        <app-button
+          [label]="'exports.buttons.export'"
+          [disabled]="isBusy(dataset.type)"
+          (clicked)="exportDataset(dataset)"
+        />
+      </div>
+    </div>
+  }
+</div>

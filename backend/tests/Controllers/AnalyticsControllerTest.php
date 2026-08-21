@@ -112,6 +112,20 @@ it('equipment returns per-equipment stats', function (): void {
     expect($response->data()['data'][0]['assignment_count'])->toBe(22);
 });
 
+it('ordersInTime returns daily order counts', function (): void {
+    $this->analyticsRepository->shouldReceive('ordersInTime')
+        ->with('2026-07-01 00:00:00', '2026-07-31 23:59:59')
+        ->andReturn([
+            ['day' => '2026-07-01', 'count' => 2],
+            ['day' => '2026-07-02', 'count' => 0],
+        ]);
+
+    $response = $this->analyticsController->ordersInTime(analyticsRequest(['date_from' => '2026-07-01', 'date_to' => '2026-07-31']));
+    expect($response->statusCode())->toBe(200);
+    expect($response->data()['data'][0])->toBe(['day' => '2026-07-01', 'count' => 2]);
+    expect($response->data()['data'][1])->toBe(['day' => '2026-07-02', 'count' => 0]);
+});
+
 it('relations returns top employees', function (): void {
     $this->analyticsRepository->shouldReceive('relations')
         ->with('2026-07-01 00:00:00', '2026-07-31 23:59:59')

@@ -6,6 +6,7 @@ import { filter } from 'rxjs';
 import { AuthService } from './services/auth.service';
 import { OfflineService } from './services/offline.service';
 import { ThemeService } from './services/theme.service';
+import { UpdateService } from './services/update.service';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { ToastNotificationComponent } from './components/toast-notification/toast-notification.component';
 import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
@@ -41,6 +42,7 @@ export class AppComponent {
   private readonly authService = inject(AuthService);
   private readonly offlineService = inject(OfflineService);
   private readonly themeService = inject(ThemeService);
+  private readonly updateService = inject(UpdateService);
   private readonly router = inject(Router);
 
   readonly isLoggedIn = this.authService.isLoggedIn;
@@ -67,6 +69,7 @@ export class AppComponent {
     { path: '/schedule', label: 'common.menu.harmonogram', permission: 'harmonogram', icon: 'harmonogram' },
     { path: '/analytics', label: 'common.menu.analytics', permission: 'analityka', icon: 'analytics' },
     { path: '/reporting', label: 'common.menu.reporting', permission: 'raportowanie', icon: 'reporting' },
+    { path: '/exports', label: 'common.menu.export_csv', permission: 'export_csv', icon: 'export' },
     { path: '/incidents', label: 'common.menu.awaria', permission: 'awaria', icon: 'awaria' },
     { path: '/audit-logs', label: 'common.menu.logi_audytowe', permission: 'super_admin', icon: 'history' },
     { path: '/settings', label: 'common.menu.ustawienia', permission: 'ustawienia', icon: 'settings' },
@@ -92,6 +95,10 @@ export class AppComponent {
   readonly userEmail = computed(() => this.authService.currentUser?.email ?? '');
 
   constructor() {
+    // Monitorowanie aktualizacji PWA — po wgraniu nowego buildu automatycznie
+    // aktywuj nową wersję i przeładuj stronę (bez czyszczenia danych przeglądarki).
+    this.updateService.init();
+
     // Aktualizacja currentUrl po każdej nawigacji — wykorzystywane do tytułu sekcji.
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))

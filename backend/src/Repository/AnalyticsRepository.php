@@ -152,6 +152,43 @@ class AnalyticsRepository extends BaseRepository
     }
 
     /**
+     * Zlecenia w czasie — liczba zleceń per dzień w zakresie dat.
+     * Dni bez zleceń są uzupełniane zerami, dzięki czemu seria jest ciągła.
+     *
+     * @return array<int, array{day: string, count: int}>
+     */
+    public function ordersInTime(string $dateFrom, string $dateTo): array
+    {
+        $sql = 'SELECT DATE(`data_rozpoczecia`) AS `day`, COUNT(*) AS `count`
+                FROM `orders`
+                WHERE `data_rozpoczecia` >= :date_from
+                  AND `data_rozpoczecia` <= :date_to
+                GROUP BY DATE(`data_rozpoczecia`)';
+        $stmt = $this->executeQuery($sql, [':date_from' => $dateFrom, ':date_to' => $dateTo]);
+
+        /** @var array<int, array{day: string, count: int|string}> $rows */
+        $rows = $stmt->fetchAll();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[(string) $row['day']] = (int) $row['count'];
+        }
+
+        $result = [];
+        $cursor = new \DateTimeImmutable(substr($dateFrom, 0, 10));
+        $end = new \DateTimeImmutable(substr($dateTo, 0, 10));
+        $step = new \DateInterval('P1D');
+
+        while ($cursor <= $end) {
+            $day = $cursor->format('Y-m-d');
+            $result[] = ['day' => $day, 'count' => $counts[$day] ?? 0];
+            $cursor = $cursor->add($step);
+        }
+
+        return $result;
+    }
+
+    /**
      * Relacje między zasobami — top pracownicy (przypisania, terminal, sprzęt, godziny).
      *
      * @return array<int, array<string, mixed>>

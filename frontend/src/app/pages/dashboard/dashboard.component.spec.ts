@@ -54,10 +54,31 @@ describe('DashboardComponent', () => {
 
     const alertsReq = httpMock.expectOne(`${environment.apiUrl}/dashboard/alerts`);
     alertsReq.flush({
-      expiring_certs: { count: 7, items: [] },
-      upcoming_inspections: { count: 4, items: [] },
-      unresolved_incidents: { count: 3, items: [] },
-      returning_from_leave: { count: 5, items: [] },
+      expiring_certs: {
+        count: 7,
+        items: [
+          { id: 1, employee_id: 2, nazwa: 'Prawo jazdy kat. C', data_waznosci: '2026-09-01', imie: 'Jan', nazwisko: 'Kowalski' },
+          { id: 2, employee_id: 3, nazwa: 'Uprawnienia na wózki widłowe UDT', data_waznosci: '2026-09-05', imie: 'Anna', nazwisko: 'Nowak' },
+        ],
+      },
+      upcoming_inspections: {
+        count: 4,
+        items: [
+          { id: 3, equipment_id: 5, typ_przegladu: 'OC', data_nastepnego_planowanego: '2026-09-10', sprzet_nazwa: 'Wózek widłowy 5t', numer_seryjny: 'FT-5' },
+        ],
+      },
+      unresolved_incidents: {
+        count: 3,
+        items: [
+          { id: 11, typ: 'sprzet', opis: 'Nieszczelny układ hydrauliczny', status: 'w_trakcie_naprawy', data_zgloszenia: '2026-08-11 09:00:00' },
+        ],
+      },
+      returning_from_leave: {
+        count: 5,
+        items: [
+          { id: 7, data_do: '2026-08-12', imie: 'Piotr', nazwisko: 'Lew' },
+        ],
+      },
     });
 
     const chartsReq = httpMock.expectOne(`${environment.apiUrl}/dashboard/charts`);
@@ -96,16 +117,43 @@ describe('DashboardComponent', () => {
     expect(kpis[3].value).toBe(3);
   });
 
-  it('alerts() mapuje dane na liczniki alertów', () => {
+  it('alertGroups() mapuje dane na grupy z licznikami', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     flushData();
 
-    const alerts = fixture.componentInstance.alerts();
-    expect(alerts).toHaveSize(4);
-    expect(alerts[0].count).toBe(7);
-    expect(alerts[1].count).toBe(4);
-    expect(alerts[2].count).toBe(3);
-    expect(alerts[3].count).toBe(5);
+    const groups = fixture.componentInstance.alertGroups();
+    expect(groups).toHaveSize(4);
+    expect(groups[0].count).toBe(7);
+    expect(groups[1].count).toBe(4);
+    expect(groups[2].count).toBe(3);
+    expect(groups[3].count).toBe(5);
+  });
+
+  it('alertGroups() pokazuje konkretne pozycje z odnośnikami do podstron', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    flushData();
+
+    const groups = fixture.componentInstance.alertGroups();
+
+    // Certyfikaty — nazwa dokumentu + pracownik + odnośnik do /employees
+    expect(groups[0].items).toHaveSize(2);
+    expect(groups[0].items[0].title).toBe('Prawo jazdy kat. C');
+    expect(groups[0].items[0].meta).toBe('Jan Kowalski');
+    expect(groups[0].items[0].route).toBe('/employees');
+
+    // Przeglądy — typ przeglądu + sprzęt + odnośnik do /equipment
+    expect(groups[1].items[0].title).toBe('OC');
+    expect(groups[1].items[0].meta).toBe('Wózek widłowy 5t · FT-5');
+    expect(groups[1].items[0].route).toBe('/equipment');
+
+    // Awarie — opis + status + odnośnik do szczegółów awarii
+    expect(groups[2].items[0].title).toBe('Nieszczelny układ hydrauliczny');
+    expect(groups[2].items[0].meta).toBe('W trakcie naprawy');
+    expect(groups[2].items[0].route).toBe('/incidents/11');
+
+    // Powroty z urlopów — imię i nazwisko
+    expect(groups[3].items[0].title).toBe('Piotr Lew');
+    expect(groups[3].items[0].route).toBe('/employees');
   });
 
   it('shortcuts() zwraca skróty akcji', () => {

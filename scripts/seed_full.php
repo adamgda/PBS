@@ -61,7 +61,7 @@ $adminEmail = (string) $pdo->query("SELECT `email` FROM `users` WHERE `id` = {$a
 $permissions = json_encode([
     'dashboard' => true, 'pracownicy' => true, 'sprzet' => true, 'terminale' => true,
     'harmonogram' => true, 'analityka' => true, 'raportowanie' => true,
-    'ustawienia' => true, 'awaria' => true,
+    'ustawienia' => true, 'awaria' => true, 'export_csv' => true,
 ]);
 $stmt = $pdo->prepare(
     "UPDATE `users`

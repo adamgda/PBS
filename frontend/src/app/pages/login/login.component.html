@@ -50,17 +50,26 @@
   </aside>
 
   <!-- ===== Prawy panel formularza ===== -->
-  <div class="flex w-full items-center justify-center px-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-[calc(env(safe-area-inset-bottom)+2.5rem)] sm:px-6 lg:w-1/2">
-    <div class="w-full max-w-md">
-      <div class="mb-8 flex items-center gap-3 lg:hidden">
-        <span class="grid h-11 w-11 place-items-center rounded-xl bg-pbs-primary text-lg font-bold text-white">P</span>
-        <span class="text-xl font-bold tracking-tight text-gray-900">PORTBS</span>
+  <div
+    class="relative flex w-full items-center justify-center overflow-hidden bg-gradient-to-br from-pbs-primary via-pbs-navy-800 to-[#0a1626] px-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-[calc(env(safe-area-inset-bottom)+2.5rem)] sm:px-6 lg:w-1/2 lg:bg-none lg:bg-gray-50"
+  >
+    <!-- Dekoracyjne kule (mobile) -->
+    <div class="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-pbs-secondary/30 blur-3xl lg:hidden"></div>
+    <div class="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-pbs-accent/20 blur-3xl lg:hidden"></div>
+
+    <div class="relative w-full max-w-md">
+      <!-- Brand (mobile) -->
+      <div class="mb-6 flex items-center justify-center gap-3 lg:hidden">
+        <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 text-xl font-bold text-white backdrop-blur">P</span>
+        <span class="text-2xl font-bold tracking-tight text-white">PORTBS</span>
       </div>
 
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ 'common.auth.login_title' | translate }}</h2>
-        <p class="mt-2 text-gray-600">{{ 'common.auth.login_subtitle' | translate }}</p>
-      </div>
+      <!-- Karta formularza -->
+      <div class="rounded-2xl bg-white p-6 shadow-elevated sm:p-8">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ 'common.auth.login_title' | translate }}</h2>
+          <p class="mt-2 text-gray-600">{{ 'common.auth.login_subtitle' | translate }}</p>
+        </div>
 
       <form class="mt-8 space-y-5" (ngSubmit)="onSubmit()" novalidate>
         <app-form-input
@@ -112,7 +121,10 @@
             {{ 'common.auth.login_button' | translate }}
           }
         </app-button>
-      </form>
+        </form>
+      </div>
+
+      <p class="mt-6 text-center text-xs text-white/60 lg:hidden">{{ 'common.auth.copyright' | translate }}</p>
     </div>
   </div>
 </div>

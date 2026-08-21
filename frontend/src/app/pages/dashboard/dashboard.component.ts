@@ -20,6 +20,7 @@ import {
 
 import { AuthService } from '../../services/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
+import { ThemeService } from '../../services/theme.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { SvgIconComponent } from '../../components/svg-icon/svg-icon.component';
 import { KpiCardComponent, KpiTone } from '../../components/kpi-card/kpi-card.component';
@@ -40,10 +41,27 @@ interface HeroStat {
   icon: string;
 }
 
-interface AlertDatum {
+type AlertTone = 'warning' | 'info' | 'danger' | 'success' | 'neutral';
+
+/** Pojedyncza, konkretna pozycja w grupie alertów (np. jeden wygasający certyfikat). */
+interface AlertDetailItem {
+  id: number;
+  title: string;
+  meta: string;
+  date: string;
+  urgency: string;
+  tone: AlertTone;
+  route: string;
+}
+
+/** Grupa alertów — nagłówek + liczba + lista szczegółowych pozycji z odnośnikami. */
+interface AlertGroupDatum {
   key: string;
+  icon: string;
+  tone: AlertTone;
   count: number;
-  tone: 'warning' | 'info' | 'danger' | 'success' | 'neutral';
+  route: string;
+  items: AlertDetailItem[];
 }
 
 interface ShortcutDatum {
@@ -109,6 +127,13 @@ const ACTIVITY_META: Record<string, { label: string; badge: string }> = {
   other: { label: 'dashboard.activity.item_other', badge: 'bg-gray-400' },
 };
 
+/** Czytelne etykiety statusów awarii (sekcja jest single-language PL jak relativeTime). */
+const INCIDENT_STATUS_LABELS: Record<string, string> = {
+  zgloszona: 'Zgłoszona',
+  w_trakcie_naprawy: 'W trakcie naprawy',
+  naprawiona: 'Naprawiona',
+};
+
 /**
  * Dashboard (Etap 13) — profesjonalny widok startowy po zalogowaniu.
  * Zawiera karty KPI, interaktywne wykresy (ApexCharts), alerty,
@@ -137,13 +162,24 @@ const ACTIVITY_META: Record<string, { label: string; badge: string }> = {
 export class DashboardComponent {
   private readonly authService = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
+  private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
   /** Data wyświetlana w nagłówku. */
   readonly today = new Date();
 
-  readonly loading = signal<boolean>(true);
   readonly error = signal<string>('');
+
+  /** Flagi ładowania per źródło danych — dzięki temu każda sekcja statystyk
+   *  ma własny loader (zamiast pokazywania "0" przy wolnym internecie). */
+  readonly summaryLoading = signal<boolean>(true);
+  readonly alertsLoading = signal<boolean>(true);
+  readonly chartsLoading = signal<boolean>(true);
+
+  /** Czy trwa jakiekolwiek pobieranie danych z API (wyliczana z powyższych). */
+  readonly loading = computed(
+    () => this.summaryLoading() || this.alertsLoading() || this.chartsLoading(),
+  );
 
   private readonly _summary = signal<DashboardSummary | null>(null);
   private readonly _alerts = signal<DashboardAlerts | null>(null);
@@ -223,14 +259,138 @@ export class DashboardComponent {
     }).format(value);
   }
 
-  alerts(): AlertDatum[] {
+  /**
+   * Szczegółowe grupy alertów — każda pozycja to konkretny rekord
+   * (certyfikat, przegląd, awaria, powrót z urlopu) z datą i odnośnikiem
+   * do podstrony, na której można nim zarządzać.
+   */
+  alertGroups(): AlertGroupDatum[] {
     const a = this._alerts();
+
+    const certs: AlertDetailItem[] = (a?.expiring_certs.items ?? []).map((it) => ({
+      id: Number(it['id']),
+      title: String(it['nazwa'] ?? '—'),
+      meta: this.fullName(it['imie'], it['nazwisko']),
+      date: this.formatDate(it['data_waznosci']),
+      urgency: this.daysUntil(it['data_waznosci']),
+      tone: 'warning',
+      route: '/employees',
+    }));
+
+    const inspections: AlertDetailItem[] = (a?.upcoming_inspections.items ?? []).map((it) => {
+      const sprzet = String(it['sprzet_nazwa'] ?? '');
+      const serial = it['numer_seryjny'] ? ` · ${String(it['numer_seryjny'])}` : '';
+      return {
+        id: Number(it['id']),
+        title: String(it['typ_przegladu'] ?? '—'),
+        meta: (sprzet + serial).trim() || '—',
+        date: this.formatDate(it['data_nastepnego_planowanego']),
+        urgency: this.daysUntil(it['data_nastepnego_planowanego']),
+        tone: 'info',
+        route: '/equipment',
+      };
+    });
+
+    const incidents: AlertDetailItem[] = (a?.unresolved_incidents.items ?? []).map((it) => {
+      const id = Number(it['id']);
+      return {
+        id,
+        title: String(it['opis'] ?? 'Awarie'),
+        meta: INCIDENT_STATUS_LABELS[String(it['status'] ?? '')] ?? String(it['status'] ?? ''),
+        date: this.formatDate(it['data_zgloszenia']),
+        urgency: '',
+        tone: 'danger',
+        route: id ? `/incidents/${id}` : '/incidents',
+      };
+    });
+
+    const returns: AlertDetailItem[] = (a?.returning_from_leave.items ?? []).map((it) => {
+      const name = this.fullName(it['imie'], it['nazwisko']);
+      return {
+        id: Number(it['id']),
+        title: name || '—',
+        meta: 'Powrót z urlopu',
+        date: this.formatDate(it['data_do']),
+        urgency: this.daysUntil(it['data_do']),
+        tone: 'success',
+        route: '/employees',
+      };
+    });
+
     return [
-      { key: 'dashboard.alerts.expiring_certs', count: a?.expiring_certs.count ?? 0, tone: 'warning' },
-      { key: 'dashboard.alerts.upcoming_inspections', count: a?.upcoming_inspections.count ?? 0, tone: 'info' },
-      { key: 'dashboard.alerts.unresolved_incidents', count: a?.unresolved_incidents.count ?? 0, tone: 'danger' },
-      { key: 'dashboard.alerts.returning_from_leave', count: a?.returning_from_leave.count ?? 0, tone: 'success' },
+      {
+        key: 'dashboard.alerts.expiring_certs',
+        icon: 'document',
+        tone: 'warning',
+        count: a?.expiring_certs.count ?? 0,
+        route: '/employees',
+        items: certs,
+      },
+      {
+        key: 'dashboard.alerts.upcoming_inspections',
+        icon: 'wrench',
+        tone: 'info',
+        count: a?.upcoming_inspections.count ?? 0,
+        route: '/equipment',
+        items: inspections,
+      },
+      {
+        key: 'dashboard.alerts.unresolved_incidents',
+        icon: 'awaria',
+        tone: 'danger',
+        count: a?.unresolved_incidents.count ?? 0,
+        route: '/incidents',
+        items: incidents,
+      },
+      {
+        key: 'dashboard.alerts.returning_from_leave',
+        icon: 'pracownicy',
+        tone: 'success',
+        count: a?.returning_from_leave.count ?? 0,
+        route: '/employees',
+        items: returns,
+      },
     ];
+  }
+
+  private fullName(first: string | number | null, last: string | number | null): string {
+    return `${first ?? ''} ${last ?? ''}`.trim();
+  }
+
+  private formatDate(value: string | number | null): string {
+    const ts = this.toTimestamp(value);
+    if (!ts) {
+      return '';
+    }
+    return new Date(ts).toLocaleDateString('pl-PL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
+
+  private daysUntil(value: string | number | null): string {
+    const ts = this.toTimestamp(value);
+    if (!ts) {
+      return '';
+    }
+    const diff = Math.ceil((ts - Date.now()) / 86400000);
+    if (diff <= 0) {
+      return 'dziś';
+    }
+    if (diff === 1) {
+      return 'jutro';
+    }
+    return `za ${diff} dni`;
+  }
+
+  private toTimestamp(value: string | number | null): number {
+    if (value === null || value === undefined || value === '') {
+      return 0;
+    }
+    const str = String(value);
+    const ts = new Date(str.includes('T') ? str : str.replace(' ', 'T')).getTime();
+    return Number.isNaN(ts) ? 0 : ts;
   }
 
   shortcuts(): ShortcutDatum[] {
@@ -243,7 +403,7 @@ export class DashboardComponent {
 
   activity(): ActivityDatum[] {
     const items = this._charts()?.activity ?? [];
-    return items.slice(0, 5).map((item) => {
+    return items.slice(0, 6).map((item) => {
       const meta = ACTIVITY_META[item.type] ?? ACTIVITY_META['other'];
       return {
         titleKey: meta.label,
@@ -277,7 +437,7 @@ export class DashboardComponent {
     return `${Math.floor(hours / 24)} dni temu`;
   }
 
-  alertBadgeClass(tone: AlertDatum['tone']): string {
+  alertBadgeClass(tone: AlertTone): string {
     switch (tone) {
       case 'danger':
         return 'bg-red-500';
@@ -293,31 +453,64 @@ export class DashboardComponent {
   }
 
   private load(): void {
-    this.loading.set(true);
     this.error.set('');
+    this.summaryLoading.set(true);
+    this.alertsLoading.set(true);
+    this.chartsLoading.set(true);
 
+    // Żądania są niezależne — każdy włącza/wyłącza własną flagę ładowania,
+    // dzięki czemu loader znika dopiero gdy realne dane dotrą (lub wystąpi błąd).
     this.dashboardService.summary().subscribe({
-      next: (summary) => this._summary.set(summary),
-      error: () => this.error.set('dashboard.error'),
+      next: (summary) => {
+        this._summary.set(summary);
+        this.summaryLoading.set(false);
+      },
+      error: () => {
+        this.summaryLoading.set(false);
+        this.error.set('dashboard.error');
+      },
     });
 
     this.dashboardService.alerts().subscribe({
-      next: (alerts) => this._alerts.set(alerts),
-      error: () => this.error.set('dashboard.error'),
+      next: (alerts) => {
+        this._alerts.set(alerts);
+        this.alertsLoading.set(false);
+      },
+      error: () => {
+        this.alertsLoading.set(false);
+        this.error.set('dashboard.error');
+      },
     });
 
     this.dashboardService.charts().subscribe({
-      next: (charts) => this._charts.set(charts),
-      error: () => this.error.set('dashboard.error'),
+      next: (charts) => {
+        this._charts.set(charts);
+        this.chartsLoading.set(false);
+      },
+      error: () => {
+        this.chartsLoading.set(false);
+        this.error.set('dashboard.error');
+      },
     });
-
-    // Żądania są niezależne — kończymy ładowanie po ich wystartowaniu.
-    this.loading.set(false);
   }
 
   // ===== Wykres: operacje (area) — realne dane z `/dashboard/charts` =====
   readonly area = computed<AreaChartConfig>(() => {
     const trend = this._charts()?.orders_trend;
+    const data = trend?.series ?? [];
+    const dark = this.themeService.dark();
+
+    // Zapas (padding) wokół zakresu osi Y — dzięki temu gładka linia wykresu
+    // nie jest przycinana w skrajnych punktach. Górna granica dostaje zapas
+    // powyżej maksimum, a dolna schodzi lekko poniżej 0 (np. -0.1/-0.2),
+    // aby wartość 0 też miała wolną przestrzeń pod linią.
+    const rawMin = data.length ? Math.min(...data) : 0;
+    const rawMax = data.length ? Math.max(...data) : 0;
+    const spread = Math.max(rawMax - rawMin, 1);
+    const yMin = rawMin - spread * 0.15;
+    const yMax = rawMax + spread * 0.15;
+    const yAuto = data.length === 0;
+
     return {
       chart: {
         type: 'area',
@@ -327,7 +520,7 @@ export class DashboardComponent {
         zoom: { enabled: false },
         parentHeightOffset: 0,
       },
-      series: [{ name: 'Zlecenia', data: trend?.series ?? [] }],
+      series: [{ name: 'Zlecenia', data }],
       xaxis: {
         categories: trend?.categories ?? [],
         axisBorder: { show: false },
@@ -335,6 +528,9 @@ export class DashboardComponent {
         labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
       },
       yaxis: {
+        min: yAuto ? undefined : yMin,
+        max: yAuto ? undefined : yMax,
+        forceNiceScale: yAuto,
         labels: { style: { colors: '#94a3b8', fontSize: '12px' } },
       },
       stroke: { curve: 'smooth', width: 2.5 },
@@ -344,7 +540,7 @@ export class DashboardComponent {
       },
       grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } },
       dataLabels: { enabled: false },
-      tooltip: { theme: 'light', marker: { show: true } },
+      tooltip: { theme: dark ? 'dark' : 'light', marker: { show: true } },
       legend: { show: false },
       colors: ['#1e3a5f'],
     };
@@ -353,12 +549,16 @@ export class DashboardComponent {
   // ===== Wykres: struktura floty (donut) — realne dane z `/dashboard/charts` =====
   readonly donut = computed<DonutChartConfig>(() => {
     const fleet = this._charts()?.fleet_structure;
+    const dark = this.themeService.dark();
+    const centerValueColor = dark ? '#e2e8f0' : '#172d49';
+    const mutedColor = dark ? '#94a3b8' : '#64748b';
+    const legendColor = dark ? '#cbd5e1' : '#475569';
     return {
       chart: { type: 'donut', height: 300, fontFamily: 'Inter, sans-serif' },
       series: fleet?.series ?? [],
       labels: fleet?.labels ?? [],
       colors: ['#f43f5e', '#3b82f6', '#f59e0b', '#22c55e'],
-      legend: { position: 'bottom', fontFamily: 'Inter, sans-serif', labels: { colors: '#475569' } },
+      legend: { position: 'bottom', fontFamily: 'Inter, sans-serif', labels: { colors: legendColor } },
       plotOptions: {
         pie: {
           donut: {
@@ -366,15 +566,16 @@ export class DashboardComponent {
             labels: {
               show: true,
               name: { show: false },
-              value: { show: true, fontSize: '24px', fontWeight: '700', color: '#172d49' },
-              total: { show: true, label: 'Szt.', color: '#64748b', fontSize: '12px' },
+              value: { show: true, fontSize: '24px', fontWeight: '700', color: centerValueColor },
+              total: { show: true, label: 'Szt.', color: mutedColor, fontSize: '12px' },
             },
           },
         },
       },
       dataLabels: { enabled: false },
-      stroke: { width: 3, colors: ['#ffffff'] },
-      tooltip: { theme: 'light' },
+      // Obrys segmentów dopasowany do motywu — w dark mode ciemny zamiast białego.
+      stroke: { width: 3, colors: [dark ? '#0f172a' : '#ffffff'] },
+      tooltip: { theme: dark ? 'dark' : 'light' },
       responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }],
     };
   });
@@ -382,6 +583,9 @@ export class DashboardComponent {
   // ===== Wykres: obrót per terminal (bar) — realne dane z `/dashboard/charts` =====
   readonly bar = computed<BarChartConfig>(() => {
     const turnover = this._charts()?.terminal_turnover;
+    const dark = this.themeService.dark();
+    // Kolor słupków dopasowany do motywu (jasny/ciemny) — niebieski z palety marki.
+    const barColor = dark ? '#60a5fa' : '#2563eb';
     return {
       chart: {
         type: 'bar',
@@ -401,14 +605,12 @@ export class DashboardComponent {
       plotOptions: {
         bar: { borderRadius: 8, columnWidth: '55%', distributed: false },
       },
-      colors: ['#1e3a5f'],
-      fill: {
-        type: 'gradient',
-        gradient: { shade: 'dark', type: 'vertical', shadeIntensity: 0.4, gradientToColors: ['#3b82f6'], opacityFrom: 1, opacityTo: 0.9, stops: [0, 100] },
-      },
+      colors: [barColor],
+      // Solidne (jednolite) wypełnienie — bez gradientu.
+      fill: { type: 'solid', colors: [barColor] },
       grid: { borderColor: '#eef2f7', strokeDashArray: 4, padding: { left: 8, right: 8 } },
       dataLabels: { enabled: false },
-      tooltip: { theme: 'light' },
+      tooltip: { theme: dark ? 'dark' : 'light' },
       legend: { show: false },
     };
   });

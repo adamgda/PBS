@@ -221,7 +221,8 @@ frontend/
 │           ├── raportowanie.json# Teksty sekcji Raportowanie
 │           ├── ustawienia.json  # Teksty sekcji Ustawienia
 │           ├── awaria.json      # Teksty sekcji Awaria
-│           └── notatki.json     # Teksty widgetu szybkich notatek to-do
+│           ├── notatki.json     # Teksty widgetu szybkich notatek to-do
+│           └── exports.json     # Teksty sekcji Eksport danych (CSV)
 ```
 
 Zasady:
@@ -256,6 +257,7 @@ Konwencja rozmieszczania szablonów (zgodna ze wzorcem `AppComponent`):
 /harmonogram            → HarmonogramComponent (kalendarz)
 /analityka              → AnalitykaComponent
 /raportowanie           → RaportowanieComponent
+/exports                → ExportsComponent (Eksport danych — CSV)
 /raportowanie/terminal  → RaportTerminalComponent
 /raportowanie/pojazd    → RaportPojazdComponent
 /ustawienia             → UstawieniaComponent
@@ -563,7 +565,7 @@ Backend oparty na architekturze REST API z warstwami:
 - JWT (JSON Web Token) — token dostępowy + refresh token
 - JWT (JSON Web Token) — token dostępowy + refresh token
 - Role: wyłącznie `super_admin` (konto główne, seedowane) oraz `admin` (konta tworzone w Ustawienia → Użytkownicy). **Pracownicy nie posiadają kont ani dostępu do aplikacji** — są zasobem zarządzanym w sekcji Pracownicy.
-- Uprawnienia per sekcja: `dashboard`, `pracownicy`, `sprzet`, `terminale`, `harmonogram`, `analityka`, `raportowanie`, `ustawienia`, `awaria`
+- Uprawnienia per sekcja: `dashboard`, `pracownicy`, `sprzet`, `terminale`, `harmonogram`, `analityka`, `raportowanie`, `ustawienia`, `awaria`, `export_csv`
 
 **Jedno źródło prawdy (back-end):** `PermissionMiddleware` weryfikuje uprawnienia **z bazy danych** (odczyt `users.permissions` po `user_id`), a nie z claima JWT. Dzięki temu backend zawsze egzekwuje *aktualne* uprawnienia — zmiana uprawnień w adminie obowiązuje natychmiast (eliminacja problemu „stale token", czyli rozjazdu między uprawnieniami we froncie a backendem).
 
@@ -1180,6 +1182,21 @@ Frontend (Angular) dodatkowo:
 - Tryb offline-first: notatki kolejkowane przez background sync i synchronizowane po odzyskaniu połączenia; lokalny store w `IndexedDB`
 - Stylowanie: Tailwind CSS, wsuwany panel (`translate-x`), dostępność klawiatury (Esc zamyka, focus trap wewnątrz panelu)
 
+### 10.11 Eksport danych (CSV)
+
+- Osobna sekcja „Eksport danych" (`/exports`, `ExportsComponent`) — generowanie plików CSV na podstawie danych systemu.
+- Dostęp pod uprawnieniem sekcji `export_csv` (`PermissionMiddleware`); `super_admin` ma bypass.
+- Widok: zakres dat (od/do, opcjonalny) + siatka kart zestawów z przyciskiem „Eksportuj CSV".
+- **Zestawy danych (biała lista typów):**
+  - `orders` — zlecenia z rozliczeniem godzin i wynagrodzeń (per przypisanie `order_employees`, stawka z `employee_rates` wg daty zlecenia),
+  - `employees` — pracownicy (z terminalem i sprzętem),
+  - `equipment` — sprzęt/pojazdy z `vehicle_details` (przebieg, OC) i najwcześniejszym planowanym przeglądem z `vehicle_service_plans`,
+  - `incidents` — awarie (z czasem trwania w godzinach),
+  - `daily_reports` — raporty dzienne (terminalowe + pojazdowe, UNION).
+- Serializacja CSV wg **RFC 4180** (`ExportService`): CRLF, ucieczka wartości podwójnym cudzysłowem, BOM UTF-8 (poprawne polskie znaki w Excelu).
+- Pobieranie: frontend `ExportsService` wykonuje `GET /exports/{type}` z `responseType: 'blob'`, plik zapisywany lokalnie przez przeglądarkę.
+- Odpowiedź `Cache-Control: no-store` — bez cache'owania danych osobowych; frontend dodatkowo pomija cache GET parametrem `_ts`.
+
 ---
 
 ## 11. API Endpoints
@@ -1382,6 +1399,16 @@ Endpointy **publiczne** (bez `AuthMiddleware`) — obsługa zgłoszeń z naklejk
 | GET | `/api/v1/qr/{token}` | Publiczne info o maszynie (nazwa, numer, kategoria) — bez danych osobowych |
 | POST | `/api/v1/qr/{token}/incident` | Zgłoszenie awarii maszyny z QR (`incidents`, źródło `qr`, anonimowe) |
 | POST | `/api/v1/qr/{token}/daily-report` | Raport obsługi codziennej (OC) z QR (`daily_vehicle_reports`, źródło `qr`) |
+
+### 11.18 Eksport danych (CSV)
+
+Endpoint zwraca **surowy plik CSV** (`text/csv`) z nagłówkiem `Content-Disposition: attachment` — wymaga uprawnienia sekcji `export_csv`.
+
+| Metoda | Endpoint | Opis |
+|---|---|---|
+| GET | `/api/v1/exports/{type}?from=&to=` | Eksport danych do CSV (`type`: `orders`, `employees`, `equipment`, `incidents`, `daily_reports`; `from`/`to` opcjonalne, YYYY-MM-DD) |
+
+`Response::raw()` umożliwia odpowiedź nie-JSON. Nieznany typ → 422; nieprawidłowa data `from`/`to` → 422. Odpowiedź `Cache-Control: no-store`.
 
 ---
 

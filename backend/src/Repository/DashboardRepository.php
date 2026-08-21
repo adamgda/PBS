@@ -75,18 +75,26 @@ class DashboardRepository extends BaseRepository
      */
     public function alerts(): array
     {
+        // Certyfikaty/uprawnienia — wzbogacone o dane pracownika, aby dashboard
+        // mógł pokazać konkretną pozycję (czyj dokument i kiedy wygasa).
         $certs = $this->fetchAlertItems(
-            'SELECT ed.`id`, ed.`nazwa`, ed.`data_waznosci`
+            'SELECT ed.`id`, ed.`employee_id`, ed.`nazwa`, ed.`data_waznosci`,
+                    emp.`imie`, emp.`nazwisko`
              FROM `employee_documents` ed
+             INNER JOIN `employees` emp ON emp.`id` = ed.`employee_id`
              WHERE ed.`data_waznosci` IS NOT NULL
                AND ed.`data_waznosci` BETWEEN :from AND :to
              ORDER BY ed.`data_waznosci` ASC',
             '30',
         );
 
+        // Przeglądy pojazdów — wzbogacone o nazwę i numer seryjny sprzętu.
         $inspections = $this->fetchAlertItems(
-            'SELECT vsp.`id`, vsp.`typ_przegladu`, vsp.`data_nastepnego_planowanego`
+            'SELECT vsp.`id`, vsp.`equipment_id`, vsp.`typ_przegladu`,
+                    vsp.`data_nastepnego_planowanego`, eq.`nazwa` AS sprzet_nazwa,
+                    eq.`numer_seryjny`
              FROM `vehicle_service_plans` vsp
+             INNER JOIN `equipment` eq ON eq.`id` = vsp.`equipment_id`
              WHERE vsp.`is_active` = TRUE
                AND vsp.`data_nastepnego_planowanego` IS NOT NULL
                AND vsp.`data_nastepnego_planowanego` BETWEEN :from AND :to
@@ -94,8 +102,9 @@ class DashboardRepository extends BaseRepository
             '30',
         );
 
+        // Awaria — wzbogacona o typ (sprzęt/inne) dla czytelniejszego opisu.
         $incidents = $this->fetchAlertItems(
-            'SELECT i.`id`, i.`opis`, i.`status`, i.`data_zgloszenia`
+            'SELECT i.`id`, i.`typ`, i.`opis`, i.`status`, i.`data_zgloszenia`
              FROM `incidents` i
              WHERE i.`status` IN (\'zgloszona\', \'w_trakcie_naprawy\', \'naprawiona\')
              ORDER BY i.`data_zgloszenia` ASC',

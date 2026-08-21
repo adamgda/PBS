@@ -180,4 +180,23 @@ class UserRepository extends BaseRepository
         $sql = "UPDATE `{$this->table}` SET `permissions` = :perms WHERE `id` = :id";
         $this->executeQuery($sql, [':perms' => json_encode($permissions, JSON_THROW_ON_ERROR), ':id' => $userId]);
     }
+
+    /**
+     * Adresy e-mail wszystkich aktywnych kont z rolą `super_admin`.
+     *
+     * Odbiorcy powiadomień o błędach endpointów (status 5xx). Zanonimizowane
+     * (usunięte) konta są pomijane zgodnie z polityką RODO.
+     *
+     * @return array<int, string>
+     */
+    public function findSuperAdminEmails(): array
+    {
+        $sql = "SELECT `email` FROM `{$this->table}` WHERE `role` = 'super_admin' AND `is_active` = TRUE AND `email` NOT LIKE :deleted_pattern";
+        $stmt = $this->executeQuery($sql, [':deleted_pattern' => 'deleted\\_%@pbs.local']);
+
+        /** @var array<int, array{email: string}> $rows */
+        $rows = $stmt->fetchAll();
+
+        return array_map(static fn (array $row): string => (string) $row['email'], $rows);
+    }
 }

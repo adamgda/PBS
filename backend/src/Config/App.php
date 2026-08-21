@@ -13,6 +13,7 @@ use App\Controllers\AuditLogController;
 use App\Controllers\DashboardController;
 use App\Controllers\EmployeeController;
 use App\Controllers\EquipmentController;
+use App\Controllers\ExportController;
 use App\Controllers\HealthController;
 use App\Controllers\IncidentController;
 use App\Controllers\InvoiceController;
@@ -50,6 +51,7 @@ use App\Repository\EmployeeRepository;
 use App\Repository\EmployeeVacationRepository;
 use App\Repository\EquipmentHistoryRepository;
 use App\Repository\EquipmentRepository;
+use App\Repository\ExportRepository;
 use App\Repository\IncidentRepository;
 use App\Repository\InvoiceRepository;
 use App\Repository\OrderRepository;
@@ -71,6 +73,7 @@ use App\Services\CryptoService;
 use App\Services\DashboardService;
 use App\Services\EmployeeService;
 use App\Services\EquipmentService;
+use App\Services\ExportService;
 use App\Services\FileUploadService;
 use App\Services\IncidentService;
 use App\Services\InvoiceService;
@@ -93,6 +96,8 @@ final class App
     private readonly Config $config;
     private readonly Router $router;
     private readonly MiddlewarePipeline $pipeline;
+    private readonly UserRepository $userRepository;
+    private readonly MailService $mailService;
 
     public function __construct(Config $config)
     {
@@ -103,6 +108,7 @@ final class App
 
         // === Repozytoria ===
         $userRepository = new UserRepository($pdo);
+        $this->userRepository = $userRepository;
         $userNoteRepository = new UserNoteRepository($pdo);
         $refreshTokenRepository = new RefreshTokenRepository($pdo);
         $passwordResetRepository = new PasswordResetRepository($pdo);
@@ -126,6 +132,7 @@ final class App
         $alertConfigRepository = new AlertConfigRepository($pdo);
         $alertNotificationRepository = new AlertNotificationRepository($pdo);
         $alertSourceRepository = new AlertSourceRepository($pdo);
+        $exportRepository = new ExportRepository($pdo);
 
         // === Serwisy ===
         $isProduction = $config->isProduction();
@@ -173,6 +180,7 @@ final class App
 
         $passwordPolicyService = new PasswordPolicyService();
         $mailService = new MailService($config);
+        $this->mailService = $mailService;
         $frontendBaseUrl = $config->get('FRONTEND_BASE_URL', 'http://localhost:4200') ?? 'http://localhost:4200';
         $authService = new AuthService(
             $userRepository,
@@ -305,6 +313,10 @@ final class App
         $auditLogService = new AuditLogService($auditLogRepository);
         $auditLogController = new AuditLogController($auditLogService);
 
+        // === Serwis eksportu CSV (Eksport danych) — wymagane uprawnienie `export_csv` ===
+        $exportService = new ExportService($exportRepository);
+        $exportController = new ExportController($exportService);
+
         // === Guard uprawnień per-route ===
         // Opakowuje handler kontrolera sprawdzaniem PermissionMiddleware dla wskazanych sekcji.
         $ustawieniaGuard = static function (callable $handler) use ($userRepository): callable {
@@ -405,6 +417,18 @@ final class App
         // Guard uprawnień sekcji „dashboard" (Etap 13).
         $dashboardGuard = static function (callable $handler) use ($userRepository): callable {
             $permissionMiddleware = new PermissionMiddleware(['dashboard'], ['super_admin'], $userRepository);
+
+            return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
+                return $permissionMiddleware->process(
+                    $request,
+                    static fn (Request $req): Response => $handler($req, $routeParams),
+                );
+            };
+        };
+
+        // Guard uprawnień sekcji „Eksport danych" (export_csv).
+        $exportCsvGuard = static function (callable $handler) use ($userRepository): callable {
+            $permissionMiddleware = new PermissionMiddleware(['export_csv'], ['super_admin'], $userRepository);
 
             return static function (Request $request, array $routeParams) use ($permissionMiddleware, $handler): Response {
                 return $permissionMiddleware->process(
@@ -558,12 +582,16 @@ final class App
             ['method' => 'GET', 'path' => '/api/v1/analytics/terminals', 'handler' => $analitykaGuard([$analyticsController, 'terminals'])],
             ['method' => 'GET', 'path' => '/api/v1/analytics/employees', 'handler' => $analitykaGuard([$analyticsController, 'employees'])],
             ['method' => 'GET', 'path' => '/api/v1/analytics/equipment', 'handler' => $analitykaGuard([$analyticsController, 'equipment'])],
+            ['method' => 'GET', 'path' => '/api/v1/analytics/orders-in-time', 'handler' => $analitykaGuard([$analyticsController, 'ordersInTime'])],
             ['method' => 'GET', 'path' => '/api/v1/analytics/relations', 'handler' => $analitykaGuard([$analyticsController, 'relations'])],
 
             // Sekcja Dashboard (Etap 13) — wymagane uprawnienie `dashboard`
             ['method' => 'GET', 'path' => '/api/v1/dashboard/summary', 'handler' => $dashboardGuard([$dashboardController, 'summary'])],
             ['method' => 'GET', 'path' => '/api/v1/dashboard/alerts', 'handler' => $dashboardGuard([$dashboardController, 'alerts'])],
             ['method' => 'GET', 'path' => '/api/v1/dashboard/charts', 'handler' => $dashboardGuard([$dashboardController, 'charts'])],
+
+            // Sekcja Eksport danych (CSV) — wymagane uprawnienie `export_csv`
+            ['method' => 'GET', 'path' => '/api/v1/exports/{type}', 'handler' => $exportCsvGuard([$exportController, 'export'])],
 
             // Sekcja Logi audytowe (Dashboard) — wyłącznie dla roli super_admin
             ['method' => 'GET', 'path' => '/api/v1/audit-logs', 'handler' => $superAdminGuard([$auditLogController, 'index'])],
@@ -624,12 +652,14 @@ final class App
     public function run(): void
     {
         $request = Request::fromGlobals();
+        $exception = null;
 
         try {
             $response = $this->handle($request);
         } catch (\Throwable $e) {
             // Loguj wyjątek do stderr (widoczne w konsoli serwera PHP built-in / start-backend.sh),
             // aby ułatwić diagnostykę błędów 500 — wcześniej wyjątek był połykany bez śladu.
+            $exception = $e;
             error_log('[PBS] Unhandled exception: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             $appDebug = filter_var($this->config->get('APP_DEBUG', 'false'), FILTER_VALIDATE_BOOL);
             $response = Response::error(
@@ -639,6 +669,87 @@ final class App
             );
         }
 
+        // Powiadomienie e-mail superadmina o błędzie endpointu (status ≥ 500).
+        if ($response->statusCode() >= 500) {
+            $errorDetail = $response->data()['error'] ?? null;
+            $message = $exception !== null
+                ? $exception->getMessage()
+                : (is_string($errorDetail) && $errorDetail !== '' ? $errorDetail : 'Server error');
+
+            $this->notifyEndpointError(
+                $request,
+                $response->statusCode(),
+                $message,
+                $exception !== null ? $exception->getTraceAsString() : null,
+            );
+        }
+
         $response->send();
+    }
+
+    /**
+     * Wysyła powiadomienie e-mail o błędzie endpointu (status 5xx) do superadmina.
+     *
+     * Adresy odbiorców pochodzą z konfiguracji (ERROR_NOTIFY_EMAIL) oraz z bazy
+     * (wszystkie aktywne konta super_admin). Błąd powiadomienia nigdy nie przerywa
+     * odpowiedzi wysyłanej do klienta.
+     */
+    private function notifyEndpointError(Request $request, int $status, string $message, ?string $trace = null): void
+    {
+        try {
+            $recipients = $this->superAdminRecipients();
+            if ($recipients === []) {
+                return;
+            }
+
+            foreach ($recipients as $recipient) {
+                $this->mailService->sendErrorNotification(
+                    $recipient,
+                    $status,
+                    $request->method(),
+                    $request->path(),
+                    $message,
+                    $trace,
+                    $request->ip(),
+                );
+            }
+        } catch (\Throwable $e) {
+            error_log('[PBS] Error notification failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Adresy odbiorców powiadomień o błędach endpointów.
+     *
+     * Jawne adresy z konfiguracji (ERROR_NOTIFY_EMAIL, lista rozdzielana przecinkami)
+     * uzupełnione o adresy wszystkich aktywnych kont super_admin z bazy danych.
+     * Nadpis konfiguracyjny jest przydatny m.in. gdy baza danych jest niedostępna.
+     *
+     * @return array<int, string>
+     */
+    private function superAdminRecipients(): array
+    {
+        $recipients = [];
+
+        $configured = $this->config->get('ERROR_NOTIFY_EMAIL', '');
+        if ($configured !== null && $configured !== '') {
+            foreach (explode(',', $configured) as $address) {
+                $address = trim($address);
+                if ($address !== '') {
+                    $recipients[] = $address;
+                }
+            }
+        }
+
+        try {
+            foreach ($this->userRepository->findSuperAdminEmails() as $email) {
+                $recipients[] = $email;
+            }
+        } catch (\Throwable $e) {
+            // Baza niedostępna — korzystamy wyłącznie z nadpisu konfiguracyjnego.
+            error_log('[PBS] Super admin email lookup failed: ' . $e->getMessage());
+        }
+
+        return array_values(array_unique($recipients));
     }
 }

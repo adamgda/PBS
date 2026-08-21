@@ -15,9 +15,10 @@ final class Response
      */
     public function __construct(
         private readonly int $statusCode,
-        private readonly array $data,
+        private readonly array $data = [],
         private array $headers = [],
         private bool $compressed = false,
+        private ?string $rawBody = null,
     ) {}
 
     /**
@@ -27,6 +28,17 @@ final class Response
     public static function json(int $statusCode, ?array $data = null, array $headers = []): self
     {
         return new self($statusCode, $data ?? [], $headers);
+    }
+
+    /**
+     * Odpowiedź z surowym ciałem (np. CSV) — bez JSON-owej serializacji.
+     * Nagłówki (w tym Content-Type i Content-Disposition) przekazywane są jawnie.
+     *
+     * @param array<string, string> $headers
+     */
+    public static function raw(int $statusCode, string $body, array $headers = []): self
+    {
+        return new self($statusCode, [], $headers, false, $body);
     }
 
     public static function success(mixed $data = null, int $statusCode = 200): self
@@ -81,6 +93,14 @@ final class Response
         return $this->headers;
     }
 
+    /**
+     * Surowe ciało odpowiedzi (np. CSV); null dla odpowiedzi JSON.
+     */
+    public function rawBody(): ?string
+    {
+        return $this->rawBody;
+    }
+
     public function header(string $name, string $value): void
     {
         $this->headers[$name] = $value;
@@ -118,6 +138,12 @@ final class Response
         }
 
         if ($this->statusCode === 204) {
+            return;
+        }
+
+        // Odpowiedź surowa (np. CSV) — bez serializacji JSON.
+        if ($this->rawBody !== null) {
+            echo $this->rawBody;
             return;
         }
 

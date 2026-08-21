@@ -36,6 +36,11 @@ export interface AnalyticsEquipment {
   assignment_count: number;
 }
 
+export interface AnalyticsOrderInTime {
+  day: string;
+  count: number;
+}
+
 export interface AnalyticsRelation {
   employee_id: number;
   imie: string | null;

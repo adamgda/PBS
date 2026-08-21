@@ -129,3 +129,18 @@ it('updatePermissions zapisuje uprawnienia jako JSON', function (): void {
     $this->repo->updatePermissions(1, ['pracownicy' => true, 'awarie' => false]);
     expect(true)->toBeTrue();
 });
+
+it('findSuperAdminEmails zwraca adresy aktywnych kont super_admin', function (): void {
+    $this->stmt->shouldReceive('fetchAll')->once()->andReturn([
+        ['email' => 'super@pbs.local'],
+        ['email' => 'admin@pbs.local'],
+    ]);
+
+    expect($this->repo->findSuperAdminEmails())->toBe(['super@pbs.local', 'admin@pbs.local']);
+});
+
+it('findSuperAdminEmails zwraca pustą tablicę, gdy brak kont super_admin', function (): void {
+    $this->stmt->shouldReceive('fetchAll')->once()->andReturn([]);
+
+    expect($this->repo->findSuperAdminEmails())->toBe([]);
+});

@@ -13,10 +13,11 @@ import { AddButtonComponent } from '../../components/add-button/add-button.compo
 import { ButtonComponent } from '../../components/button/button.component';
 import { IconButtonComponent } from '../../components/icon-button/icon-button.component';
 import { StatusBadgeComponent } from '../../components/status-badge/status-badge.component';
+import { SelectComponent, SelectOption } from '../../components/select/select.component';
 import { CalendarComponent, CalendarEvent, CalendarView } from '../../components/calendar/calendar.component';
 
 import { Order, OrderStatus, OrderListParams } from '../../models/orders.model';
-import { Employee } from '../../models/employee.model';
+import { Employee, EMPLOYEE_ROLES } from '../../models/employee.model';
 type ModalMode = 'copyWeek' | null;
 
 /** Rząd zmiany w siatce tygodniowej (06–14, 14–22, 22–06). */
@@ -59,6 +60,7 @@ interface WeekDayColumn {
     ButtonComponent,
     IconButtonComponent,
     StatusBadgeComponent,
+    SelectComponent,
     CalendarComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,6 +101,9 @@ export class OrdersComponent {
 
   // Wybrane zlecenie do detalu w widoku głównym (klik na kalendarzu)
   readonly selectedOrder = signal<Order | null>(null);
+
+  // Flaga ładowania szczegółów wybranego zlecenia (loader listy pracowników)
+  readonly detailsLoading = signal<boolean>(false);
 
   // Odfiltrowana lista dostępnych pracowników (wg wyszukiwania; urlopowicy widoczni jako wyłączeni)
   readonly filteredAvailableEmployees = computed<Employee[]>(() => {
@@ -238,29 +243,40 @@ export class OrdersComponent {
   }
 
   loadDetails(id: number): void {
+    this.detailsLoading.set(true);
     this.ordersService.get(id).subscribe({
       next: (o) => {
         this.selectedOrder.set(o);
+        this.detailsLoading.set(false);
       },
-      error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
+      error: (err) => {
+        this.detailsLoading.set(false);
+        this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
+      },
     });
   }
 
   /** Szybkie przypisanie pracownika z panelu "Dostępni pracownicy" do wybranego zlecenia. */
-  quickAssignEmployee(emp: Employee): void {
+  quickAssignEmployee(emp: Employee, role?: string | null): void {
     const order = this.selectedOrder();
     if (!order) {
       this.toastService.error(this.t('harmonogram.assign.select_order_first'));
       return;
     }
+    this.assignSaving.set(true);
     this.ordersService
-      .assignEmployee(order.id, { employee_id: emp.id, rola: emp.rola_dzis ?? null })
+      .assignEmployee(order.id, { employee_id: emp.id, rola: role ?? emp.rola_dzis ?? null })
       .subscribe({
         next: () => {
+          this.assignSaving.set(false);
+          this.cancelAssign();
           this.toastService.success(this.t('harmonogram.assign.added_success'));
           this.loadDetails(order.id);
         },
-        error: (err) => this.toastService.error(err?.error?.error || this.t('common.messages.error.generic')),
+        error: (err) => {
+          this.assignSaving.set(false);
+          this.toastService.error(err?.error?.error || this.t('common.messages.error.generic'));
+        },
       });
   }
 
@@ -268,6 +284,53 @@ export class OrdersComponent {
   isEmployeeAssigned(emp: Employee): boolean {
     const order = this.selectedOrder();
     return !!order?.employees?.some((e) => e.employee_id === emp.id);
+  }
+
+  // --- Przypisanie pracownika z wyborem roli (panel "Dostępni pracownicy") ---
+
+  /** Pracownik, dla którego otwarto inline-wybór roli (null = zamknięty). */
+  readonly assigningEmployee = signal<Employee | null>(null);
+  /** Wybrana rola w bieżącym przypisaniu ('' = brak roli). */
+  readonly assignRole = signal<string>('');
+  /** Flaga trwającego zapisu przypisania. */
+  readonly assignSaving = signal<boolean>(false);
+
+  /** Opcje ról do selecta (etykiety przez klucze tłumaczeniowe). */
+  readonly roleOptions = computed<SelectOption[]>(() =>
+    EMPLOYEE_ROLES.map((role) => ({ value: role, labelKey: this.roleLabelKey(role) })),
+  );
+
+  /** Otwiera wybór roli dla pracownika (domyślnie jego rola dnia). */
+  startAssign(emp: Employee): void {
+    this.assigningEmployee.set(emp);
+    this.assignRole.set(emp.rola_dzis ?? '');
+  }
+
+  /** Zamyka wybór roli bez przypisania. */
+  cancelAssign(): void {
+    this.assigningEmployee.set(null);
+    this.assignRole.set('');
+  }
+
+  /** Potwierdza przypisanie z wybraną rolą. */
+  confirmAssign(): void {
+    const emp = this.assigningEmployee();
+    if (!emp) {
+      return;
+    }
+    const role = this.assignRole() || null;
+    this.quickAssignEmployee(emp, role);
+  }
+
+  private roleLabelKey(role: string): string {
+    const map: Record<string, string> = {
+      operator: 'pracownicy.roles.operator',
+      brygadzista: 'pracownicy.roles.foreman',
+      sztauer: 'pracownicy.roles.stevedore',
+      lukowy: 'pracownicy.roles.hatch',
+      operator_zurawia: 'pracownicy.roles.crane_operator',
+    };
+    return map[role] ?? role;
   }
 
   // --- Kopiowanie tygodnia ---

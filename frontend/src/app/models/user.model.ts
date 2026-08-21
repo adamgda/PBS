@@ -15,6 +15,7 @@ export const PERMISSION_SECTIONS = [
   'raportowanie',
   'ustawienia',
   'awaria',
+  'export_csv',
 ] as const;
 
 export type PermissionSection = (typeof PERMISSION_SECTIONS)[number];

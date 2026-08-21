@@ -59,7 +59,16 @@ Aby wymusić pełne tokeny CSRF:
 2. Wysyła go w nagłówku `X-CSRF-Token` dla POST/PUT/PATCH/DELETE.
 3. W `.env` produkcji: `CSRF_ENFORCE=true`.
 
-## 7. Pozostałe elementy etapu (infrastruktura / zewnętrzne)
+## 7. Eksport danych (CSV) — bezpieczeństwo (Etap 22)
+
+- Endpoint `GET /api/v1/exports/{type}` jest **read-only** — zwraca surowy plik CSV (`Response::raw()`), nie JSON.
+- Dostęp ograniczony uprawnieniem sekcji `export_csv` (`PermissionMiddleware`); `super_admin` ma bypass.
+- Odpowiedź zawiera `Content-Type: text/csv; charset=utf-8` oraz `Cache-Control: no-store` — dane osobowe (np. eksport pracowników) nie są cache'owane.
+- Biała lista typów eksportu w `ExportService` — nieobsługiwany typ zwraca 422; zakres dat (`from`/`to`) walidowany (nieprawidłowa data → 422).
+- Eksport danych osobowych (pracownicy, sprzęt z przypisaniami) podlega tej samej polityce RODO co reszta API — ograniczony do użytkowników z uprawnieniem `export_csv`.
+- **Zalecenie (do wdrożenia):** logowanie eksportów danych osobowych w `audit_log` (kto, kiedy, jaki typ i zakres wyeksportował).
+
+## 8. Pozostałe elementy etapu (infrastruktura / zewnętrzne)
 
 - **Penetration test / audyt bezpieczeństwa** — wykonać zewnętrznie przed produkcyjnym Go-Live.
 - **Docker Secrets / Vault** — konfiguracja środowiskowa (poza repozytorium).

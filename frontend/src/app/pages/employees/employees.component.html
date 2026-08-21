@@ -88,9 +88,19 @@
       tone="success"
     />
 
-    <!-- 3. Podział godzin — dedykowana karta (2 wartości × 2 okresy), ale skompresowana tak,
+    <!-- 3. Na urlopie -->
+    <app-kpi-card
+      label="pracownicy.kpi.on_leave"
+      [value]="s.na_urlopie"
+      icon="calendar"
+      tone="warning"
+    />
+
+    <!-- 4. Podział godzin — dedykowana karta (2 wartości × 2 okresy), ale skompresowana tak,
          by wysokość była zgodna z pozostałymi kartami (tekst-xs, mniejsza ikona, ciaśniejsze odstępy) -->
     <div class="relative overflow-hidden rounded-xl bg-white p-4 shadow-card ring-1 ring-gray-100 dark:bg-slate-900 dark:ring-slate-800">
+      <!-- Akcent po lewej — niebieski, jak tło ikony (spójność z pozostałymi kartami KPI) -->
+      <span class="absolute inset-y-0 left-0 w-1 bg-blue-500"></span>
       <div class="flex items-center justify-between gap-3">
         <p class="truncate text-sm font-medium text-gray-500 dark:text-slate-400">{{ 'pracownicy.kpi.split' | translate }}</p>
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm">
@@ -108,14 +118,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 4. Na urlopie -->
-    <app-kpi-card
-      label="pracownicy.kpi.on_leave"
-      [value]="s.na_urlopie"
-      icon="calendar"
-      tone="warning"
-    />
   } @else if (summaryLoading()) {
     <ng-container [ngTemplateOutlet]="kpiSkeletonSingle" />
     <ng-container [ngTemplateOutlet]="kpiSkeletonSingle" />
